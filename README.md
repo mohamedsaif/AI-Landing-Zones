@@ -13,9 +13,17 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 ## Reference Architecture
 The below diagram represents the reference architecture of the AI Landing Zone.
 
+![image](/media/AI-Landing-Zone-Reference-Architecture.png)
+
 ## Reference Implementation
 
 The table represents the various reference implementations of the AI Landing Zone based on the service inventory & configuration
+
+| Type | Description |
+| ----------- | ----------- |
+| Portal | In Development |
+| Bicep | In Development |
+| Terraform | In Development |
 
 ## Usecases & Scenarios
 The AI Landing Zone act as a foundational technical pattern that is able to facilitate implementation of the below AI usecases & scenarios either with its default architecture or by extending it with additional Azure services as needed.
@@ -27,20 +35,21 @@ The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://le
 The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas.
 
 ## Design Areas
+The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
 
-- Security
-- Identity
-- Compute
-- Data
-- Reliability
-- Networking
-- Governance
-- Monitoring
-- Cost Optimization
-- Platform Automation
-- Resource Organization
-- Operational Excellence
-- Performance Efficiency
+- [Security](/docs/Security.md)
+- [Identity](/docs/Identity.md)
+- [Compute](/docs/Compute.md)
+- [Data](/docs/Data.md)
+- [Reliability](/docs/Reliability.md)
+- [Networking](/docs/Networking.md)
+- [Governance](/docs/Governance.md)
+- [Monitoring](/docs/Monitoring.md)
+- [Cost Optimization](/docs/Cost-Optimization.md)
+- [Platform Automation](/docs/Platform-Automation.md)
+- [Resource Organization](/docs/Resource-Organization.md)
+- [Operational Excellence](/docs/Operational-Excellence.md)
+- [Performance Efficiency](/docs/Performance-Efficiency.md)
 
 ## Contributing
 
