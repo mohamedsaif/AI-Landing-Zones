@@ -1,14 +1,33 @@
-# Project
+# AI Landing Zone
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+- The AI Landing Zone provides an enterprise-scale production ready reference architecture with implementation (Portal, Bicep & Terraform) for AI Apps & Agents in the form of an application landing zone.
+- It is meant to act as a foundation for various patterns, use cases and scenarios of AI solutions which can be deployed with or without platform landing zone.
+- The IaC implementations i.e. Bicep and Terraform are based on [Azure Verified Modules](https://aka.ms/AVM).
+- The AI Landing Zone focuses on [AI on Azure Platform](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/platform/architectures). A future version of it will cover [AI on Azure Infrastructure](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/infrastructure/cycle-cloud).
+- The AI Landing Zone has been designed and tested for Azure Public Cloud but can be leveraged in the Azure Government and Sovereign Cloud.
+- The AI Landing Zone is able to cover both generative and non-generative scenario per [resource selection guidance CAF AI Scenario](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/platform/resource-selection).
+- The AI Landing Zone leverages [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/) as the orchestration framework.
+- Given the pace of innovation and change in AI, the AI Landing Zone may leverage services in Preview to provide an architecture with latest features.
 
-As the maintainer of this project, please make a few updates:
+## Reference Architecture
+The below diagram represents the reference architecture of the AI Landing Zone.
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+## Reference Implementation
+
+The table represents the various reference implementations of the AI Landing Zone.
+
+## AI Usecases & Scenarios
+The AI Landing Zone act as a foundational technical pattern that is able to facilitate implementation of the below AI usecases & scenarios either with its default architecture or by extending it with additional Azure services as needed.
+
+## Cloud Adoption Framework
+The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/). For a holistic implementation of the AI Landing Zone, we recommend to review the [AI Checklist](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/#ai-checklists). To understand how to leverage the AI Landing Zone as part of a wider strategy, review the guidance on [AI Strategy](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/strategy). AI Landing Zone is part of the AI Ready stage in particular the AI on Azure platforms (PaaS).
+
+## Well-Architected Framework
+The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas.
+
+## Design Areas
+
+
 
 ## Contributing
 
