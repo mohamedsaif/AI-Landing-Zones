@@ -1,8 +1,9 @@
 # AI Landing Zone
 
-- The AI Landing Zone provides an enterprise-scale production ready reference architecture with implementation (Portal, Bicep & Terraform) for AI Apps & Agents in the form of an application landing zone.
-- It is meant to act as a foundation for various patterns, use cases and scenarios of AI solutions which can be deployed with or without platform landing zone.
-- The IaC implementations i.e. Bicep and Terraform are based on [Azure Verified Modules](https://aka.ms/AVM).
+The AI Landing Zone provides an enterprise-scale production ready reference architecture with implementation (Portal, Bicep & Terraform) for AI Apps & Agents in the form of an application landing zone.
+
+- The AI Landing Zone is meant to act as a foundation for various patterns, use cases and scenarios of AI solutions which can be deployed with or without platform landing zone.
+- The IaC implementations of the AI Landing Zone i.e. Bicep and Terraform are based on [Azure Verified Modules](https://aka.ms/AVM).
 - The AI Landing Zone focuses on [AI on Azure Platform](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/platform/architectures). A future version of it will cover [AI on Azure Infrastructure](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/infrastructure/cycle-cloud).
 - The AI Landing Zone has been designed and tested for Azure Public Cloud but can be leveraged in the Azure Government and Sovereign Cloud.
 - The AI Landing Zone is able to cover both generative and non-generative scenario per [resource selection guidance CAF AI Scenario](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/platform/resource-selection).
