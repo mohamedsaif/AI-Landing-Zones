@@ -15,9 +15,9 @@ The below diagram represents the reference architecture of the AI Landing Zone.
 
 ## Reference Implementation
 
-The table represents the various reference implementations of the AI Landing Zone.
+The table represents the various reference implementations of the AI Landing Zone based on the service inventory & configuration
 
-## AI Usecases & Scenarios
+## Usecases & Scenarios
 The AI Landing Zone act as a foundational technical pattern that is able to facilitate implementation of the below AI usecases & scenarios either with its default architecture or by extending it with additional Azure services as needed.
 
 ## Cloud Adoption Framework
@@ -28,7 +28,19 @@ The AI landing Zone aligns with the guidance in the WAF AI workload. For a holis
 
 ## Design Areas
 
-
+- Security
+- Identity
+- Compute
+- Data
+- Reliability
+- Networking
+- Governance
+- Monitoring
+- Cost Optimization
+- Platform Automation
+- Resource Organization
+- Operational Excellence
+- Performance Efficiency
 
 ## Contributing
 
