@@ -36,8 +36,6 @@ The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://le
 ## Well-Architected Framework
 The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas.
 
-![image](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/images/ai-ready.svg)
-
 ## Design Areas
 The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
 
