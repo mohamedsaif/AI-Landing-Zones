@@ -23,7 +23,7 @@ The table represents the various reference implementations of the AI Landing Zon
 | ----------- | ----------- |
 | Portal | In Development |
 | Bicep | In Development |
-| Terraform | In Development |
+| Terraform | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
 
 ## Usecases & Scenarios
 The AI Landing Zone act as a foundational technical pattern that is able to facilitate implementation of the below AI usecases & scenarios either with its default architecture or by extending it with additional Azure services as needed.
