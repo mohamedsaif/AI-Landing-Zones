@@ -11,9 +11,12 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 - Given the pace of innovation and change in AI, the AI Landing Zone may leverage services in Preview to provide an architecture with latest features.
 
 ## Reference Architecture
-The below diagram represents the reference architecture of the AI Landing Zone.
+The below diagram represents the reference architecture of the AI Landing Zone with Platform Landing Zone which is our recommended configuration.
 
+The below diagram represents the reference architecture of the AI Landing Zone without Platform Landing Zone as a standalone application landing zone.
 ![image](/media/AI-Landing-Zone-Reference-Architecture.png)
+
+
 
 ## Reference Implementation
 
@@ -25,8 +28,8 @@ The table represents the various reference implementations of the AI Landing Zon
 | Bicep | Coming Soon in August 2025 |
 | Portal | Coming Soon in September 2025 |
 
-## Usecases & Scenarios
-The AI Landing Zone act as a foundation architecture which can be leveraged to deploy a particular AI usecase & scenario on Azure, like the below, either with its default architecture or by extending it with additional Azure services as needed.
+## Use cases & Scenarios
+The AI Landing Zone act as a foundation architecture which can be leveraged to deploy a particular AI usecase & scenario on Azure, such as the below, either with its default architecture or by extending it with additional Azure services as needed.
 
 - Chat Using Azure AI Foundry
 - Agents Using Azure AI Foundry
