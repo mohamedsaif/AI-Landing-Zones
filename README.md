@@ -25,7 +25,8 @@ The below diagram represents the reference architecture of the AI Landing Zone w
 - AI Landing Zone in Azure Sovereign Cloud
 - AI Landing Zone in Multi-Region for BCDR
 - AI Landing Zone in Multi-Environment (Dev, Test, Prod)
-- AI Landing Zone in Multi-App Scenarios
+- AI Landing Zone in Multi-App workloads
+- AI Landing Zone in Multi-cloud & Hybrid environments
 - AI Landing Zone with Data Landing Zone
 
 ## Reference Implementation
