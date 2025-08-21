@@ -1,4 +1,4 @@
-# AI Landing Zone
+# AI Landing Zone - Preview
 
 The AI Landing Zone provides an enterprise-scale production ready reference architecture with implementation (Portal, Bicep & Terraform) for AI Apps & Agents in the form of an application landing zone.
 
