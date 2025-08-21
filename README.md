@@ -12,9 +12,10 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 
 ## Reference Architecture
 The below diagram represents the reference architecture of the AI Landing Zone with Platform Landing Zone which is our recommended configuration.
+![image](/media/AI-Landing-Zone-with-platform.png)
 
 The below diagram represents the reference architecture of the AI Landing Zone without Platform Landing Zone as a standalone application landing zone.
-![image](/media/AI-Landing-Zone-Reference-Architecture.png)
+![image](/media/AI-Landing-Zone-without-platform.png)
 
 
 
