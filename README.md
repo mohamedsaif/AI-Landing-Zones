@@ -11,13 +11,22 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 - Given the pace of innovation and change in AI, the AI Landing Zone may leverage services in Preview to provide an architecture with latest features.
 
 ## Reference Architecture
+
+### AI Landing Zone with Platform Landing Zone
 The below diagram represents the reference architecture of the AI Landing Zone with Platform Landing Zone which is our recommended configuration.
 ![image](/media/AI-Landing-Zone-with-platform.png)
 
+### AI Landing Zone without Platform Landing Zone
 The below diagram represents the reference architecture of the AI Landing Zone without Platform Landing Zone as a standalone application landing zone.
 ![image](/media/AI-Landing-Zone-without-platform.png)
 
-
+### Upcoming AI Landing Zone Architectures
+- AI Landing Zone in Azure Government Cloud
+- AI Landing Zone in Azure Sovereign Cloud
+- AI Landing Zone in Multi-Region for BCDR
+- AI Landing Zone in Multi-Environment (Dev, Test, Prod)
+- AI Landing Zone in Multi-App Scenarios
+- AI Landing Zone with Data Landing Zone
 
 ## Reference Implementation
 
