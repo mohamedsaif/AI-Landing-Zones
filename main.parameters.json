@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "aiFoundryDefinition": {
+      "value": {
+        "includeAssociatedResources": true,
+        "aiModelDeployments": [
+          {
+            "name": "gpt-4o",
+            "raiPolicyName": "",
+            "versionUpgradeOption": "",
+            "model": {
+              "format": "OpenAI",
+              "name": "gpt-4o",
+              "version": "2024-11-20"
+            },
+            "scale": {
+              "type": "Standard",
+              "capacity": 1,
+              "family": "",
+              "size": "",
+              "tier": ""
+            }
+          }
+        ]
+      }
+    },
+    "jumpVmAdminPassword": {
+      "value": "$(secretOrRandomPassword)"
+    },
+    "buildVmDefinition": {
+      "value": {
+        "name": "",
+        "sku": "Standard_D2s_v5",
+        "adminUsername": "azureuser",
+        "sshPublicKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBT+xwzoMEFuSb/ITDjHjTX2280jaytmDCRZ6wh5HB9P pclacerda@gmail.com",
+        "runner": "github",
+        "github": {
+          "owner": "placerda",
+          "repo": "aiml-app",
+          "labels": "self-hosted,linux,x64,build",
+          "agentName": "build-aiml-lz"
+        },
+        "tags": {},
+        "enableTelemetry": true
+      }
+    }
+  }
+}
