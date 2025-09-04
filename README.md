@@ -1,6 +1,6 @@
 # AI Landing Zone (Bicep AVM Pattern)
 
-This repository contains the **Bicep code** for the **AI Landing Zone Architecture**, published as an [**Azure Verified Module (AVM) Pattern**](https://aka.ms/avm). It provides a landing zone tailored for **generative AI application workloads**, automating deployment of a secure and configurable environment on Azure.
+This repository contains the **Bicep code** for the **AI Landing Zone Architecture**, published as an [Azure Verified Module](https://aka.ms/avm) Pattern. It provides a landing zone tailored for **generative AI application workloads**, automating deployment of a secure and configurable environment on Azure.
 
 ## Architecture
 
