@@ -1,406 +1,309 @@
-# How to Use — AI Landing Zone (Bicep AVM Pattern)
+# Deploying AI Landing Zone (Bicep AVM Pattern)
 
-This guide explains how to deploy and operate the **AI Landing Zone** implemented in this repository using **Bicep** (and optionally **`azd`**). It covers deployment flows, parameterization patterns (create vs. reuse), network isolation choices, and what each resource does when enabled.
+This guide explains how to deploy and operate the **AI Landing Zone** in this repository using **Bicep**. It covers deployment flows, parameterization patterns (create vs. reuse), network-isolation choices, and how each module behaves when enabled.
 
-> The template is designed for **GenAI application workloads** and **Azure AI Foundry** projects. By default it deploys a **network‑isolated** environment using **Private Endpoints (PE)** and **Private DNS (PDNS)**.
+> The template is designed for **GenAI application workloads** and **Azure AI Foundry** projects. By default it deploys a **network-isolated** environment using **Private Endpoints (PE)** and **Private DNS (PDNS)**.
 
 ---
 
 ## Table of Contents
 
-* [1) What you decide before provisioning](#1-what-you-decide-before-provisioning)
-* [2) Quick start with `azd`](#2-quick-start-with-azd)
-* [3) Key parameters you will set frequently](#3-key-parameters-you-will-set-frequently)
-* [4) Resource‑by‑resource behavior and parameters](#4-resource-by-resource-behavior-and-parameters)
-* [5) Minimal examples](#5-minimal-examples)
-* [6) Gotchas & Pro Tips](#6-gotchas--pro-tips)
-* [7) Naming & resource groups](#7-naming--resource-groups)
-* [8) Using the AVM module in your repo](#8-using-the-avm-module-in-your-repo)
-* [9) What gets deployed (at a glance)](#9-what-gets-deployed-at-a-glance)
+## Table of Contents
+
+1. [What gets deployed (at a glance)](#1-what-gets-deployed-at-a-glance)  
+2. [What you decide before provisioning](#2-what-you-decide-before-provisioning)  
+3. [Quick start with `azd`](#3-quick-start-with-azd)  
+4. [Core parameters you will set often](#4-core-parameters-you-will-set-often)  
+5. [Resource-by-resource behavior & parameters](#5-resource-by-resource-behavior--parameters) 
+6. [Examples](#6-examples)  
+7. [Things to Know](#7-things-to-know)  
+8. [Naming & resource groups](#8-naming--resource-groups)  
+9. [Using this AVM Pattern from your own Bicep](#9-using-this-avm-pattern-from-your-own-bicep)  
+
 
 ---
 
-## 1) What you decide before provisioning
+## 1) What gets deployed (at a glance)
 
-**A. Create vs. reuse existing services**
-For any shared service you already own (e.g., VNet, Log Analytics, ACR), provide its **Resource ID** under the `resourceIds` object. When you supply an ID, the template **uses** that resource; when blank, the template **creates** a new one.
+The **AI layer** centers on **Azure AI Foundry** (account, project, optional model deployments, and connections).
 
-**B. Which modules to deploy**
-The `deployToggles` object controls which modules are created: VNet, Observability, Container Apps Environment, Container Apps, ACR, Key Vault, Storage, Cosmos DB, Azure AI Search, App Configuration, perimeter components (WAF Policy, Application Gateway, API Management, Firewall), and optional VMs (Build/Jump), plus **AI Foundry**. Turn each on/off according to your environment.
+Depending on your toggles and reuse choices, the deployment can include:
 
-**C. Isolation posture**
-Keep `networkIsolation = true` to get PE/PDNS for data planes. If your platform landing zone already provides shared PDNS/PE and connectivity, set the appropriate flag (for example, `flagPlatformLandingZone = true` if present in your version) and supply existing **PDNS** zone IDs via parameters.
+* **Core app platform:** Container Apps Environment (internal ILB), Container Apps, ACR
+* **Networking:** Spoke VNet, subnets, Private Endpoints, Private DNS zones (and optional hub peering)
+* **Data & config:** Storage, Key Vault, Cosmos DB, App Configuration, Azure AI Search
+* **Observability:** Log Analytics + Application Insights
+* **Perimeter:** WAF Policy, Application Gateway, API Management, Azure Firewall
+* **Operations:** Build VM (Linux) and Jump VM (Windows via Bastion)
 
 ---
 
-## 2) Quick start with `azd`
+## 2) What you decide before provisioning
 
-### Prereqs
+### A) Platform-integrated vs. Standalone
 
-* Azure CLI and `azd` installed and signed in (`azd auth login`).
-* A resource group in your target subscription.
-* Optional: a `.bicepparam` per environment (e.g., `infra/dev.bicepparam`).
+* **Platform-integrated**: If your platform landing zone already provides shared PDNS/PE and connectivity, set `flagPlatformLandingZone = true` and supply existing **Private DNS Zone IDs** via `privateDnsZoneIds` (per service). The template then **reuses** platform PDNS and only creates what you ask for.
+* **Standalone**: If you are not using a platform LZ, keep `flagPlatformLandingZone = false` (default). The template **creates** PDNS zones and **binds** Private Endpoints automatically for the services you deploy.
 
-### Initialize and provision
+### B) Create vs. reuse existing services
+
+For any service you already have, put its **Resource ID** under `resourceIds`.
+
+* **If an ID is provided**, the template **reuses** it.
+* **If left empty**, the template **creates** a new resource (when the corresponding toggle is true).
+
+### C) Which modules to deploy
+
+Use `deployToggles` to enable or skip each service (reusing via `resourceIds` still works). You can enable: VNet, Observability (LAW + App Insights), CAE, Container Apps, ACR, Key Vault, Storage, Cosmos DB, AI Search, App Configuration, perimeter components (WAF Policy, Application Gateway, API Management, Firewall), and optional VMs (Build/Jump).
+
+## 3) Quick start with `azd`
+
+### Prerequisites
+
+* **Azure CLI** and **Azure Developer CLI** installed and signed in (`azd auth login`)
+* A **resource group** in your target subscription
+* A **`.bicepparam` file** for parameter values (e.g., `infra/main.bicepparam`)
+
+### Steps to deploy
 
 ```bash
 # 1) Sign in
 azd auth login
 
-# 2) Initialize an environment (e.g., dev)
+# 2) Initialize an environment (example: dev)
 azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e dev
 
-# 3) Provision using your param file (recommended)
-azd provision --parameters @infra/dev.bicepparam
-# or if mapped in azure.yaml
+# 3) Deploy infrastructure (uses infra/main.bicep + infra/main.bicepparam from azure.yaml)
 azd provision
 ```
 
-**Supplying parameters**
+### Providing parameters
 
-* **Option A:** `azd provision --parameters @infra/dev.bicepparam`
-* **Option B:** Reference the file in `azure.yaml` → `infra.parameters.file`
-* **Option C:** Use `azd env set <name> <value>` for a small set of values
+* **Option A (recommended):** Reference your `.bicepparam` file directly in `azure.yaml`:
 
-> Keep secrets (PATs, admin passwords) **out** of `.bicepparam`. Inject them from your secure store or pipeline variables.
+  ```yaml
+  infra:
+    provider: bicep
+    path: infra
+    module: main
+    parameters:
+      file: infra/main.bicepparam
+  ```
 
----
+  Then simply run:
 
-## 3) Key parameters you will set frequently
+  ```bash
+  azd provision
+  ```
 
-* **Location, tags, names** — `location`, `tags`, `baseName` (a short unique prefix). The template derives resource names and uses a deterministic token when a global name is required.
-* **Create vs. reuse** — `resourceIds` block. Leave blank to **create**, or set a full **resource ID** to **reuse**.
-* **Deployment switches** — `deployToggles` block for each module.
-* **Network isolation** — `networkIsolation` and either `privateDnsZoneIds` (reuse) or `privateDnsZones` (create) for PDNS.
-* **AI Foundry** — `aiFoundryDefinition` controls account/project, optional model deployments, and dependencies (create vs. reuse) for Search, Cosmos DB, Storage, and Key Vault.
+* **Option B:** Use `azd env set <name> <value>` for small overrides.
 
----
+* **Option C:** Edit the `.env` file for your environment under `.azure/<env>/.env`.
 
-## 4) Resource‑by‑resource behavior and parameters
+> Keep secrets (PATs, admin passwords) **out of `.bicepparam`**. Use Key Vault or pipeline variables instead.
 
-### Virtual Network (spoke)
+## 4) Core parameters you will set often
 
-Creates (or reuses) a dedicated VNet with subnets for **Private Endpoints**, **Container Apps Environment**, optional **Application Gateway**, **Firewall**, **Bastion**, and **VMs**. Optional peering to a hub VNet.
-**Parameters:** `vnetDefinition` for address space and subnets; `resourceIds.virtualNetworkResourceId` to reuse; optional peering objects if your version includes them.
-
-### Private DNS & Private Endpoints
-
-With `networkIsolation = true`, the template adds PEs and wires **PDNS** for services that are present (created or reused). You can point to existing PDNS zones via `privateDnsZoneIds` (per‑service keys like `search`, `cosmosSql`, `blob`, `keyVault`, `containerApps`, `appConfig`, `acr`, `appInsights`, and for AI endpoints: `cognitiveservices`, `openai`, `aiServices`) or ask the template to create them via `privateDnsZones`.
-
-### Observability (Log Analytics + Application Insights)
-
-Deploys a **Log Analytics Workspace** (LAW) and an **Application Insights** instance. Insights can bind to a reused LAW.
-**Parameters:** `logAnalyticsDefinition`, `appInsightsDefinition`; reuse with `resourceIds.logAnalyticsWorkspaceResourceId` / `resourceIds.appInsightsResourceId`.
-
-### Container Apps Environment (CAE)
-
-Creates (or reuses) an **internal** CAE (ILB) with optional **workload profiles**; apps can be external or internal to the environment.
-**Parameters:** `containerAppEnvDefinition` (subnet, internal load balancer, zone redundancy, workload profiles, user‑assigned identities).
-
-### Container Apps (microservices)
-
-Deploys defined apps with images, scaling, and (optionally) Dapr sidecars.
-**Parameters:** `containerAppsList` entries (`app_id`, `profile_name`, `min_replicas`, `max_replicas`, `external`, image refs). Toggle with `deployToggles.containerApps`.
-
-### Azure Container Registry (ACR)
-
-Creates (or reuses) a private registry. With isolation, adds a PE and PDNS `privatelink.azurecr.io`.
-**Parameters:** `containerRegistryDefinition` (`name`, `sku`, tags) or reuse with `resourceIds.containerRegistryResourceId`.
-
-### Key Vault (app scope)
-
-Central secret store for the app and CI/CD. With isolation, adds a PE and PDNS `privatelink.vaultcore.azure.net`.
-**Parameters:** `keyVaultDefinition` (+ optional role assignments) or reuse with `resourceIds.keyVaultResourceId`.
-
-### Storage Account (app scope)
-
-Blob/file queues for app data. With isolation, PE for **blob** and PDNS `privatelink.blob.core.windows.net` (cloud suffix varies by cloud).
-**Parameters:** `storageAccountDefinition` or reuse with `resourceIds.storageAccountResourceId`.
-
-### Cosmos DB (app scope)
-
-Global database for chat state, metadata, or app data. With isolation, PE for **SQL** endpoint and PDNS `privatelink.documents.azure.com`.
-**Parameters:** `cosmosDbDefinition` or reuse with `resourceIds.dbAccountResourceId`.
-
-### Azure AI Search (app scope)
-
-Search/vector index for RAG. With isolation, PE and PDNS `privatelink.search.windows.net`.
-**Parameters:** `searchDefinition` (SKU, partitions/replicas, semantic search) or reuse with `resourceIds.searchServiceResourceId`.
-
-### App Configuration
-
-Centralized app settings. With isolation, PE and PDNS `privatelink.azconfig.io`.
-**Parameters:** `appConfigurationDefinition` or reuse with `resourceIds.appConfigResourceId`.
-
-### Azure AI Foundry — account, project, models
-
-**What it is:** Creates an **AI Foundry account** and a **project**. Optionally deploys **model deployments** and wires connections to **Storage**, **Key Vault**, **Cosmos DB**, and **AI Search**.
-
-**Choose one of these simple paths:**
-
-* **Project only (no Agent Service, no auto-deps):**
-
-  * Set `deployToggles.aiFoundry = true`.
-  * Set `aiFoundryDefinition.includeAssociatedResources = false`.
-  * Leave `aiFoundryDefinition.aiModelDeployments = []`.
-  * Do **not** set any agent/capability-host parameters.
-  * (Optional) Point to existing services with `existingResourceId` under each `*Configuration`.
-* **Full Foundry (project + models + deps):**
-
-  * `deployToggles.aiFoundry = true`.
-  * `aiFoundryDefinition.includeAssociatedResources = true` (auto-create Search/KV/Cosmos/Storage unless you provide `existingResourceId`).
-  * Fill `aiFoundryDefinition.aiModelDeployments` with entries: `name`, `model { format, name, version }`, and `scale { type, capacity }`.
-
-**Networking tips (when isolated):** Provide the project’s PE subnet resource ID and, if you are not using platform PDNS, the zone IDs for `cognitiveservices`, `openai`, and `services.ai` so endpoints resolve privately.
-
-**Example — Project only (no Agent Service / no auto-deps)**
-
-```bicepparam
-using './main.bicep'
-
-param deployToggles = {
-  aiFoundry: true
-}
-
-param aiFoundryDefinition = {
-  includeAssociatedResources: false
-  aiModelDeployments: []
-  // No agent/capability-host settings
-  storageAccountConfiguration: {
-    existingResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<name>'
-  }
-  keyVaultConfiguration: {
-    existingResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<name>'
-  }
-  cosmosDbConfiguration: {
-    existingResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DocumentDB/databaseAccounts/<name>'
-  }
-  aiSearchConfiguration: {
-    existingResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Search/searchServices/<name>'
-  }
-}
-```
-
-### Perimeter options (WAF Policy, Application Gateway, API Management, Firewall)
-
-* **WAF Policy** — independent policy resource that can be attached to App Gateway when both are enabled.
-* **Application Gateway** — L7 entry point; can be public or internal. Bind to Container Apps or APIM backends.
-* **API Management** — API governance surface; typically starts in non‑VNet mode unless you attach a subnet later.
-* **Azure Firewall** — optional network egress control; can be deployed with or without a Firewall Policy.
-  **Parameters:** `wafPolicyDefinition`, `appGatewayDefinition`, `apimDefinition`, `firewallDefinition` (+ optional `firewallPolicyDefinition`).
-
-### Optional VMs
-
-* **Build VM (Linux)** — can auto‑install an Azure DevOps agent or GitHub runner via cloud‑init.
-* **Jump VM (Windows)** — for Bastion‑based ops; admin password stored in a dedicated (bastion) Key Vault.
-  **Parameters:** `buildVmDefinition` (size, SSH key, runner details + PATs via secure params), `jumpVmDefinition` (size, admin username, secret name) and secure parameter `jumpVmAdminPassword`.
+* `location` — defaults to the resource-group location.
+* `tags` — key/value pairs applied to resources for identification, governance, and billing.
+* `flagPlatformLandingZone` — `true` to reuse platform PDNS and networking; `false` to let this deployment create PDNS/PE.
+* `baseName` — deterministic naming seed. If omitted, a stable 12-character token is generated and used as the base name.
+* `resourceIds` — object with existing resource IDs to **reuse** (VNet, LAW, App Insights, CAE, ACR, Cosmos, KV, Storage, Search, App Config, APIM, App Gateway, Bastion, Firewall, etc.).
+* `deployToggles` — per-service boolean switches that control whether each service is deployed.
+* `privateDnsZoneIds` / `privateDnsZones` — provide zone IDs to reuse, or let the template create zones and link them to your VNet.
+* `aiFoundryDefinition` — controls AI Foundry account/project, model deployments, associated resources, and networking:
+  * `agentServiceEnabled` — enables the AI agent service; if `false`, no capability hosts, agent-specific private DNS/PEs, or agent dependencies are created.
+  * `includeAssociatedResources` — when `true` AND `agentServiceEnabled` is `true`, auto‑creates Search, Key Vault, Cosmos DB, and Storage unless you set `existingResourceId` inside each `*Configuration`.
+  * `aiModelDeployments[]` — model entries (`name`, `model {format,name,version}`, `scale {type,capacity}`).
+  * `privateEndpointSubnetResourceId` — PE subnet for Foundry-associated resources when isolated.
 
 ---
 
-## 5) Minimal examples
+## 5) Resource-by-resource behavior & parameters
 
-### Everything created & isolated (excerpt)
+### 5.1 Virtual Network (spoke)
 
-````bicepparam
-using './main.bicep'
+Creates (or reuses) a VNet with subnets for **Private Endpoints**, **Container Apps Environment**, optional **Application Gateway**, **Firewall**, **Bastion**, **Jump VM**, and **Build VM**. Optional hub peering supported.
 
-param networkIsolation = true
+* **Parameters:**
 
-param resourceIds = {
-  virtualNetworkResourceId: ''
-  logAnalyticsWorkspaceResourceId: ''
-  appInsightsResourceId: ''
-  containerEnvResourceId: ''
-  containerRegistryResourceId: ''
-  dbAccountResourceId: ''
-  keyVaultResourceId: ''
-  storageAccountResourceId: ''
-  searchServiceResourceId: ''
-  appConfigResourceId: ''
-  apimServiceResourceId: ''
-  applicationGatewayResourceId: ''
-  firewallResourceId: ''
-  bastionHostResourceId: ''
-  groundingServiceResourceId: ''
-}
+  * `vnetDefinition` — address space, DNS servers, subnets, optional peering (`vnetPeeringConfiguration` or `vwanHubPeeringConfiguration`).
+  * Reuse with `resourceIds.virtualNetworkResourceId`.
 
-param deployToggles = {
-  virtualNetwork: true
-  logAnalytics: true
-  appInsights: true
-  containerEnv: true
-  containerApps: true
-  containerRegistry: true
-  cosmosDb: true
-  keyVault: true
-  storageAccount: true
-  searchService: true
-  appConfig: true
-  apiManagement: true
-  applicationGateway: true
-  wafPolicy: true
-  firewall: true
-  buildVm: true
-  jumpVm: true
-  aiFoundry: true
-}
-```bicepparam
-using './main.bicep'
+### 5.2 Private DNS & Private Endpoints
 
-param networkIsolation = true
+The template creates Private Endpoints for deployed services and links appropriate PDNS zones.
 
-param resourceIds = {
-  virtualNetworkResourceId: ''
-  logAnalyticsWorkspaceResourceId: ''
-  appInsightsResourceId: ''
-  containerEnvResourceId: ''
-  containerRegistryResourceId: ''
-  dbAccountResourceId: ''
-  keyVaultResourceId: ''
-  storageAccountResourceId: ''
-  searchServiceResourceId: ''
-  appConfigResourceId: ''
-  apimServiceResourceId: ''
-  applicationGatewayResourceId: ''
-  firewallResourceId: ''
-  bastionHostResourceId: ''
-  groundingServiceResourceId: ''
-}
+* **Reuse PDNS** via `privateDnsZoneIds` (keys: `cognitiveservices`, `openai`, `aiServices`, `search`, `cosmosSql`, `blob`, `keyVault`, `appConfig`, `containerApps`, `acr`, `appInsights`).
+* **Create PDNS** via `privateDnsZones` when in standalone mode.
 
-param deployToggles = {
-  virtualNetwork: true
-  logAnalytics: true
-  appInsights: true
-  containerEnv: true
-  containerApps: true
-  containerRegistry: true
-  cosmosDb: true
-  keyVault: true
-  storageAccount: true
-  searchService: true
-  appConfig: true
-  apiManagement: false
-  applicationGateway: false
-  wafPolicy: false
-  firewall: false
-  buildVm: false
-  jumpVm: false
-  aiFoundry: true
-}
-````
+### 5.3 Observability (Log Analytics + Application Insights)
 
-### Reuse a VNet, LAW/Insights, and ACR (excerpt)
+Deploys a **Log Analytics Workspace** and **Application Insights** unless you reuse existing ones. App Insights binds to the LAW.
 
-```bicepparam
-param resourceIds = {
-  virtualNetworkResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>'
-  logAnalyticsWorkspaceResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<law>'
-  appInsightsResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Insights/components/<appi>'
-  containerRegistryResourceId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerRegistry/registries/<acr>'
-}
+* **Parameters:**
 
-param deployToggles = {
-  virtualNetwork: false   // reusing VNet
-  logAnalytics: false     // reusing LAW
-  appInsights: false      // reusing App Insights
-  containerRegistry: false
-}
+  * `logAnalyticsDefinition`, `appInsightsDefinition`
+  * Reuse with `resourceIds.logAnalyticsWorkspaceResourceId` / `resourceIds.appInsightsResourceId`.
 
-param privateDnsZoneIds = {
-  search: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.search.windows.net'
-  cosmosSql: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com'
-  blob: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net'
-  keyVault: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net'
-  containerApps: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.<region>.azurecontainerapps.io'
-  appConfig: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azconfig.io'
-  acr: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io'
-  appInsights: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.applicationinsights.azure.com'
-  cognitiveservices: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com'
-  openai: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com'
-  aiServices: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com'
-}
-```
+### 5.4 Container Apps Environment (CAE)
 
----
+Creates (or reuses) an **internal** CAE (ILB) with optional **workload profiles**; apps can be external or internal.
 
-## 6) Gotchas & Pro Tips
+* **Parameters:**
 
-* **App Insights requires LAW.** If `deployToggles.appInsights = true` and you reuse LAW, the module binds to it.
-* **PDNS is demand‑driven.** Zones are created only for services present and not supplied via `privateDnsZoneIds`.
-* **Platform LZ integration.** If your platform team manages PDNS/PE, use the provided flag (if present) and pass existing PDNS zone IDs to avoid duplicating zones/links.
-* **CAE is internal by default.** Expose apps via Application Gateway or adjust ingress as needed.
-* **Outputs.** After deployment, inspect outputs for IDs, names, and endpoints to wire into CI/CD and app configuration.
+  * `containerAppEnvDefinition` — subnet, ILB, zone redundancy, workload profiles, identities.
+  * Reuse with `resourceIds.containerEnvResourceId`.
 
----
+### 5.5 Container Apps (microservices)
 
-## 7) Naming & resource groups
+Deploy apps with images, scaling, Dapr sidecars, and optional external ingress.
 
-Use `baseName` to drive consistent resource names. For resource groups, a concise scheme like `rg-<workload>-<env>` works well (e.g., `rg-ailz-dev`). Ensure global‑name resources (Storage, ACR) still meet naming rules.
+* **Parameters:**
 
----
+  * `containerAppsList` entries: `app_id`, `profile_name`, `min_replicas`, `max_replicas`, `external`, image ref(s).
+  * Toggle with `deployToggles.containerApps`.
 
-## 8) Using the AVM module in your repo
+### 5.6 Azure Container Registry (ACR)
 
-You can keep your infra repo and call this landing zone as an AVM Pattern module.
+Creates (or reuses) a private ACR. In isolated mode, adds a PE and `privatelink.azurecr.io` PDNS.
 
-**`main.bicep` (minimal example)**
+* **Parameters:**
 
-```bicep
-targetScope = 'resourceGroup'
-param location string = resourceGroup().location
-param baseName string
-param networkIsolation bool = true
+  * `containerRegistryDefinition` (`name`, `sku`, `tags`)
+  * Reuse with `resourceIds.containerRegistryResourceId`.
 
-module aiLandingZone 'br/public:avm/ptn/ai-ml/ai-landing-zone:<version>' = {
-  name: 'ai-landing-zone'
-  params: {
-    location: location
-    baseName: baseName
-    networkIsolation: networkIsolation
-    resourceIds: { /* leave blank to create; set IDs to reuse */ }
-    deployToggles: { /* turn modules on/off as needed */ }
-  }
-}
-```
+### 5.7 Key Vault (app scope)
 
-**`infra/dev.bicepparam`**
+Central secret store for the app and CI/CD. In isolated mode, adds a PE and `privatelink.vaultcore.azure.net`.
 
-```bicepparam
-using './main.bicep'
-param baseName = 'ailz-dev'
-param networkIsolation = true
-```
+* **Parameters:**
 
-**`azure.yaml`**
+  * `keyVaultDefinition` (+ optional `roleAssignments`)
+  * Reuse with `resourceIds.keyVaultResourceId`.
 
-```yaml
-name: ailz-dev
-infra:
-  provider: bicep
-  path: ./main.bicep
-  parameters:
-    file: ./infra/dev.bicepparam
-```
+### 5.8 Storage Account (app scope)
 
-**Provision**
+Blob/file/queue for app data. In isolated mode, PE for **blob** and `privatelink.blob.core.windows.net` PDNS (cloud suffix varies).
 
-```bash
-azd auth login
-azd init -e dev
-azd provision
-```
+* **Parameters:**
+
+  * `storageAccountDefinition`
+  * Reuse with `resourceIds.storageAccountResourceId`.
+
+### 5.9 Cosmos DB (app scope)
+
+Global database for chat state, metadata, or app data. In isolated mode, PE for **SQL** and `privatelink.documents.azure.com` PDNS.
+
+* **Parameters:**
+
+  * `cosmosDbDefinition`
+  * Reuse with `resourceIds.dbAccountResourceId`.
+
+### 5.10 Azure AI Search (app scope)
+
+Search/vector index for RAG. In isolated mode, PE + `privatelink.search.windows.net` PDNS.
+
+* **Parameters:**
+
+  * `searchDefinition` (SKU, partitions/replicas, semantic search)
+  * Reuse with `resourceIds.searchServiceResourceId`.
+
+### 5.11 App Configuration
+
+Centralized app settings. In isolated mode, PE + `privatelink.azconfig.io` PDNS.
+
+* **Parameters:**
+
+  * `appConfigurationDefinition`
+  * Reuse with `resourceIds.appConfigResourceId`.
+
+### 5.12 Azure AI Foundry — Account, Project, and Models
+
+This section provisions an **AI Foundry account** and **project**, optionally deploys **model instances**, and connects to supporting services such as **Storage**, **Key Vault**, **Cosmos DB**, and **AI Search**.
+
+#### Deployment Paths
+
+Choose one of the following approaches:
+
+1. **Complete Setup (Project + Agent Service + Models + Resources)**
+
+   * Set `aiFoundryDefinition.createCapabilityHosts = true`
+   * Set `aiFoundryDefinition.includeAssociatedResources = true`
+   * Provide `aiModelDeployments[]` entries with:
+
+     * `name`
+     * `model { format, name, version }`
+     * `scale { type, capacity }`
+   * For Search, Cosmos DB, Storage, and Key Vault you may **customize their configuration** (e.g., name, SKU) or **reuse existing resources** by supplying `*Configuration.existingResourceId`.
+
+2. **Minimal Setup (Project Only)**
+
+   * Set `aiFoundryDefinition.createCapabilityHosts = false`
+   * Set `aiFoundryDefinition.includeAssociatedResources = false`
+
+> [!NOTE]
+> `includeAssociatedResources` is only effective when `aiFoundryDefinition.createCapabilityHosts = true`. If `createCapabilityHosts = false`, no associated resources are deployed even if `includeAssociatedResources = true`.
+
+### AI Foundry Networking
+
+The **AI Foundry Agent Service** requires a runtime subnet for agent hosts, a private endpoints subnet (for Search, Cosmos DB, Key Vault, and Storage), and Private DNS zones for the corresponding `privatelink.*` domains.
+
+Depending on your scenario, the networking setup works in two ways:
+
+* **Standalone mode (`flagPlatformLandingZone = false`)** automatically uses `agent-subnet` in your VNet for the agent hosts. The private endpoints subnet defaults to `pe-subnet`, but you can override this with `aiFoundryDefinition.privateEndpointSubnetResourceId`. Private DNS zones are created and linked to your VNet automatically, unless you supply existing zone IDs.
+
+* **Platform-integrated mode (`flagPlatformLandingZone = true`)** expects you to provide the subnet IDs. The agent hosts subnet must be specified via `aiFoundryDefinition.aiFoundryConfiguration.networking.agentServiceSubnetResourceId`, and the private endpoints subnet via `aiFoundryDefinition.privateEndpointSubnetResourceId`. In this case, all Private DNS zones must also be provided in `privateDnsZoneIds` (for example: `cognitiveservices`, `openai`, `aiServices`, `search`, `cosmosSql`, `blob`, `keyVault`, …) and linked by your platform landing zone.
+
+> See **`examples.md`** for sample configurations in both modes.
+
+### 5.13 Perimeter options (WAF Policy, Application Gateway, API Management, Firewall)
+
+* **WAF Policy** — standalone policy that can attach to App Gateway.
+* **Application Gateway** — L7 entry point, can be public and/or internal, bind to Container Apps or APIM.
+* **API Management** — Central place for API gateway + governance (products, policies, auth).
+* **Azure Firewall** — optional egress control, can be deployed with or without **Firewall Policy**.
+* **Parameters:**
+
+  * `wafPolicyDefinition`, `appGatewayDefinition`, `apimDefinition`, `firewallDefinition`, `firewallPolicyDefinition`.
+
+### 5.14 Optional VMs
+
+* **Build VM (Linux)** — can automatically configure an Azure DevOps agent or GitHub runner via cloud-init.
+* **Jump VM (Windows)** — Bastion-accessed admin host; password seeded into a dedicated Key Vault for operators.
+* **Parameters:**
+
+  * `buildVmDefinition` (size, SSH key, runner details; PATs via secure params)
+  * `jumpVmDefinition` (size, admin username, `vmKeyVaultSecName`) and secure `jumpVmAdminPassword`.
 
 ---
 
-## 9) What gets deployed (at a glance)
+## 6) Examples
 
-Depending on your toggles and reuse choices, the deployment can include:
+All deployment examples are in **[examples.md](./examples.md)**, including greenfield vs. reuse, Foundry variants (with/without Agent Service), perimeter configurations (AGW/WAF/APIM/Firewall), CAE/Container Apps, PDNS reuse/create, and “use this as an AVM module” samples.
 
-* **Core app platform:** VNet (spoke), CAE (internal), Container Apps, ACR
-* **Data & config:** Storage, Key Vault, Cosmos DB, App Configuration, Azure AI Search
-* **Observability:** Log Analytics + Application Insights
-* **AI layer:** Azure AI Foundry (account, project, optional model deployments & connections)
-* **Perimeter (optional):** WAF Policy, Application Gateway, API Management, Azure Firewall
-* **Operations (optional):** Build VM (Linux) and Jump VM (Windows via Bastion)
+---
 
-> Review your `resourceIds` and `deployToggles` to tailor the footprint precisely for **create** vs. **reuse** scenarios.
+## 7) Things to Know
+
+1. **Platform LZ vs. Standalone:** If `flagPlatformLandingZone = true`, you must supply PDNS zone IDs in `privateDnsZoneIds`; this deployment will not create them.
+2. **Observability coupling:** App Insights requires a LAW. If you reuse an existing LAW, App Insights uses that ID and skips creating a new workspace.
+3. **CAE diagnostics:** When `containerAppEnvDefinition.enableDiagnosticSettings = true`, the CAE expects LAW credentials; the template wires them automatically for created LAW or references existing.
+4. **Build VM guard:** The Build VM is deployed **only when** `buildVmDefinition.sshPublicKey` is set.
+5. **Jump VM guard:** The Jump VM is deployed **only when** `jumpVmAdminPassword` is provided and you are **not** in platform LZ mode.
+6. **ACR/Storage naming:** Both are global and have naming constraints. If you don’t set names, the template derives valid names from `baseName`.
+7. **App Gateway frontends:** The template provisions a **private** frontend and, optionally, a **public** frontend when `appGatewayDefinition.createPublicFrontend = true`.
+
+---
+
+## 8) Naming & resource groups
+
+* **Deterministic naming:** If you leave names blank, the template uses a stable `resourceToken` (derived from subscription, RG, and location) to build compliant names across resources.
+* **Resource groups:** A concise pattern like `rg-<workload>-<env>` works well (e.g., `rg-ailz-dev`).
+* **Global name resources:** Storage and ACR require globally unique names, letting the template derive them from `baseName` is usually simplest.
+
+---
+
+## 9) Using this AVM Pattern from your own Bicep
+
+You can reference this Landing Zone as an **AVM Pattern** module from your own repo. Ready-to-copy samples (module call, `.bicepparam`, and `azure.yaml`) are in **[examples.md](./examples.md)** under *Use the pattern as an AVM module in your own bicep*.

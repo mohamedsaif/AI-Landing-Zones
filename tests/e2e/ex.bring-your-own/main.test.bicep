@@ -16,11 +16,13 @@ param serviceShort string = 'lzbyo'
 param namePrefix string = '#_namePrefix_#'
 
 // 12 chars to match baseName usage
-var workloadName = take(padLeft('${namePrefix}${serviceShort}', 12), 12)
+var _seed = toLower('${namePrefix}${serviceShort}')
+var workloadName = take(replace(replace(replace(replace(_seed, ' ', ''), '-', ''), '_', ''), '.', ''), 12)
 
 // Dependencies RG
+var _depRgRaw = 'dep-${namePrefix}-bicep-${serviceShort}-dependencies-rg'
 resource dependenciesResourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
-  name: 'dep-${namePrefix}-bicep-${serviceShort}-dependencies-rg'
+  name: take(_depRgRaw, 90)
   location: enforcedLocation
 }
 
@@ -42,7 +44,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
 
 // Test execution (idempotency)
 @batchSize(1)
-module testDeployment '../../../main.bicep' = [
+module testDeployment '../../../infra/main.bicep' = [
   for iteration in ['init', 'idem']: {
     scope: resourceGroup
     name: '${uniqueString(deployment().name, enforcedLocation)}-test-${serviceShort}-${iteration}'
@@ -59,6 +61,10 @@ module testDeployment '../../../main.bicep' = [
 
         // have AF wire deps
         includeAssociatedResources: true
+
+        aiFoundryConfiguration: {
+          createCapabilityHosts: true
+        }  
 
         // required config objects (BYO for these three)
         aiSearchConfiguration: {

@@ -2,7 +2,10 @@
 name: azure-ai-landing-zone
 metadata:
   template: azure-ai-landing-zone
+
 infra:
   provider: bicep
-  path: .
+  path: infra
   module: main
+  parameters:
+    file: infra/main.bicepparam

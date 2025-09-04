@@ -165,7 +165,6 @@ param vnetDefinition types.VNetDefinitionType = {
       addressPrefix: '192.168.4.96/27'
     }
   ]
-  // Uncomment ONE of the peering blocks if you need it.
 
   // vnetPeeringConfiguration: {
   //   peerVnetResourceId: ''
@@ -339,7 +338,6 @@ param privateDnsZones types.PrivateDnsZoneDefinitionsType = {
   ]
 }
 
-
 // 1.5.13 AI Foundry
 
 @description('Optional.  AI Foundry project configuration (account/project, networking, associated resources, and deployments).')
@@ -349,7 +347,6 @@ var _afDefaults = {
   baseUniqueName: ''
   location: location
   enableTelemetry: enableTelemetry
-  agentServiceEnabled: true
   aiProjects: []
   aiModelDeployments: [
     {
@@ -407,108 +404,6 @@ var _afDefaults = {
 }
 
 var _afParam = union(_afDefaults, aiFoundryDefinition ?? {})
-
-// param aiFoundryDefinition types.AiFoundryDefinitionType = {
-//   // Basic resource identity/defaults
-//   baseUniqueName: ''
-//   location: location
-//   enableTelemetry: enableTelemetry
-//   agentServiceEnabled: true
-
-//   aiProjects: []
-
-//   aiModelDeployments: [
-//     {
-//       name: 'chat'
-//       raiPolicyName: ''
-//       versionUpgradeOption: ''
-//       model: {
-//         format: 'OpenAI'
-//         name: 'gpt-4o'
-//         version: '2024-11-20'
-//       }
-//       scale: {
-//         capacity: 1
-//         family: ''
-//         size: ''
-//         tier: ''
-//         type: 'Standard'
-//       }
-//     }
-//     {
-//       name: 'text-embedding'
-//       raiPolicyName: ''
-//       versionUpgradeOption: ''
-//       model: {
-//         format: 'OpenAI'
-//         name: 'text-embedding-3-large'
-//         version: '1'
-//       }
-//       scale: {
-//         capacity: 1
-//         family: ''
-//         size: ''
-//         tier: ''
-//         type: 'Standard'
-//       }
-//     }
-//   ]
-
-//   lock: {
-//     kind: 'None'
-//     name: ''
-//   }
-//   includeAssociatedResources: true
-//   privateEndpointSubnetResourceId: ''
-
-//   aiFoundryConfiguration: {
-//     accountName: ''
-//     location: location
-//     sku: 'S0'
-//   createCapabilityHosts: false
-//     allowProjectManagement: true
-//     networking: {
-//       agentServiceSubnetResourceId: ''
-//       cognitiveServicesPrivateDnsZoneResourceId: ''
-//       openAiPrivateDnsZoneResourceId: ''
-//       aiServicesPrivateDnsZoneResourceId: ''
-//     }
-//     project: {
-//       name: ''
-//       displayName: ''
-//       desc: 'This is the default project for AI Foundry.'
-//     }
-//     roleAssignments: []
-//   }
-
-//   aiSearchConfiguration: {
-//     existingResourceId: ''
-//     name: 'srch-${baseName}-af'
-//     privateDnsZoneResourceId: ''
-//     roleAssignments: []
-//   }
-
-//   keyVaultConfiguration: {
-//     existingResourceId: ''
-//     name: 'kv-${baseName}-af'  
-//     privateDnsZoneResourceId: ''
-//     roleAssignments: []
-//   }
-
-//   storageAccountConfiguration: {
-//     existingResourceId: ''
-//     name: 'st${baseName}af'     
-//     blobPrivateDnsZoneResourceId: ''
-//     roleAssignments: []
-//   }
-
-//   cosmosDbConfiguration: {
-//     existingResourceId: ''
-//     name: 'cos${baseName}af'  
-//     privateDnsZoneResourceId: ''
-//     roleAssignments: []
-//   }
-// }
 
 // 1.5.14 WAF Policy
 @description('Conditional.  Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed).')
@@ -803,8 +698,9 @@ module jumpVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployJu
     ]
   }
   dependsOn: [
-    virtualNetwork! 
-  ]  
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+  ]
 }
 
 // Normalize entire build VM object so nested props always exist at runtime
@@ -877,7 +773,10 @@ module buildVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployB
 
     customData: base64(_buildCloudInit)
   }
-  dependsOn: [ virtualNetwork! ]
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+  ]
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -919,9 +818,7 @@ var _waf  = '${_abbrs.networking.webApplicationFirewallPolicy}-'
 var _afBaseUniqueName = contains(_afParam!, 'baseUniqueName') && !empty(_afParam!.baseUniqueName!) ? _afParam.baseUniqueName!  : ''
 var _afLocation = contains(_afParam, 'location') && !empty(_afParam.location!) ? _afParam.location! : location 
 var _afConfigObj = contains(_afParam, 'aiFoundryConfiguration') ? _afParam.aiFoundryConfiguration! : {}
-var _afAgentSvcEnabled = contains(_afParam, 'agentServiceEnabled')
-  ? (_afParam.agentServiceEnabled! ?? true)
-  : true
+var _afAgentSvcEnabled = bool((_afConfigObj.?createCapabilityHosts ?? false))
 var _afPeSubnetParam = contains(_afParam, 'privateEndpointSubnetResourceId') && !empty(_afParam.privateEndpointSubnetResourceId!)
   ? _afParam.privateEndpointSubnetResourceId!  : ''
 var _afSearchCfg     = contains(_afParam, 'aiSearchConfiguration')     ? _afParam.aiSearchConfiguration!     : {}
@@ -1117,7 +1014,7 @@ var _hasLogAnalytics = (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) || 
 var _deployAppInsights = empty(resourceIds.appInsightsResourceId) && deployToggles.appInsights && _hasLogAnalytics
 var _hasAppInsights = (!empty(resourceIds.appInsightsResourceId)) || (_deployAppInsights)
 
-// “has” reflects presence (existing or will be created here) for GenAI-app stack
+// "has" reflects presence (existing or will be created here) for GenAI-app stack
 var _hasStorage = (!empty(resourceIds.storageAccountResourceId)) || (_deploySa)
 var _hasCosmos = (!empty(resourceIds.dbAccountResourceId)) || (_deployCosmos)
 var _hasSearch = (!empty(resourceIds.searchServiceResourceId)) || (_deploySearch)
@@ -1132,7 +1029,6 @@ var _agwSubnetId = empty(resourceIds.virtualNetworkResourceId)
   ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agwSubnetName)
   : '${existingVNet.id}/subnets/${_agwSubnetName}'
 
-// Removed AFW subnet variable as it's not used directly by modules
 
 // ──────────────────────────────────────────────────────────────────────
 // 3.3 Private DNS Zones (create when isolated AND per-zone ID not provided)
@@ -1514,7 +1410,8 @@ module privateEndpointAcr 'br/public:avm/res/network/private-endpoint:0.11.0' = 
     }
   }
   dependsOn: [
-    registry!  
+    #disable-next-line BCP321
+    (_deployAcr) ? registry : null
   ]
 }
 
@@ -1625,11 +1522,14 @@ module privateEndpointSearch 'br/public:avm/res/network/private-endpoint:0.11.0'
     }
   }
   dependsOn: [
-    searchService!    
-    virtualNetwork!      
-    privateDnsZoneSearch!  
-  ]  
-}
+    #disable-next-line BCP321
+    (empty(resourceIds.searchServiceResourceId)) ? searchService : null
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+    #disable-next-line BCP321
+    (_deployPdnsAndPe && !_useExistingPdz.search && _needSearchPdns) ? privateDnsZoneSearch : null
+  ]
+  }
 
 // Key Vault (GenAI)
 module privateEndpointKeyVault 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasKv) {
@@ -1757,8 +1657,9 @@ module appInsights 'br/public:avm/res/insights/component:0.6.0' = if (_deployApp
     enableTelemetry: enableTelemetry
   }
   dependsOn: [
-    logAnalytics!
-  ]  
+    #disable-next-line BCP321
+    (empty(resourceIds.logAnalyticsWorkspaceResourceId)) ? logAnalytics : null
+  ]
 }
 
 // ─────────────────────────────────────────────────────────────────────-
@@ -1825,11 +1726,12 @@ module containerEnv 'br/public:avm/res/app/managed-environment:0.11.3' = if (_de
     workloadProfiles: containerAppEnvDefinition.workloadProfiles    
   }
   dependsOn: [
-    virtualNetwork!
-    logAnalytics!
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+    #disable-next-line BCP321
+    (empty(resourceIds.logAnalyticsWorkspaceResourceId)) ? logAnalytics : null
   ]  
 }
-
 
 // ─────────────────────────────────────────────────────────────────────-
 // 3.8 Container Apps
@@ -1894,9 +1796,12 @@ module containerApps 'br/public:avm/res/app/container-app:0.18.1' = [
       })
     }
     dependsOn: [
-      containerEnv!
-      privateDnsZoneContainerApps
-      privateEndpointContainerAppsEnv
+      #disable-next-line BCP321
+      (empty(resourceIds.containerEnvResourceId)) ? containerEnv : null
+      #disable-next-line BCP321
+      (_deployPdnsAndPe && !_useExistingPdz.containerApps && _hasContainerEnv) ? privateDnsZoneContainerApps : null
+      #disable-next-line BCP321
+      (_deployPdnsAndPe && _hasContainerEnv) ? privateEndpointContainerAppsEnv : null
     ]
   }
 ]
@@ -2094,9 +1999,6 @@ var _afModelDeployments = [
   )
 ]
 
-// // Build model deployment array from _afParam (keep the existing _afModelEntries/_afModelDeployments)
-// var _afBaseName = substring(resourceToken, 0, 12)
-
 // Let the AVM module create its associated resources (Search/Cosmos/Storage/KV)
 // If Agent Service is disabled, force no AF-associated deps
 var _afWantsDeps = _afAgentSvcEnabled && (_afParam.includeAssociatedResources! ?? true)
@@ -2166,6 +2068,7 @@ var _afBlobPdzBinding = !flagPlatformLandingZone
 
 
 // module aiFoundry 'br/public:avm/ptn/ai-ml/ai-foundry:0.3.0' = {
+// Note: temporarily using custom module to avoid deployment scripts creation by AI Foundry AVM Module
 module aiFoundry 'ai-foundry/main.bicep' = {
   name: 'aiFoundryDeployment'
   params: {
@@ -2184,9 +2087,7 @@ module aiFoundry 'ai-foundry/main.bicep' = {
     // Core networking (PDNS for AI services domain families)
     // Force createCapabilityHosts=false when Agent Service is disabled
     aiFoundryConfiguration: union(_afConfigObj, _afNetworkingConfig, {
-      createCapabilityHosts: _afAgentSvcEnabled && bool((_afConfigObj.?createCapabilityHosts ?? false))
-        ? true
-        : false
+      createCapabilityHosts: _afAgentSvcEnabled
     })
 
     // Ask AVM to create AF-associated resources (Search/Cosmos/Storage/KV)
@@ -2226,12 +2127,18 @@ module aiFoundry 'ai-foundry/main.bicep' = {
     tags: tags
   }
   dependsOn: [
-    searchService!
-    virtualNetwork!
-    privateDnsZoneSearch!   
-    privateDnsZoneCogSvcs!  
-    privateDnsZoneOpenAi!  
-    privateDnsZoneAiService! 
+    #disable-next-line BCP321
+    (empty(resourceIds.searchServiceResourceId)) ? searchService : null
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+    #disable-next-line BCP321
+    (_deployPdnsAndPe && !_useExistingPdz.search && _needSearchPdns) ? privateDnsZoneSearch : null
+    #disable-next-line BCP321
+    (_deployPdnsAndPe && !_useExistingPdz.cognitiveservices) ? privateDnsZoneCogSvcs : null
+    #disable-next-line BCP321
+    (_deployPdnsAndPe && !_useExistingPdz.openai) ? privateDnsZoneOpenAi : null
+    #disable-next-line BCP321
+    (_deployPdnsAndPe && !_useExistingPdz.aiServices) ? privateDnsZoneAiService : null
   ]
 }
 
@@ -2347,9 +2254,12 @@ module applicationGateway 'br/public:avm/res/network/application-gateway:0.7.1' 
     ]
   }
   dependsOn: [
-    wafPolicy!
-    appGatewayPip!
-    virtualNetwork!
+    #disable-next-line BCP321
+    (_deployWafPolicy) ? wafPolicy : null
+    #disable-next-line BCP321
+    (_agwCreatePublicFrontend) ? appGatewayPip : null
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
   ]
 }
 
@@ -2474,19 +2384,16 @@ module apim 'br/public:avm/res/api-management/service:0.9.1' = if (_deployApim) 
     publisherEmail: apimDefinition.publisherEmail
     publisherName: apimDefinition.publisherName
 
-    // Non-VNet posture by omission (don't pass subnetResourceId)
-    // virtualNetworkType param isn't exposed by AVM; default is None when no subnet is supplied.
-
     // Enable HTTP/2 via customProperties (string "true"/"false")
     customProperties: apimDefinition.protocols != null && apimDefinition.protocols.enableHttp2
       ? { 'Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2': 'true' }
       : {}
 
     enableTelemetry: enableTelemetry
-    // Optional (only if you want them):
+    // Optional:
     // minApiVersion: apimDefinition.minApiVersion
     // notificationSenderEmail: apimDefinition.notificationSenderEmail
-    // hostnameConfigurations: apimDefinition.hostnameConfiguration  // <- make sure this is PLURAL in your object
+    // hostnameConfigurations: apimDefinition.hostnameConfiguration 
     // additionalLocations: apimDefinition.additionalLocations
   }
 }
@@ -2563,9 +2470,9 @@ module hubReversePeering 'br/public:avm/res/network/virtual-network:0.7.0' = if 
       }
     ]
   }
-  // ensure the spoke VNet id exists first if you're creating it here
   dependsOn: [
-    virtualNetwork!
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
   ]
 }
 
@@ -2645,8 +2552,3 @@ output firewallResourceId string = _deployFirewall
 
 // WAF Policy
 output wafPolicyResourceId string = _deployAppGateway ? _wafPolicyResourceId : ''
-
-// Container Apps
-// output containerAppResourceIds array = _deployContainerApps
-//   ? [for (app, i) in containerAppsList: containerApps[i].outputs.resourceId]
-//   : []

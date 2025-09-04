@@ -16,7 +16,8 @@ param serviceShort string = 'lzdef'
 param namePrefix string = '#_namePrefix_#'
 
 // Keep 12 chars to match baseName default constraints
-var workloadName = take(padLeft('${namePrefix}${serviceShort}', 12), 12)
+var _seed = toLower('${namePrefix}${serviceShort}')
+var workloadName = take(replace(replace(replace(replace(_seed, ' ', ''), '-', ''), '_', ''), '.', ''), 12)
 
 // RG for test
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
@@ -26,7 +27,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
 
 // Test execution (idempotency: init + idem)
 @batchSize(1)
-module testDeployment '../../../main.bicep' = [
+module testDeployment '../../../infra/main.bicep' = [
   for iteration in ['init', 'idem']: {
     scope: resourceGroup
     name: '${uniqueString(deployment().name, enforcedLocation)}-test-${serviceShort}-${iteration}'
@@ -35,10 +36,13 @@ module testDeployment '../../../main.bicep' = [
       baseName: workloadName
 
       // Minimal model to keep capacity small and deterministic
-      aiFoundryDefinition: {
+      aiFoundryDefinition: {   
         lock: { kind: 'None', name: '' }
         aiProjects: []
         includeAssociatedResources: true
+        aiFoundryConfiguration: {
+          createCapabilityHosts: true
+        }     
         aiSearchConfiguration: {}
         storageAccountConfiguration: {}
         cosmosDbConfiguration: {}

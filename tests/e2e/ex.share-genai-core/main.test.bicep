@@ -16,7 +16,8 @@ param serviceShort string = 'lzshare'
 param namePrefix string = '#_namePrefix_#'
 
 // 12 chars to match baseName usage
-var workloadName = take(padLeft('${namePrefix}${serviceShort}', 12), 12)
+var _seed = toLower('${namePrefix}${serviceShort}')
+var workloadName = take(replace(replace(replace(replace(_seed, ' ', ''), '-', ''), '_', ''), '.', ''), 12)
 
 // Test RG
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
@@ -26,7 +27,7 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
 
 // Test execution (idempotency)
 @batchSize(1)
-module testDeployment '../../../main.bicep' = [
+module testDeployment '../../../infra/main.bicep' = [
   for iteration in ['init', 'idem']: {
     scope: resourceGroup
     name: '${uniqueString(deployment().name, enforcedLocation)}-test-${serviceShort}-${iteration}'
@@ -37,6 +38,9 @@ module testDeployment '../../../main.bicep' = [
         lock: { kind: 'None', name: '' }
         aiProjects: []
         includeAssociatedResources: true // Foundry will create its own Search/Cosmos/KV/Storage
+        aiFoundryConfiguration: {
+          createCapabilityHosts: true
+        }  
         aiSearchConfiguration: {}
         storageAccountConfiguration: {}
         cosmosDbConfiguration: {}

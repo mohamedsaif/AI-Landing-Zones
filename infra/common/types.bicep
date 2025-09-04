@@ -746,24 +746,8 @@ type AiFoundryConfigurationType = {
   location: string?
   @description('Optional. Account SKU.')
   sku: (
-    | 'C2'
-    | 'C3'
-    | 'C4'
     | 'F0'
-    | 'F1'
-    | 'S'
-    | 'S0'
-    | 'S1'
-    | 'S2'
-    | 'S3'
-    | 'S4'
-    | 'S5'
-    | 'S6'
-    | 'S7'
-    | 'S8'
-    | 'S9'
-    | 'S10'
-    | 'DC0')?
+    | 'S0')?
   @description('Optional. Create capability hosts (data plane services).')
   createCapabilityHosts: bool?
   @description('Optional. Allow project management operations.')
@@ -826,9 +810,6 @@ type AiFoundryDefinitionType = {
 
   @description('Optional. Enable telemetry for the pattern modules.')
   enableTelemetry: bool?
-
-  @description('Optional. Toggle the AI Foundry Agent Service. When false, capability hosts and AF-associated resources are not created by this template.')
-  agentServiceEnabled: bool?
 
   @description('Optional. Create BYOR (bring-your-own resource) links where applicable.')
   createByor: bool?
