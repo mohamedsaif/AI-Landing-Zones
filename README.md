@@ -1,6 +1,6 @@
-# AI Landing Zone Architecture — Bicep Implementation
+# AI Landing Zone (Bicep AVM Pattern)
 
-This repository contains the **Bicep code** for the **AI Landing Zone Architecture**, published as an [**Azure Verified Module (AVM) Pattern**](https://aka.ms). It provides a landing zone tailored for **generative AI application workloads**, automating deployment of a secure and configurable environment on Azure.
+This repository contains the **Bicep code** for the **AI Landing Zone Architecture**, published as an [**Azure Verified Module (AVM) Pattern**](https://aka.ms/avm). It provides a landing zone tailored for **generative AI application workloads**, automating deployment of a secure and configurable environment on Azure.
 
 ## Architecture
 
@@ -19,4 +19,4 @@ When network isolation is enabled, traffic is routed only through Private Endpoi
   Step-by-step instructions on creating or reusing resources, setting up isolation, and configuring parameters. Includes a minimal example and notes on running `azd provision` (make sure the CLI is installed and logged in before you start).
 
 * [**Parameter reference.**](./docs/parameters.md)
-  Full list of parameters and objects, aligned with the strongly-typed contracts defined in `common/types.bicep`.
+  Full list of parameters and objects, aligned with the strongly-typed contracts defined in `types.bicep`.
