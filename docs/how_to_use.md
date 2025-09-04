@@ -66,14 +66,22 @@ Use `deployToggles` to enable or skip each service (reusing via `resourceIds` st
 
 ### Steps to deploy
 
-```bash
-# 1) Sign in
+
+1) Sign in
+
+```
 azd auth login
+```
 
-# 2) Initialize an environment (example: dev)
+2) Initialize an environment (example: dev)
+
+```
 azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e dev
+```
 
-# 3) Deploy infrastructure (uses infra/main.bicep + infra/main.bicepparam from azure.yaml)
+3) Deploy infrastructure (uses infra/main.bicep + infra/main.bicepparam from azure.yaml)
+
+```
 azd provision
 ```
 
