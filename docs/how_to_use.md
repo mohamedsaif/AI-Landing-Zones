@@ -8,8 +8,6 @@ This guide explains how to deploy and operate the **AI Landing Zone** in this re
 
 ## Table of Contents
 
-## Table of Contents
-
 1. [What gets deployed (at a glance)](#1-what-gets-deployed-at-a-glance)  
 2. [What you decide before provisioning](#2-what-you-decide-before-provisioning)  
 3. [Quick start with `azd`](#3-quick-start-with-azd)  
