@@ -9,9 +9,9 @@ The architecture delivers a full **AI Landing Zone** with **Azure AI Foundry** a
 ![Architecture](./docs/architecture.png)
 *AI Landing Zone*
 
-Flexibility comes from **feature toggles**: you choose whether to create, reuse, or share each service between your application and AI Foundry. This approach supports both greenfield deployments and integration with an existing platform landing zone.
+Flexibility comes from **feature toggles**: you choose whether to create or reuse each service. This approach supports both greenfield deployments and integration with an existing platform landing zone.
 
-When network isolation is enabled, traffic is routed only through Private Endpoints. Name resolution uses Private DNS zones — either created during deployment or linked from zones already managed at the platform level.
+By default, network isolation is enabled, ensuring that all traffic flows exclusively through Private Endpoints. Name resolution is handled via Private DNS zones, either created during deployment or linked to zones already managed at the platform level.
 
 ## Documentation
 
