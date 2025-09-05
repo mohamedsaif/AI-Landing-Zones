@@ -36,13 +36,13 @@ module testDeployment '../../../infra/main.bicep' = [
       baseName: workloadName
 
       // Minimal model to keep capacity small and deterministic
-      aiFoundryDefinition: {   
+      aiFoundryDefinition: {
         lock: { kind: 'None', name: '' }
         aiProjects: []
         includeAssociatedResources: true
         aiFoundryConfiguration: {
           createCapabilityHosts: true
-        }     
+        }
         aiSearchConfiguration: {}
         storageAccountConfiguration: {}
         cosmosDbConfiguration: {}

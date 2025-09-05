@@ -74,6 +74,9 @@ type DeployTogglesType = {
   @description('Required. Toggle to deploy Azure AI Search (true) or not (false).')
   searchService: bool
 
+  @description('Required. Toggle to deploy Bing Grounding with Search (true) or not (false).')
+  groundingWithBingSearch: bool
+
   @description('Required. Toggle to deploy App Configuration (true) or not (false).')
   appConfig: bool
 

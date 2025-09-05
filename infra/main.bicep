@@ -25,6 +25,7 @@
 //       3.10 AI Foundry (AVM pattern)
 //       3.11 Gateways (WAF policy, App Gateway, Azure Firewall, APIM)
 //       3.12 Hub/Spoke Peering
+//       3.13 Grounding with Bing Search
 //   4  OUTPUTS
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -36,22 +37,12 @@
 // 1.1 Imports
 import * as types from 'common/types.bicep'
 
-// 1.2 General Configuration
-
+// 1.2 General Configuration (location, tags, naming token, global flags)
 @description('Required.  Azure region for AI Foundry resources. Defaults to the resource group location.')
 param location string = resourceGroup().location
 
 @description('Optional.  Tags applied to all deployed resources.')
 param tags object = {}
-
-@description('Optional.  Enable platform landing zone integration.')
-param flagPlatformLandingZone bool = false
-
-@description('Optional.  Enable module telemetry. See https://aka.ms/avm/telemetryinfo.')
-param enableTelemetry bool = true
-
-@description('Optional. Enable network isolation posture (Private Endpoints + Private DNS).')
-param networkIsolation bool = true
 
 @description('Optional.  Deterministic token for resource names; auto-generated if not provided.')
 param resourceToken string = toLower(uniqueString(subscription().id, resourceGroup().name, location))
@@ -59,7 +50,19 @@ param resourceToken string = toLower(uniqueString(subscription().id, resourceGro
 @description('Optional.  Base name to seed resource names; defaults to a 12-char token.')
 param baseName string = substring(resourceToken, 0, 12)
 
-// 1.3 Reuse Existing Services
+@description('Optional.  Enable module telemetry. See https://aka.ms/avm/telemetryinfo.')
+param enableTelemetry bool = true
+
+@description('Optional. Enable network isolation posture (Private Endpoints + Private DNS).')
+param networkIsolation bool = true
+
+@description('Optional.  Enable platform landing zone integration.')
+param flagPlatformLandingZone bool = false
+
+@description('Optional.  Deploy GenAI app services; defaults to true.')
+param deployGenAiAppBackingServices bool = true
+
+// 1.3 Reuse Existing Services (resource IDs to reuse, leave empty to create)
 @description('Optional.  Existing resource IDs to reuse; leave empty to create new resources.')
 param resourceIds types.ResourceIdsType = {
   virtualNetworkResourceId: ''
@@ -79,7 +82,7 @@ param resourceIds types.ResourceIdsType = {
   groundingServiceResourceId: ''
 }
 
-// 1.4 Deploy Toggles
+// 1.4 Deploy Toggles (per-service on/off; reuse still works via resourceIds)
 @description('Optional.  Per-service deployment toggles; set false to skip creating a service. Reuse still works via resourceIds.')
 param deployToggles types.DeployTogglesType = {
   logAnalytics: true
@@ -93,6 +96,7 @@ param deployToggles types.DeployTogglesType = {
   keyVault: true
   storageAccount: true
   searchService: true
+  groundingWithBingSearch: true
   appConfig: true
 
   apiManagement: true
@@ -308,7 +312,8 @@ param appConfigurationDefinition types.AppConfigurationDefinitionType = {
   roleAssignments: []
 }
 
-// 1.5.12 Private DNS Zone IDs (optional reuse)
+// 1.5.12 Private DNS
+// 1.5.12a Private DNS Zone IDs (optional reuse)
 @description('Conditional.  Existing Private DNS Zone resource IDs per service; provide to reuse, or leave empty to create.')
 param privateDnsZoneIds object = {
   cognitiveservices: ''
@@ -324,6 +329,7 @@ param privateDnsZoneIds object = {
   appInsights: ''
 }
 
+// 1.5.12b Private DNS Zones (creation + VNet links)
 @description('Conditional.  Private DNS Zones and VNet links configuration (used when creating zones).')
 param privateDnsZones types.PrivateDnsZoneDefinitionsType = {
   existingZonesResourceGroupResourceId: ''
@@ -339,10 +345,521 @@ param privateDnsZones types.PrivateDnsZoneDefinitionsType = {
 }
 
 // 1.5.13 AI Foundry
-
 @description('Optional.  AI Foundry project configuration (account/project, networking, associated resources, and deployments).')
 param aiFoundryDefinition types.AiFoundryDefinitionType?
 
+// 1.5.14 Grounding with Bing
+@description('Optional.  Grounding with Bing Configuration.')
+param groundingWithBingDefinition types.KSGroundingWithBingDefinitionType = {
+  name: ''
+  sku: 'G1'
+  tags: {}
+}
+
+// 1.5.15 WAF Policy
+@description('Conditional.  Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed).')
+param wafPolicyDefinition types.WafPolicyDefinitionsType = {
+  name: ''
+  policySettings: {
+    enabledState: 'Enabled'
+    mode: 'Prevention'
+    requestBodyCheck: true
+    maxRequestBodySizeInKb: 128
+    fileUploadLimitInMb: 100
+  }
+  managedRules: {
+    exclusions: []
+    managedRuleSets: [
+      {
+        type: 'OWASP'
+        version: '3.2'
+        ruleGroupOverride: []
+      }
+    ]
+  }
+  tags: {}
+}
+
+// 1.5.16 Application Gateway
+@description('Conditional.  Application Gateway configuration (used when AGW is deployed).')
+param appGatewayDefinition types.AppGatewayDefinitionType = {
+  name: ''
+  http2Enable: true
+  authenticationCertificate: {}
+  sku: { name: 'WAF_v2', tier: 'WAF_v2', capacity: 0 } // capacity 0 when autoscale is used
+  autoscaleConfiguration: { minCapacity: 2, maxCapacity: 10 }
+  backendAddressPools: {
+    defaultPool: { name: 'defaultPool', fqdns: [], ipAddresses: [] }
+  }
+  backendHttpSettings: {
+    defaultSetting: {
+      cookieBasedAffinity: 'Disabled'
+      name: 'defaultSetting'
+      port: 80
+      protocol: 'Http'
+      affinityCookieName: ''
+      hostName: ''
+      path: ''
+      pickHostNameFromBackendAddress: false
+      probeName: ''
+      requestTimeout: 30
+      trustedRootCertificateNames: []
+      authenticationCertificate: []
+      connectionDraining: { enabled: false, drainTimeoutSec: 0 }
+    }
+  }
+  frontendPorts: { port80: { name: 'port80', port: 80 } }
+  httpListeners: {
+    defaultListener: {
+      name: 'defaultListener'
+      frontendPortName: 'port80'
+      frontendIpConfigurationName: 'privateFrontend'
+      firewallPolicyId: ''
+      requireSni: false
+      hostName: ''
+      hostNames: []
+      sslCertificateName: ''
+      sslProfileName: ''
+      customErrorConfiguration: []
+    }
+  }
+  probeConfigurations: {}
+  redirectConfiguration: {
+    defaultRedirect: {
+      includePath: true
+      includeQueryString: true
+      name: 'defaultRedirect'
+      redirectType: 'Permanent'
+      targetListenerName: ''
+      targetUrl: 'https://example.com'
+    }
+  }
+  requestRoutingRules: {
+    defaultRule: {
+      name: 'defaultRule'
+      ruleType: 'Basic'
+      httpListenerName: 'defaultListener'
+      backendAddressPoolName: ''
+      priority: 100
+      urlPathMapName: ''
+      backendHttpSettingsName: ''
+      redirectConfigurationName: 'defaultRedirect'
+      rewriteRuleSetName: ''
+    }
+  }
+  rewriteRuleSet: {}
+  sslCertificates: {}
+  sslPolicy: {
+    cipherSuites: []
+    disabledProtocols: []
+    minProtocolVersion: 'TLSv1_2'
+    policyName: ''
+    policyType: 'Custom'
+  }
+  sslProfile: {}
+  trustedClientCertificate: {}
+  trustedRootCertificate: {}
+  urlPathMapConfigurations: {}
+  tags: {}
+  roleAssignments: []
+  createPublicFrontend: true
+}
+
+// 1.5.17 API Management
+@description('Conditional.  API Management configuration (used when APIM is deployed).')
+param apimDefinition types.ApimDefinitionType = {
+  name: ''
+  publisherEmail: 'admin@example.com'
+  publisherName: 'Contoso'
+  additionalLocations: {}
+  certificate: {}
+  clientCertificateEnabled: false
+  hostnameConfiguration: { management: {}, portal: {}, developerPortal: {}, proxy: {}, scm: {} }
+  minApiVersion: '2019-12-01'
+  notificationSenderEmail: 'apimgmt-noreply@azure.com'
+  protocols: { enableHttp2: true }
+  roleAssignments: []
+  signIn: { enabled: true }
+  signUp: { enabled: false, termsOfService: { consentRequired: false, enabled: false, text: '' } }
+  skuRoot: 'Developer'
+  skuCapacity: 1
+  tags: {}
+  tenantAccess: { enabled: true }
+}
+
+// 1.5.18 Azure Firewall
+@description('Conditional.  Azure Firewall configuration (used when Firewall is deployed).')
+param firewallDefinition types.FirewallDefinitionType = {
+  name: ''
+  sku: 'AZFW_VNet'
+  tier: 'Standard'
+  zones: []
+  tags: {}
+}
+
+// 1.5.19 Azure Firewall Policy
+@description('Optional.  Azure Firewall Policy configuration (only used if your deployment wires a policy).')
+param firewallPolicyDefinition types.FirewallPolicyDefinitionType = {
+  networkPolicyRuleCollectionGroupName: null
+  networkPolicyRuleCollectionGroupPriority: 100
+  networkRules: []
+}
+
+// 1.5.20 Hub VNet Peering
+@description('Conditional.  Hub VNet peering configuration (required only when establishing hub-spoke peering).')
+param hubVnetPeeringDefinition types.HuVnetPeeringDefinitionType = {
+  name: ''
+  peerVnetResourceId: ''
+  firewallIpAddress: ''
+  allowForwardedTraffic: true
+  allowGatewayTransit: false
+  allowVirtualNetworkAccess: true
+  createReversePeering: true
+  reverseAllowForwardedTraffic: true
+  reverseAllowGatewayTransit: false
+  reverseAllowVirtualNetworkAccess: true
+  reverseName: ''
+  reverseUseRemoteGateways: false
+  useRemoteGateways: false
+}
+
+// 1.5.21 Build VM configuration
+@description('Optional.  Build VM configuration to support CI/CD workers (Linux).')
+param buildVmDefinition types.BuildVmDefinitionType = {
+  name: ''
+  sku: 'Standard_D2s_v5'
+  adminUsername: 'azureuser'
+  sshPublicKey: ''
+  runner: 'azdo'
+  azdo: {
+    orgUrl: 'https://dev.azure.com/<org>'
+    pool: 'Default'
+  }
+  tags: {}
+  enableTelemetry: enableTelemetry
+}
+
+// 1.5.22 Jump VM configuration (Windows, Bastion-accessed)
+@description('Optional.  Jump (bastion) VM configuration (Windows).')
+param jumpVmDefinition types.JumpVmDefinitionType = {
+  name: ''
+  sku: 'Standard_D2s_v5'
+  adminUsername: 'azureuser'
+  vmKeyVaultSecName: 'jump-admin-password'
+  tags: {}
+  enableTelemetry: enableTelemetry
+}
+
+// 1.5.23 Dedicated Key Vault for JumpVM password (public network access for convenience with Bastion operators)
+@description('Conditional.  Dedicated Key Vault for JumpVM secrets (public network).')
+param bastionKeyVaultDefinition types.KeyVaultDefinitionType = {
+  name: ''
+  sku: 'standard'
+  tenantId: subscription().tenantId
+  roleAssignments: []
+  tags: {}
+}
+
+// 1.6 Secrets/Tokens
+@secure()
+@description('Conditional. Required when deploying Jump VM. Local admin password to set on the Windows JumpVM.')
+param jumpVmAdminPassword string = ''
+
+@secure()
+@description('Optional. PAT used to register the Azure DevOps agent (when runner = azdo).')
+param azdoPat string = ''
+
+@secure()
+@description('Optional. PAT used to request a GitHub runner registration token (when runner = github).')
+param githubPat string = ''
+
+
+//////////////////////////////////////////////////////////////////////////
+// 2. VARIABLES 
+//////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////
+// 2. VARIABLES 
+//////////////////////////////////////////////////////////////////////////
+
+// ── 2.1 Tags & naming helpers
+// Merge top-level tags once; used across modules
+var _tags = union(tags, vnetDefinition.tags! ?? {})
+
+// CAF-style abbreviations (drives consistent resource naming)
+var _abbrs = loadJsonContent('./common/abbreviations.json')
+
+// Name prefixes derived from abbreviations (some cannot contain hyphen)
+var _acr = _abbrs.containers.containerRegistry // no hyphen allowed in ACR
+var _bing = '${_abbrs.ai.bing}-'
+var _ca = '${_abbrs.containers.containerApp}-'
+var _cae = '${_abbrs.containers.containerAppsEnvironment}-'
+var _afw = '${_abbrs.networking.firewall}-'
+var _afwp = '${_abbrs.networking.firewallPolicy}-'
+var _agw = '${_abbrs.networking.applicationGateway}-'
+var _pe = '${_abbrs.networking.privateEndpoint}-'
+var _pip = '${_abbrs.networking.publicIPAddress}-'
+var _vnet = '${_abbrs.networking.virtualNetwork}-'
+var _ai = '${_abbrs.managementGovernance.applicationInsights}-'
+var _apim = '${_abbrs.integration.apiManagement}-'
+var _appcs = '${_abbrs.configuration.appConfiguration}-'
+var _law = '${_abbrs.managementGovernance.logAnalyticsWorkspace}-'
+var _cos = '${_abbrs.databases.cosmosDbAccount}-'
+var _kv = '${_abbrs.security.keyVault}-'
+var _srch = '${_abbrs.ai.aiSearch}-'
+var _st = _abbrs.storage.storageAccount // no hyphen allowed in Storage
+var _vm = '${_abbrs.compute.virtualMachine}-'
+var _waf = '${_abbrs.networking.webApplicationFirewallPolicy}-'
+
+
+// ── 2.2 Common names & defaults (env, images, flags)
+var _containerDummyImageName = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+var _containerEnvName = empty(containerAppEnvDefinition.name!) ? '${_cae}${baseName}' : containerAppEnvDefinition.name!
+var _agwCreatePublicFrontend = bool(appGatewayDefinition.createPublicFrontend! ?? true)
+
+
+// ── 2.3 Virtual network & subnets (reuse/new) + peering helpers
+// Parse existing VNet Id (if provided)
+var _vnetIdSegments = empty(resourceIds.virtualNetworkResourceId) ? [''] : split(resourceIds.virtualNetworkResourceId, '/')
+var _existingVNetSubscriptionId = length(_vnetIdSegments) >= 3 ? _vnetIdSegments[2] : ''
+var _existingVNetResourceGroupName = length(_vnetIdSegments) >= 5 ? _vnetIdSegments[4] : ''
+var _existingVNetName = length(_vnetIdSegments) >= 1 ? last(_vnetIdSegments) : ''
+
+// Effective VNet name (create path)
+var _vnetName = empty(vnetDefinition.name!) ? '${_vnet}${baseName}' : vnetDefinition.name!
+
+// Optional peering configuration (read safely without try/?.)
+var _hasPeerCfg = contains(vnetDefinition, 'vnetPeeringConfiguration') && !empty(vnetDefinition.vnetPeeringConfiguration!)
+
+// Read values with defaults
+#disable-next-line BCP318
+var _peerCfgName = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'name') && !empty(vnetDefinition.vnetPeeringConfiguration!.name!)
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.name!
+  : ''
+#disable-next-line BCP318
+var _peerCfgVnetId = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'peerVnetResourceId') && !empty(vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId)
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId!
+  : ''
+var _peerAllowVna = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowVirtualNetworkAccess')
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.allowVirtualNetworkAccess
+  : true
+var _peerAllowFwd = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowForwardedTraffic')
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.allowForwardedTraffic
+  : true
+var _peerAllowGw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowGatewayTransit')
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.allowGatewayTransit
+  : false
+var _peerUseRgw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'useRemoteGateways')
+  #disable-next-line BCP318
+  ? vnetDefinition.vnetPeeringConfiguration!.useRemoteGateways
+  : false
+
+// Final peering helpers
+var _hasPeer = !empty(_peerCfgVnetId)
+var _peerName = empty(_peerCfgName) ? '${_vnetName}-to-peer' : _peerCfgName
+
+// Whether we will deploy the VNet (vs reuse)
+var _deployVnet = empty(resourceIds.virtualNetworkResourceId) && deployToggles.virtualNetwork
+
+// VNet resourceId that works for both reuse/new
+#disable-next-line BCP318
+var _vnetResourceId = !empty(resourceIds.virtualNetworkResourceId)
+  ? existingVNet.id
+  : (_deployVnet ? virtualNetwork!.outputs.resourceId : '')
+
+// Subnets used across modules (computed once)
+var _peSubnetName = 'pe-subnet'
+var _peSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _peSubnetName)
+  : '${existingVNet.id}/subnets/${_peSubnetName}'
+
+var _agentSubnetName = 'agent-subnet'
+var _agentSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agentSubnetName)
+  : '${existingVNet.id}/subnets/${_agentSubnetName}'
+
+var _agwSubnetName = 'AppGatewaySubnet'
+var _agwSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agwSubnetName)
+  : '${existingVNet.id}/subnets/${_agwSubnetName}'
+
+var _acaInfraSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, containerAppEnvDefinition.subnetName!)
+  : '${existingVNet.id}/subnets/${containerAppEnvDefinition.subnetName!}'
+
+// Compute subnets (Jump/Build)
+var _jumpSubnetName = 'jumpbox-subnet'
+var _buildSubnetName = 'devops-build-agents-subnet'
+var _jumpSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _jumpSubnetName)
+  : '${existingVNet.id}/subnets/${_jumpSubnetName}'
+var _buildSubnetId = empty(resourceIds.virtualNetworkResourceId)
+  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _buildSubnetName)
+  : '${existingVNet.id}/subnets/${_buildSubnetName}'
+
+
+// ── 2.4 Existing resource parsing (IDs → subscription/rg/name)
+var _apimIdSegments = empty(resourceIds.apimServiceResourceId) ? [''] : split(resourceIds.apimServiceResourceId, '/')
+var _apimSub = length(_apimIdSegments) >= 3 ? _apimIdSegments[2] : ''
+var _apimRg = length(_apimIdSegments) >= 5 ? _apimIdSegments[4] : ''
+var _apimNameExisting = length(_apimIdSegments) >= 1 ? last(_apimIdSegments) : ''
+
+var _agwIdSegments = empty(resourceIds.applicationGatewayResourceId) ? [''] : split(resourceIds.applicationGatewayResourceId, '/')
+var _agwSub = length(_agwIdSegments) >= 3 ? _agwIdSegments[2] : ''
+var _agwRg = length(_agwIdSegments) >= 5 ? _agwIdSegments[4] : ''
+var _agwNameExisting = length(_agwIdSegments) >= 1 ? last(_agwIdSegments) : ''
+
+var _afwIdSegments = empty(resourceIds.firewallResourceId) ? [''] : split(resourceIds.firewallResourceId, '/')
+var _afwSub = length(_afwIdSegments) >= 3 ? _afwIdSegments[2] : ''
+var _afwRg = length(_afwIdSegments) >= 5 ? _afwIdSegments[4] : ''
+var _afwNameExisting = length(_afwIdSegments) >= 1 ? last(_afwIdSegments) : ''
+
+var _lawIdSegments = empty(resourceIds.logAnalyticsWorkspaceResourceId) ? [''] : split(resourceIds.logAnalyticsWorkspaceResourceId, '/')
+var _existingLawSubscriptionId = length(_lawIdSegments) >= 3 ? _lawIdSegments[2] : ''
+var _existingLawResourceGroupName = length(_lawIdSegments) >= 5 ? _lawIdSegments[4] : ''
+var _existingLawName = length(_lawIdSegments) >= 1 ? last(_lawIdSegments) : ''
+
+var _aiIdSegments = empty(resourceIds.appInsightsResourceId) ? [''] : split(resourceIds.appInsightsResourceId, '/')
+var _existingAISubscriptionId = length(_aiIdSegments) >= 3 ? _aiIdSegments[2] : ''
+var _existingAIResourceGroupName = length(_aiIdSegments) >= 5 ? _aiIdSegments[4] : ''
+var _existingAIName = length(_aiIdSegments) >= 1 ? last(_aiIdSegments) : ''
+
+var _envIdSegments = empty(resourceIds.containerEnvResourceId) ? [''] : split(resourceIds.containerEnvResourceId, '/')
+var _existingEnvSubscriptionId = length(_envIdSegments) >= 3 ? _envIdSegments[2] : ''
+var _existingEnvResourceGroup = length(_envIdSegments) >= 5 ? _envIdSegments[4] : ''
+var _existingEnvName = length(_envIdSegments) >= 1 ? last(_envIdSegments) : ''
+
+var _acrIdSegments = empty(resourceIds.containerRegistryResourceId) ? [''] : split(resourceIds.containerRegistryResourceId, '/')
+var _existingAcrSub = length(_acrIdSegments) >= 3 ? _acrIdSegments[2] : ''
+var _existingAcrRg = length(_acrIdSegments) >= 5 ? _acrIdSegments[4] : ''
+var _existingAcrName = length(_acrIdSegments) >= 1 ? last(_acrIdSegments) : ''
+
+var _cosmosIdSegments = empty(resourceIds.dbAccountResourceId) ? [''] : split(resourceIds.dbAccountResourceId, '/')
+var _existingCosmosSub = length(_cosmosIdSegments) >= 3 ? _cosmosIdSegments[2] : ''
+var _existingCosmosRg = length(_cosmosIdSegments) >= 5 ? _cosmosIdSegments[4] : ''
+var _existingCosmosName = length(_cosmosIdSegments) >= 1 ? last(_cosmosIdSegments) : ''
+
+var _kvIdSegments = empty(resourceIds.keyVaultResourceId) ? [''] : split(resourceIds.keyVaultResourceId, '/')
+var _existingKvSub = length(_kvIdSegments) >= 3 ? _kvIdSegments[2] : ''
+var _existingKvRg = length(_kvIdSegments) >= 5 ? _kvIdSegments[4] : ''
+var _existingKvName = length(_kvIdSegments) >= 1 ? last(_kvIdSegments) : ''
+
+var _saIdSegments = empty(resourceIds.storageAccountResourceId) ? [''] : split(resourceIds.storageAccountResourceId, '/')
+var _existingSaSub = length(_saIdSegments) >= 3 ? _saIdSegments[2] : ''
+var _existingSaRg = length(_saIdSegments) >= 5 ? _saIdSegments[4] : ''
+var _existingSaName = length(_saIdSegments) >= 1 ? last(_saIdSegments) : ''
+
+var _searchIdSegments = empty(resourceIds.searchServiceResourceId) ? [''] : split(resourceIds.searchServiceResourceId, '/')
+var _existingSearchSub = length(_searchIdSegments) >= 3 ? _searchIdSegments[2] : ''
+var _existingSearchRg = length(_searchIdSegments) >= 5 ? _searchIdSegments[4] : ''
+var _existingSearchName = length(_searchIdSegments) >= 1 ? last(_searchIdSegments) : ''
+
+var _appcsIdSegments = empty(resourceIds.appConfigResourceId) ? [''] : split(resourceIds.appConfigResourceId, '/')
+var _existingAppcsSub = length(_appcsIdSegments) >= 3 ? _appcsIdSegments[2] : ''
+var _existingAppcsRg = length(_appcsIdSegments) >= 5 ? _appcsIdSegments[4] : ''
+var _existingAppcsName = length(_appcsIdSegments) >= 1 ? last(_appcsIdSegments) : ''
+
+
+// ── 2.5 Service defaults for create path (compact objects)
+var _cosmosDef = cosmosDbDefinition ?? { name: '' }
+var _storageAccountDef = storageAccountDefinition ?? { name: '', publicNetworkAccessEnabled: false, tags: {} }
+var _searchDef = searchDefinition ?? { name: '', tags: {} }
+
+
+// ── 2.6 Effective names/SKUs (create path) + friendly names
+var _acrEffectiveSku = !empty(containerRegistryDefinition.sku!) ? containerRegistryDefinition.sku! : 'Premium'
+var _acrNameEffective = !empty(containerRegistryDefinition.name!) ? containerRegistryDefinition.name! : '${_acr}${baseName}'
+
+var _appConfigName = empty((appConfigurationDefinition ?? { name: '' }).name!)
+  ? '${_appcs}${baseName}'
+  : (appConfigurationDefinition.name!)
+
+var _wafName = empty(wafPolicyDefinition.name!) ? '${_waf}${baseName}' : wafPolicyDefinition.name!
+var _agwName = empty(appGatewayDefinition.name!) ? '${_agw}${baseName}' : appGatewayDefinition.name!
+
+// Convenience alias for downstream modules
+var agwName = _agwName
+var agwId = resourceId('Microsoft.Network/applicationGateways', agwName)
+var agwSubnet = _agwSubnetId
+
+var _afwPolicyName = '${_afwp}${baseName}'
+var _afwName = empty(firewallDefinition.name!) ? '${_afw}${baseName}' : firewallDefinition.name!
+var _apimName = empty(apimDefinition.name!) ? '${_apim}${baseName}' : apimDefinition.name!
+var _bastionKvName = empty(bastionKeyVaultDefinition.name!) ? '${_kv}${baseName}-jump' : bastionKeyVaultDefinition.name!
+var _bingNameEffective = empty(groundingWithBingDefinition.name!) ? '${_bing}${baseName}' : groundingWithBingDefinition.name!
+
+
+// ── 2.7 Deployment switches & “has” state (create vs reuse)
+var _deploySa = empty(resourceIds.storageAccountResourceId) && deployGenAiAppBackingServices && deployToggles.storageAccount
+var _deployCosmos = empty(resourceIds.dbAccountResourceId) && deployGenAiAppBackingServices && deployToggles.cosmosDb
+var _deploySearch = empty(resourceIds.searchServiceResourceId) && deployGenAiAppBackingServices && deployToggles.searchService
+var _deployKv = empty(resourceIds.keyVaultResourceId) && deployGenAiAppBackingServices && deployToggles.keyVault
+var _deployContainerAppEnv = empty(resourceIds.containerEnvResourceId) && deployGenAiAppBackingServices && deployToggles.containerEnv
+var _deployContainerApps = deployGenAiAppBackingServices && _hasContainerEnv && deployToggles.containerApps && length(containerAppsList) > 0
+var _deployAppConfig = empty(resourceIds.appConfigResourceId) && deployGenAiAppBackingServices && deployToggles.appConfig
+var _deployAcr = empty(resourceIds.containerRegistryResourceId) && deployGenAiAppBackingServices && deployToggles.containerRegistry
+var _deployApim = empty(resourceIds.apimServiceResourceId) && deployToggles.apiManagement
+var _deployAppGateway = empty(resourceIds.applicationGatewayResourceId) && deployToggles.applicationGateway
+var _deployFirewall = empty(resourceIds.firewallResourceId) && deployToggles.firewall
+
+var _isPlatformLz = flagPlatformLandingZone
+var _deployPdnsAndPe = networkIsolation && !_isPlatformLz
+var _deployBuildVm = deployToggles.buildVm && !_isPlatformLz
+var _deployJumpVm = deployToggles.jumpVm && !_isPlatformLz && !empty(jumpVmAdminPassword)
+
+// Observability coupling (App Insights requires LAW)
+var _deployLogAnalytics = empty(resourceIds.logAnalyticsWorkspaceResourceId) && deployToggles.logAnalytics
+var _hasLogAnalytics = (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) || (_deployLogAnalytics)
+var _deployAppInsights = empty(resourceIds.appInsightsResourceId) && deployToggles.appInsights && _hasLogAnalytics
+var _hasAppInsights = (!empty(resourceIds.appInsightsResourceId)) || (_deployAppInsights)
+
+// Decide if Bing module runs (create or reuse+connect)
+var _invokeBingModule = (!empty(resourceIds.groundingServiceResourceId)) || (deployToggles.groundingWithBingSearch && empty(resourceIds.groundingServiceResourceId))
+
+// “Has” state for GenAI app stack (create or reuse)
+var _hasStorage = (!empty(resourceIds.storageAccountResourceId)) || (_deploySa)
+var _hasCosmos = (!empty(resourceIds.dbAccountResourceId)) || (_deployCosmos)
+var _hasSearch = (!empty(resourceIds.searchServiceResourceId)) || (_deploySearch)
+var _hasKv = (!empty(resourceIds.keyVaultResourceId)) || (_deployKv)
+var _hasContainerEnv = (!empty(resourceIds.containerEnvResourceId)) || (_deployContainerAppEnv)
+var _hasAppConfig = (!empty(resourceIds.appConfigResourceId)) || (_deployAppConfig)
+var _hasAcr = (!empty(resourceIds.containerRegistryResourceId)) || (_deployAcr)
+
+
+// ── 2.8 Observability effective values (LAW Id, AI connection)
+var _laIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
+  ? resourceIds.logAnalyticsWorkspaceResourceId
+  : (_deployLogAnalytics ? logAnalytics!.outputs.resourceId : '')
+var _laCustomerIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
+  ? reference(resourceIds.logAnalyticsWorkspaceResourceId, '2022-10-01', 'Full').properties.customerId
+  : (_deployLogAnalytics ? logAnalytics!.outputs.logAnalyticsWorkspaceId : '')
+var _laSharedKeyEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
+  ? listKeys(resourceIds.logAnalyticsWorkspaceResourceId, '2020-08-01').primarySharedKey
+  #disable-next-line BCP318
+  : (_deployLogAnalytics ? logAnalytics.outputs.primarySharedKey : '')
+
+
+// ── 2.9 Effective resourceIds for dependent modules (env, ACR, App Config)
+var _containerEnvIdEffective = !empty(resourceIds.containerEnvResourceId)
+  ? resourceIds.containerEnvResourceId
+  #disable-next-line BCP318
+  : containerEnv.outputs.resourceId
+
+var _acrResourceId = !empty(resourceIds.containerRegistryResourceId)
+  ? existingAcr.id
+  : (_deployAcr ? resourceId('Microsoft.ContainerRegistry/registries', _acrNameEffective) : '')
+
+var _appConfigResourceId = !empty(resourceIds.appConfigResourceId)
+  ? resourceIds.appConfigResourceId
+  : (_deployAppConfig ? resourceId('Microsoft.AppConfiguration/configurationStores', _appConfigName) : '')
+
+
+// ── 2.10 AI Foundry inputs & derived values
 var _afDefaults = {
   baseUniqueName: ''
   location: location
@@ -430,312 +947,188 @@ var _afDefaults = {
 
 var _afParam = union(_afDefaults, aiFoundryDefinition ?? {})
 
-// 1.5.14 WAF Policy
-@description('Conditional.  Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed).')
-param wafPolicyDefinition types.WafPolicyDefinitionsType = {
-  name: ''
-  policySettings: {
-    enabledState: 'Enabled'
-    mode: 'Prevention'
-    requestBodyCheck: true
-    maxRequestBodySizeInKb: 128
-    fileUploadLimitInMb: 100
+// Safe defaults from _afParam 
+var _afBaseUniqueName = contains(_afParam!, 'baseUniqueName') && !empty(_afParam!.baseUniqueName!) ? _afParam.baseUniqueName! : ''
+var _afLocation = contains(_afParam, 'location') && !empty(_afParam.location!) ? _afParam.location! : location
+var _afConfigObj = contains(_afParam, 'aiFoundryConfiguration') ? _afParam.aiFoundryConfiguration! : {}
+var _afAgentSvcEnabled = bool((_afConfigObj.?createCapabilityHosts ?? false))
+var _afPeSubnetParam = contains(_afParam, 'privateEndpointSubnetResourceId') && !empty(_afParam.privateEndpointSubnetResourceId!) ? _afParam.privateEndpointSubnetResourceId! : ''
+var _afSearchCfg = contains(_afParam, 'aiSearchConfiguration') ? _afParam.aiSearchConfiguration! : {}
+var _afCosmosCfg = contains(_afParam, 'cosmosDbConfiguration') ? _afParam.cosmosDbConfiguration! : {}
+var _afKvCfg = contains(_afParam, 'keyVaultConfiguration') ? _afParam.keyVaultConfiguration! : {}
+var _afStorageCfg = contains(_afParam, 'storageAccountConfiguration') ? _afParam.storageAccountConfiguration! : {}
+
+// Source entries and mapped AVM model deployments
+var _afModelEntries = _afParam.aiModelDeployments
+var _afModelDeployments = [
+  for (md, idx) in _afModelEntries: union(
+    {
+      name: empty(md.name) ? 'model-${idx}' : string(md.name)
+      model: { format: md.model.format, name: md.model.name, version: md.model.version }
+      sku: { capacity: int(md.scale.capacity), name: empty(md.scale.type) ? 'Standard' : string(md.scale.type) }
+    },
+    empty(md.raiPolicyName!) ? {} : { raiPolicyName: md.raiPolicyName! },
+    empty(md.versionUpgradeOption!) ? {} : { versionUpgradeOption: md.versionUpgradeOption! }
+  )
+]
+
+// Ask AVM to create AF-associated deps only if Agent Service is enabled
+var _afWantsDeps = _afAgentSvcEnabled && (_afParam.includeAssociatedResources! ?? true)
+
+
+// ── 2.11 Private DNS decisions (reuse/create) + AF PDNS bindings
+// Which PDNS zones are being reused vs. created here?
+var _useExistingPdz = {
+  cognitiveservices: !empty(privateDnsZoneIds.cognitiveservices)
+  openai: !empty(privateDnsZoneIds.openai)
+  aiServices: !empty(privateDnsZoneIds.aiServices)
+  search: !empty(privateDnsZoneIds.search)
+  cosmosSql: !empty(privateDnsZoneIds.cosmosSql)
+  blob: !empty(privateDnsZoneIds.blob)
+  keyVault: !empty(privateDnsZoneIds.keyVault)
+  appConfig: !empty(privateDnsZoneIds.appConfig)
+  containerApps: !empty(privateDnsZoneIds.containerApps)
+  acr: !empty(privateDnsZoneIds.acr)
+  appInsights: !empty(privateDnsZoneIds.appInsights)
+}
+
+// Whether AF/app stacks require specific PDNS zones
+var _foundryNeedsCosmosPdns = _afWantsDeps && _afAgentSvcEnabled
+var _foundryNeedsBlobPdns = _afWantsDeps && _afAgentSvcEnabled
+var _foundryNeedsSearchPdns = _afWantsDeps && _afAgentSvcEnabled
+var _foundryNeedsKvPdns = _afWantsDeps && _afAgentSvcEnabled
+
+var _appNeedsCosmosPdns = _hasCosmos
+var _appNeedsBlobPdns = _hasStorage
+var _appNeedsSearchPdns = _hasSearch
+var _appNeedsKvPdns = _hasKv
+
+var _needCosmosPdns = _appNeedsCosmosPdns || _foundryNeedsCosmosPdns
+var _needBlobPdns = _appNeedsBlobPdns || _foundryNeedsBlobPdns
+var _needSearchPdns = _appNeedsSearchPdns || _foundryNeedsSearchPdns
+var _needKvPdns = _appNeedsKvPdns || _foundryNeedsKvPdns
+
+// Map caller-provided VNet links to AVM shape once
+var _pdnsLinksFromParam = [
+  for l in privateDnsZones.networkLinks: {
+    name: l.vnetLinkName
+    registrationEnabled: false
+    virtualNetworkResourceId: l.vnetId
   }
-  managedRules: {
-    exclusions: []
-    managedRuleSets: [
-      {
-        type: 'OWASP'
-        version: '3.2'
-        ruleGroupOverride: []
+]
+
+// AF networking & PDNS bindings (only when not platform-managed)
+var _afNetworkingConfig = !flagPlatformLandingZone && _afAgentSvcEnabled
+  ? {
+      networking: {
+        agentServiceSubnetResourceId: _agentSubnetId
+        aiServicesPrivateDnsZoneResourceId: !_useExistingPdz.aiServices
+          #disable-next-line BCP318
+          ? privateDnsZoneAiService.outputs.resourceId
+          : privateDnsZoneIds.aiServices
+        cognitiveServicesPrivateDnsZoneResourceId: !_useExistingPdz.cognitiveservices
+          #disable-next-line BCP318
+          ? privateDnsZoneCogSvcs.outputs.resourceId
+          : privateDnsZoneIds.cognitiveservices
+        openAiPrivateDnsZoneResourceId: !_useExistingPdz.openai
+          #disable-next-line BCP318
+          ? privateDnsZoneOpenAi.outputs.resourceId
+          : privateDnsZoneIds.openai
       }
-    ]
-  }
-  tags: {}
-}
-
-// 1.5.15 Application Gateway
-@description('Conditional.  Application Gateway configuration (used when AGW is deployed).')
-param appGatewayDefinition types.AppGatewayDefinitionType = {
-  name: ''
-  http2Enable: true
-  authenticationCertificate: {}
-  sku: { name: 'WAF_v2', tier: 'WAF_v2', capacity: 0 } // capacity 0 when autoscale is used
-  autoscaleConfiguration: { minCapacity: 2, maxCapacity: 10 }
-  backendAddressPools: {
-    defaultPool: { name: 'defaultPool', fqdns: [], ipAddresses: [] }
-  }
-  backendHttpSettings: {
-    defaultSetting: {
-      cookieBasedAffinity: 'Disabled'
-      name: 'defaultSetting'
-      port: 80
-      protocol: 'Http'
-      affinityCookieName: ''
-      hostName: ''
-      path: ''
-      pickHostNameFromBackendAddress: false
-      probeName: ''
-      requestTimeout: 30
-      trustedRootCertificateNames: []
-      authenticationCertificate: []
-      connectionDraining: { enabled: false, drainTimeoutSec: 0 }
     }
-  }
-  frontendPorts: { port80: { name: 'port80', port: 80 } }
-  httpListeners: {
-    defaultListener: {
-      name: 'defaultListener'
-      frontendPortName: 'port80'
-      frontendIpConfigurationName: 'privateFrontend'
-      firewallPolicyId: ''
-      requireSni: false
-      hostName: ''
-      hostNames: []
-      sslCertificateName: ''
-      sslProfileName: ''
-      customErrorConfiguration: []
+  : {}
+
+var _afAiSearchPdzBinding = !flagPlatformLandingZone
+  ? {
+      privateDnsZoneResourceId: !_useExistingPdz.search
+        #disable-next-line BCP318
+        ? privateDnsZoneSearch.outputs.resourceId
+        : privateDnsZoneIds.search
     }
-  }
-  probeConfigurations: {}
-  redirectConfiguration: {
-    defaultRedirect: {
-      includePath: true
-      includeQueryString: true
-      name: 'defaultRedirect'
-      redirectType: 'Permanent'
-      targetListenerName: ''
-      targetUrl: 'https://example.com'
+  : {}
+
+var _afCosmosPdzBinding = !flagPlatformLandingZone
+  ? {
+      privateDnsZoneResourceId: !_useExistingPdz.cosmosSql
+        #disable-next-line BCP318
+        ? privateDnsZoneCosmos.outputs.resourceId
+        : privateDnsZoneIds.cosmosSql
     }
-  }
-  requestRoutingRules: {
-    defaultRule: {
-      name: 'defaultRule'
-      ruleType: 'Basic'
-      httpListenerName: 'defaultListener'
-      backendAddressPoolName: ''
-      priority: 100
-      urlPathMapName: ''
-      backendHttpSettingsName: ''
-      redirectConfigurationName: 'defaultRedirect'
-      rewriteRuleSetName: ''
+  : {}
+
+var _afKvPdzBinding = !flagPlatformLandingZone
+  ? {
+      privateDnsZoneResourceId: !_useExistingPdz.keyVault
+        #disable-next-line BCP318
+        ? privateDnsZoneKeyVault.outputs.resourceId
+        : privateDnsZoneIds.keyVault
     }
+  : {}
+
+var _afBlobPdzBinding = !flagPlatformLandingZone
+  ? {
+      blobPrivateDnsZoneResourceId: !_useExistingPdz.blob
+        #disable-next-line BCP318
+        ? privateDnsZoneBlob.outputs.resourceId
+        : privateDnsZoneIds.blob
+    }
+  : {}
+
+// ── 2.12 WAF/AGW/Firewall policy helpers
+var _policySettingsForModule = {
+  state: wafPolicyDefinition.policySettings.enabledState
+  mode: wafPolicyDefinition.policySettings.mode
+  requestBodyCheck: wafPolicyDefinition.policySettings.requestBodyCheck
+  maxRequestBodySizeInKb: wafPolicyDefinition.policySettings.maxRequestBodySizeInKb
+  fileUploadLimitInMb: wafPolicyDefinition.policySettings.fileUploadLimitInMb
+}
+
+// Whether to deploy a WAF policy for AGW
+var _deployWafPolicy = _deployAppGateway && deployToggles.wafPolicy
+
+// If deploying WAF policy, cache its resourceId for AGW wiring
+var _wafPolicyResourceId = _deployWafPolicy ? wafPolicy!.outputs.resourceId : ''
+
+// Public IP name for AGW (only used if public frontend is enabled)
+var _agwPipName = '${_pip}${_agw}${baseName}'
+
+// Firewall policy wiring and rules (optional)
+var _deployAfwPolicy = _deployFirewall && (length(firewallPolicyDefinition.networkRules) > 0 || !empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!))
+var _rcgName = empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!) ? 'networkRules' : firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!
+var _rcgPriority = firewallPolicyDefinition.networkPolicyRuleCollectionGroupPriority! ?? 100
+var _networkRulesForModule = [
+  for r in firewallPolicyDefinition.networkRules: {
+    name: r.name
+    ruleType: 'NetworkRule'
+    ...(empty(r.description) ? {} : { description: r.description })
+    sourceAddresses: r.sourceAddresses
+    destinationAddresses: r.destinationAddresses
+    destinationPorts: r.destinationPorts
+    ipProtocols: r.protocols
   }
-  rewriteRuleSet: {}
-  sslCertificates: {}
-  sslPolicy: {
-    cipherSuites: []
-    disabledProtocols: []
-    minProtocolVersion: 'TLSv1_2'
-    policyName: ''
-    policyType: 'Custom'
-  }
-  sslProfile: {}
-  trustedClientCertificate: {}
-  trustedRootCertificate: {}
-  urlPathMapConfigurations: {}
-  tags: {}
-  roleAssignments: []
-  createPublicFrontend: true
-}
+]
 
-// 1.5.16 API Management
-@description('Conditional.  API Management configuration (used when APIM is deployed).')
-param apimDefinition types.ApimDefinitionType = {
-  name: ''
-  publisherEmail: 'admin@example.com'
-  publisherName: 'Contoso'
-  additionalLocations: {}
-  certificate: {}
-  clientCertificateEnabled: false
-  hostnameConfiguration: { management: {}, portal: {}, developerPortal: {}, proxy: {}, scm: {} }
-  minApiVersion: '2019-12-01'
-  notificationSenderEmail: 'apimgmt-noreply@azure.com'
-  protocols: { enableHttp2: true }
-  roleAssignments: []
-  signIn: { enabled: true }
-  signUp: { enabled: false, termsOfService: { consentRequired: false, enabled: false, text: '' } }
-  skuRoot: 'Developer'
-  skuCapacity: 1
-  tags: {}
-  tenantAccess: { enabled: true }
-}
 
-// 1.5.17 Azure Firewall
-@description('Conditional.  Azure Firewall configuration (used when Firewall is deployed).')
-param firewallDefinition types.FirewallDefinitionType = {
-  name: ''
-  sku: 'AZFW_VNet'
-  tier: 'Standard'
-  zones: []
-  tags: {}
-}
+// ── 2.13 Compute helpers (Jump VM, Build VM)
+// Jump VM OS/image and computerName normalization
+var _jumpVmOsType = contains(jumpVmDefinition, 'osType') && !empty(jumpVmDefinition.osType!) ? jumpVmDefinition.osType! : 'Windows'
+var _defaultJumpWindows = { publisher: 'MicrosoftWindowsServer', offer: 'WindowsServer', sku: '2022-datacenter-azure-edition', version: 'latest' }
+var _jumpVmImageRef = contains(jumpVmDefinition, 'imageReference') && !empty(string(jumpVmDefinition.imageReference!)) ? jumpVmDefinition.imageReference! : _defaultJumpWindows
 
-// 1.5.18 Azure Firewall Policy
-@description('Optional.  Azure Firewall Policy configuration (only used if your deployment wires a policy).')
-param firewallPolicyDefinition types.FirewallPolicyDefinitionType = {
-  networkPolicyRuleCollectionGroupName: null
-  networkPolicyRuleCollectionGroupPriority: 100
-  networkRules: []
-}
-
-// 1.5.19 Hub VNet Peering
-@description('Conditional.  Hub VNet peering configuration (required only when establishing hub-spoke peering).')
-param hubVnetPeeringDefinition types.HuVnetPeeringDefinitionType = {
-  name: ''
-  peerVnetResourceId: ''
-  firewallIpAddress: ''
-  allowForwardedTraffic: true
-  allowGatewayTransit: false
-  allowVirtualNetworkAccess: true
-  createReversePeering: true
-  reverseAllowForwardedTraffic: true
-  reverseAllowGatewayTransit: false
-  reverseAllowVirtualNetworkAccess: true
-  reverseName: ''
-  reverseUseRemoteGateways: false
-  useRemoteGateways: false
-}
-
-// 1.5.20 Build VM configuration
-@description('Optional.  Build VM configuration to support CI/CD workers (Linux).')
-param buildVmDefinition types.BuildVmDefinitionType = {
-  name: ''
-  sku: 'Standard_D2s_v5'
-  adminUsername: 'azureuser'
-  sshPublicKey: ''
-  runner: 'azdo'
-  azdo: {
-    orgUrl: 'https://dev.azure.com/<org>'
-    pool: 'Default'
-  }
-  tags: {}
-  enableTelemetry: enableTelemetry
-}
-
-// 1.5.21 Jump VM configuration (Windows, Bastion-accessed)
-@description('Optional.  Jump (bastion) VM configuration (Windows).')
-param jumpVmDefinition types.JumpVmDefinitionType = {
-  name: ''
-  sku: 'Standard_D2s_v5'
-  adminUsername: 'azureuser'
-  vmKeyVaultSecName: 'jump-admin-password'
-  tags: {}
-  enableTelemetry: enableTelemetry
-}
-
-// Dedicated Key Vault for JumpVM password (public network access for convenience with Bastion operators)
-@description('Conditional.  Dedicated Key Vault for JumpVM secrets (public network).')
-param bastionKeyVaultDefinition types.KeyVaultDefinitionType = {
-  name: ''
-  sku: 'standard'
-  tenantId: subscription().tenantId
-  roleAssignments: []
-  tags: {}
-}
-
-// Secrets/tokens
-@secure()
-@description('Conditional. Required when deploying Jump VM. Local admin password to set on the Windows JumpVM.')
-param jumpVmAdminPassword string = ''
-
-@secure()
-@description('Optional. PAT used to register the Azure DevOps agent (when runner = azdo).')
-param azdoPat string = ''
-
-@secure()
-@description('Optional. PAT used to request a GitHub runner registration token (when runner = github).')
-param githubPat string = ''
-
-var _jumpSubnetName = 'jumpbox-subnet'
-var _buildSubnetName = 'devops-build-agents-subnet'
-
-var _jumpSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _jumpSubnetName)
-  : '${existingVNet.id}/subnets/${_jumpSubnetName}'
-
-var _buildSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _buildSubnetName)
-  : '${existingVNet.id}/subnets/${_buildSubnetName}'
-
-var _bastionKvName = empty(bastionKeyVaultDefinition.name!) ? '${_kv}${baseName}-jump' : bastionKeyVaultDefinition.name!
-
-module bastionVault 'br/public:avm/res/key-vault/vault:0.13.3' = if (_deployJumpVm) {
-  name: 'bastionKeyVaultDeployment'
-  params: {
-    name: _bastionKvName
-    // Public by default (no private endpoints or firewall rules passed here)
-    enablePurgeProtection: true
-    tags: union(tags, bastionKeyVaultDefinition.tags! ?? {})
-    enableTelemetry: enableTelemetry
-  }
-}
-
-// Create/seed the admin password as a secret for operators (optional but handy)
-resource bastionVaultSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = if (_deployJumpVm) {
-  name: '${_bastionKvName}/${jumpVmDefinition.vmKeyVaultSecName}'
-  properties: {
-    value: jumpVmAdminPassword
-    contentType: 'text/plain'
-  }
-  dependsOn: [bastionVault]
-}
-
-var _rawJumpName = empty(jumpVmDefinition.name!)
-  ? '${_vm}${baseName}jmp'
-  : replace(replace(replace(jumpVmDefinition.name!, ' ', ''), '_', ''), '.', '')
+var _rawJumpName = empty(jumpVmDefinition.name!) ? '${_vm}${baseName}jmp' : replace(replace(replace(jumpVmDefinition.name!, ' ', ''), '_', ''), '.', '')
 var _maxComputerNameLength = 15
 var _jumpNameLen = min(_maxComputerNameLength, length(_rawJumpName))
 var _jumpComputerName = toLower(substring(_rawJumpName, 0, _jumpNameLen))
 
-module jumpVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployJumpVm) {
-  name: 'jumpVmDeployment'
-  params: {
-    name: empty(jumpVmDefinition.name!) ? '${_vm}${baseName}-jump' : jumpVmDefinition.name!
-    location: location
-    tags: union(tags, jumpVmDefinition.tags! ?? {})
-    enableTelemetry: jumpVmDefinition.enableTelemetry ?? enableTelemetry
-    osType: _jumpVmOsType
-    availabilityZone: -1
-    adminUsername: jumpVmDefinition.adminUsername
-    adminPassword: jumpVmAdminPassword
-    computerName: _jumpComputerName
-    imageReference: _jumpVmImageRef
-    vmSize: jumpVmDefinition.sku
+// Build VM OS/image and cloud-init templating
+var _buildVmOsType = contains(buildVmDefinition, 'osType') && !empty(buildVmDefinition.osType!) ? buildVmDefinition.osType! : 'Linux'
+var _defaultBuildUbuntu = { publisher: 'Canonical', offer: '0001-com-ubuntu-server-jammy', sku: '22_04-lts', version: 'latest' }
+var _buildVmImageRef = contains(buildVmDefinition, 'imageReference') && !empty(string(buildVmDefinition.imageReference!)) ? buildVmDefinition.imageReference! : _defaultBuildUbuntu
 
-    osDisk: {
-      caching: 'ReadWrite'
-      diskSizeGB: 127
-      managedDisk: { storageAccountType: 'Premium_LRS' }
-    }
+// Normalize entire build VM object so nested props always exist
+var _buildVmNormalized = union({ azdo: { orgUrl: '', pool: '', agentName: '', workFolder: '' }, github: { owner: '', repo: '', labels: '', agentName: '', workFolder: '' } }, buildVmDefinition)
 
-    nicConfigurations: [
-      {
-        name: 'nic-jump-1'
-        ipConfigurations: [
-          {
-            name: 'ipconfig1'
-            subnetResourceId: _jumpSubnetId
-            privateIPAllocationMethod: 'Dynamic'
-          }
-        ]
-      }
-    ]
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
-  ]
-}
-
-// Normalize entire build VM object so nested props always exist at runtime
-var _buildVmNormalized = union(
-  {
-    azdo: { orgUrl: '', pool: '', agentName: '', workFolder: '' }
-    github: { owner: '', repo: '', labels: '', agentName: '', workFolder: '' }
-  },
-  buildVmDefinition
-)
+// Render cloud-init from template with placeholders
 var _t0 = loadTextContent('./common/build-cloudinit.yaml')
 var _t1 = replace(_t0, '{0}', string(_buildVmNormalized.runner))
 var _t2 = replace(_t1, '{1}', string(_buildVmNormalized.azdo.orgUrl))
@@ -754,141 +1147,13 @@ var _t14 = replace(_t13, '{13}', string(_buildVmNormalized.sshPublicKey))
 var _t15 = replace(_t14, '{14}', string(baseName))
 var _buildCloudInit = _t15
 
-// Only deploy Build VM when an SSH key is provided
-module buildVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployBuildVm && !empty(buildVmDefinition.sshPublicKey)) {
-  name: 'buildVmDeployment'
-  params: {
-    name: empty(buildVmDefinition.name!) ? '${_vm}${baseName}-build' : buildVmDefinition.name!
-    location: location
-    tags: union(tags, buildVmDefinition.tags! ?? {})
-    enableTelemetry: buildVmDefinition.enableTelemetry! ?? enableTelemetry
 
-    osType: _buildVmOsType
-    availabilityZone: -1
-    adminUsername: buildVmDefinition.adminUsername
-    imageReference: _buildVmImageRef
-    vmSize: buildVmDefinition.sku
-
-    disablePasswordAuthentication: true
-    publicKeys: [
-      {
-        path: '/home/${buildVmDefinition.adminUsername}/.ssh/authorized_keys'
-        keyData: buildVmDefinition.sshPublicKey
-      }
-    ]
-
-    osDisk: {
-      caching: 'ReadWrite'
-      diskSizeGB: 64
-      managedDisk: { storageAccountType: 'Premium_LRS' }
-    }
-
-    nicConfigurations: [
-      {
-        name: 'nic-build-1'
-        ipConfigurations: [
-          {
-            name: 'ipconfig1'
-            subnetResourceId: _buildSubnetId
-            privateIPAllocationMethod: 'Dynamic'
-          }
-        ]
-      }
-    ]
-
-    customData: base64(_buildCloudInit)
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
-  ]
-}
-
-//////////////////////////////////////////////////////////////////////////
-// 2. VARIABLES (globals)
-//////////////////////////////////////////////////////////////////////////
-
-// Tags merged once for reuse
-var _tags = union(tags, vnetDefinition.tags! ?? {})
-
-// Abbreviations
-// Based on https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations
-var _abbrs = loadJsonContent('./common/abbreviations.json')
-
-// Containers
-var _acr = _abbrs.containers.containerRegistry // no hyphen allowed in ACR
-var _ca = '${_abbrs.containers.containerApp}-'
-var _cae = '${_abbrs.containers.containerAppsEnvironment}-'
-var _afw = '${_abbrs.networking.firewall}-'
-var _afwp = '${_abbrs.networking.firewallPolicy}-'
-var _agw = '${_abbrs.networking.applicationGateway}-'
-var _pe = '${_abbrs.networking.privateEndpoint}-'
-var _pip = '${_abbrs.networking.publicIPAddress}-'
-var _vnet = '${_abbrs.networking.virtualNetwork}-'
-var _ai = '${_abbrs.managementGovernance.applicationInsights}-'
-var _apim = '${_abbrs.integration.apiManagement}-'
-var _appcs = '${_abbrs.configuration.appConfiguration}-'
-var _law = '${_abbrs.managementGovernance.logAnalyticsWorkspace}-'
-var _cos = '${_abbrs.databases.cosmosDbAccount}-'
-var _kv = '${_abbrs.security.keyVault}-'
-var _srch = '${_abbrs.ai.aiSearch}-'
-var _st = _abbrs.storage.storageAccount // no hyphen allowed in Storage
-var _vm = '${_abbrs.compute.virtualMachine}-'
-var _waf = '${_abbrs.networking.webApplicationFirewallPolicy}-'
-
-// Safe defaults to guard against missing properties
-
-// AI Foundry
-var _afBaseUniqueName = contains(_afParam!, 'baseUniqueName') && !empty(_afParam!.baseUniqueName!)
-  ? _afParam.baseUniqueName!
-  : ''
-var _afLocation = contains(_afParam, 'location') && !empty(_afParam.location!) ? _afParam.location! : location
-var _afConfigObj = contains(_afParam, 'aiFoundryConfiguration') ? _afParam.aiFoundryConfiguration! : {}
-var _afAgentSvcEnabled = bool((_afConfigObj.?createCapabilityHosts ?? false))
-var _afPeSubnetParam = contains(_afParam, 'privateEndpointSubnetResourceId') && !empty(_afParam.privateEndpointSubnetResourceId!)
-  ? _afParam.privateEndpointSubnetResourceId!
-  : ''
-var _afSearchCfg = contains(_afParam, 'aiSearchConfiguration') ? _afParam.aiSearchConfiguration! : {}
-var _afCosmosCfg = contains(_afParam, 'cosmosDbConfiguration') ? _afParam.cosmosDbConfiguration! : {}
-var _afKvCfg = contains(_afParam, 'keyVaultConfiguration') ? _afParam.keyVaultConfiguration! : {}
-var _afStorageCfg = contains(_afParam, 'storageAccountConfiguration') ? _afParam.storageAccountConfiguration! : {}
-
-// BuildVM
-var _buildVmOsType = contains(buildVmDefinition, 'osType') && !empty(buildVmDefinition.osType!)
-  ? buildVmDefinition.osType!
-  : 'Linux'
-var _defaultBuildUbuntu = {
-  publisher: 'Canonical'
-  offer: '0001-com-ubuntu-server-jammy'
-  sku: '22_04-lts'
-  version: 'latest'
-}
-var _buildVmImageRef = contains(buildVmDefinition, 'imageReference') && !empty(string(buildVmDefinition.imageReference!))
-  ? buildVmDefinition.imageReference!
-  : _defaultBuildUbuntu
-
-// Jump VM
-var _jumpVmOsType = contains(jumpVmDefinition, 'osType') && !empty(jumpVmDefinition.osType!)
-  ? jumpVmDefinition.osType!
-  : 'Windows'
-var _defaultJumpWindows = {
-  publisher: 'MicrosoftWindowsServer'
-  offer: 'WindowsServer'
-  sku: '2022-datacenter-azure-edition'
-  version: 'latest'
-}
-var _jumpVmImageRef = contains(jumpVmDefinition, 'imageReference') && !empty(string(jumpVmDefinition.imageReference!))
-  ? jumpVmDefinition.imageReference!
-  : _defaultJumpWindows
-
-// Container apps
-var _containerDummyImageName = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-
-// Container Environment
-var _containerEnvName = empty(containerAppEnvDefinition.name!) ? '${_cae}${baseName}' : containerAppEnvDefinition.name!
-
-// Application Gateway
-var _agwCreatePublicFrontend = bool(appGatewayDefinition.createPublicFrontend! ?? true)
+// ── 2.14 Hub VNet (peer) parsing for reverse peering
+var _peerVnetId = hubVnetPeeringDefinition.peerVnetResourceId
+var _peerParts = split(_peerVnetId, '/')
+var _peerSub = length(_peerParts) >= 3 ? _peerParts[2] : ''
+var _peerRg = length(_peerParts) >= 5 ? _peerParts[4] : ''
+var _peerVnetName = length(_peerParts) >= 9 ? _peerParts[8] : ''
 
 //////////////////////////////////////////////////////////////////////////
 // 3. RESOURCES
@@ -916,63 +1181,11 @@ resource avmTelemetry 'Microsoft.Resources/deployments@2024-03-01' = if (enableT
 // ──────────────────────────────────────────────────────────────────────
 // 3.1 Networking — VNet (reuse or create)
 // ─────────────────────────────────────────────────────────────────────-
-var _vnetIdSegments = empty(resourceIds.virtualNetworkResourceId)
-  ? ['']
-  : split(resourceIds.virtualNetworkResourceId, '/')
-var _existingVNetSubscriptionId = length(_vnetIdSegments) >= 3 ? _vnetIdSegments[2] : ''
-var _existingVNetResourceGroupName = length(_vnetIdSegments) >= 5 ? _vnetIdSegments[4] : ''
-var _existingVNetName = length(_vnetIdSegments) >= 1 ? last(_vnetIdSegments) : ''
 
 resource existingVNet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = if (!empty(resourceIds.virtualNetworkResourceId)) {
   name: _existingVNetName
   scope: resourceGroup(_existingVNetSubscriptionId, _existingVNetResourceGroupName)
 }
-
-var _vnetName = empty(vnetDefinition.name!) ? '${_vnet}${baseName}' : vnetDefinition.name!
-
-// ── Peer config helpers (no try(), no ?.)
-// Is a peering config present?
-var _hasPeerCfg = contains(vnetDefinition, 'vnetPeeringConfiguration') && !empty(vnetDefinition.vnetPeeringConfiguration!)
-
-// Read values safely
-#disable-next-line BCP318
-var _peerCfgName = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'name') && !empty(vnetDefinition.vnetPeeringConfiguration!.name!)
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.name!
-  : ''
-
-#disable-next-line BCP318
-var _peerCfgVnetId = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'peerVnetResourceId') && !empty(vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId)
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId!
-  : ''
-
-// Booleans with sane defaults if not provided
-var _peerAllowVna = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowVirtualNetworkAccess')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowVirtualNetworkAccess
-  : true
-
-var _peerAllowFwd = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowForwardedTraffic')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowForwardedTraffic
-  : true
-
-var _peerAllowGw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowGatewayTransit')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowGatewayTransit
-  : false
-
-var _peerUseRgw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'useRemoteGateways')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.useRemoteGateways
-  : false
-
-// Final helpers used below
-var _hasPeer = !empty(_peerCfgVnetId)
-var _peerName = empty(_peerCfgName) ? '${_vnetName}-to-peer' : _peerCfgName
-
-var _deployVnet = empty(resourceIds.virtualNetworkResourceId) && deployToggles.virtualNetwork
 
 module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = if (_deployVnet) {
   name: 'virtualNetworkDeployment'
@@ -1008,100 +1221,11 @@ module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = if (_d
   }
 }
 
-// VNet resourceId that works for both reuse/new
-#disable-next-line BCP318
-var _vnetResourceId = !empty(resourceIds.virtualNetworkResourceId)
-  ? existingVNet.id
-  : (_deployVnet ? virtualNetwork!.outputs.resourceId : '')
-
-// ──────────────────────────────────────────────────────────────────────
-// 3.2 Deploy/Reuse flags & “has” flags + AGW/FW subnet helpers
-// ─────────────────────────────────────────────────────────────────────-
-@description('Optional.  Deploy GenAI app services; defaults to true.')
-param deployGenAiAppBackingServices bool = true
-
-var _deploySa = empty(resourceIds.storageAccountResourceId) && deployGenAiAppBackingServices && deployToggles.storageAccount
-var _deployCosmos = empty(resourceIds.dbAccountResourceId) && deployGenAiAppBackingServices && deployToggles.cosmosDb
-var _deploySearch = empty(resourceIds.searchServiceResourceId) && deployGenAiAppBackingServices && deployToggles.searchService
-var _deployKv = empty(resourceIds.keyVaultResourceId) && deployGenAiAppBackingServices && deployToggles.keyVault
-var _deployContainerAppEnv = empty(resourceIds.containerEnvResourceId) && deployGenAiAppBackingServices && deployToggles.containerEnv
-var _deployContainerApps = deployGenAiAppBackingServices && _hasContainerEnv && deployToggles.containerApps && length(containerAppsList) > 0
-var _deployAppConfig = empty(resourceIds.appConfigResourceId) && deployGenAiAppBackingServices && deployToggles.appConfig
-var _deployAcr = empty(resourceIds.containerRegistryResourceId) && deployGenAiAppBackingServices && deployToggles.containerRegistry
-var _deployApim = empty(resourceIds.apimServiceResourceId) && deployToggles.apiManagement
-var _deployAppGateway = empty(resourceIds.applicationGatewayResourceId) && deployToggles.applicationGateway
-var _deployFirewall = empty(resourceIds.firewallResourceId) && deployToggles.firewall
-var _isPlatformLz = flagPlatformLandingZone
-var _deployPdnsAndPe = networkIsolation && !_isPlatformLz
-var _deployBuildVm = deployToggles.buildVm && !_isPlatformLz
-var _deployJumpVm = deployToggles.jumpVm && !_isPlatformLz && !empty(jumpVmAdminPassword)
-
-// Observability has coupling: App Insights needs a workspace.
-var _deployLogAnalytics = empty(resourceIds.logAnalyticsWorkspaceResourceId) && deployToggles.logAnalytics
-var _hasLogAnalytics = (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) || (_deployLogAnalytics)
-
-var _deployAppInsights = empty(resourceIds.appInsightsResourceId) && deployToggles.appInsights && _hasLogAnalytics
-var _hasAppInsights = (!empty(resourceIds.appInsightsResourceId)) || (_deployAppInsights)
-
-// "has" reflects presence (existing or will be created here) for GenAI-app stack
-var _hasStorage = (!empty(resourceIds.storageAccountResourceId)) || (_deploySa)
-var _hasCosmos = (!empty(resourceIds.dbAccountResourceId)) || (_deployCosmos)
-var _hasSearch = (!empty(resourceIds.searchServiceResourceId)) || (_deploySearch)
-var _hasKv = (!empty(resourceIds.keyVaultResourceId)) || (_deployKv)
-var _hasContainerEnv = (!empty(resourceIds.containerEnvResourceId)) || (_deployContainerAppEnv)
-var _hasAppConfig = (!empty(resourceIds.appConfigResourceId)) || (_deployAppConfig)
-var _hasAcr = (!empty(resourceIds.containerRegistryResourceId)) || (_deployAcr)
-
-// Helpers for AGW/FW subnets
-var _agwSubnetName = 'AppGatewaySubnet'
-var _agwSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agwSubnetName)
-  : '${existingVNet.id}/subnets/${_agwSubnetName}'
 
 // ──────────────────────────────────────────────────────────────────────
 // 3.3 Private DNS Zones (create when isolated AND per-zone ID not provided)
 // ─────────────────────────────────────────────────────────────────────-
-var _useExistingPdz = {
-  cognitiveservices: !empty(privateDnsZoneIds.cognitiveservices)
-  openai: !empty(privateDnsZoneIds.openai)
-  aiServices: !empty(privateDnsZoneIds.aiServices)
-  search: !empty(privateDnsZoneIds.search)
-  cosmosSql: !empty(privateDnsZoneIds.cosmosSql)
-  blob: !empty(privateDnsZoneIds.blob)
-  keyVault: !empty(privateDnsZoneIds.keyVault)
-  appConfig: !empty(privateDnsZoneIds.appConfig)
-  containerApps: !empty(privateDnsZoneIds.containerApps)
-  acr: !empty(privateDnsZoneIds.acr)
-  appInsights: !empty(privateDnsZoneIds.appInsights)
-}
 
-// PDNS needs: create zone if GenAI-app needs it OR AI Foundry will create its own dep
-// In this template Foundry will always have dependencies (Standard setup)
-// AI Foundry is always deployed in this template; when AF wants dependencies, ensure PDNS zones exist
-var _foundryNeedsCosmosPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsBlobPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsSearchPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsKvPdns = _afWantsDeps && _afAgentSvcEnabled
-
-var _appNeedsCosmosPdns = _hasCosmos
-var _appNeedsBlobPdns = _hasStorage
-var _appNeedsSearchPdns = _hasSearch
-var _appNeedsKvPdns = _hasKv
-
-var _needCosmosPdns = _appNeedsCosmosPdns || _foundryNeedsCosmosPdns
-var _needBlobPdns = _appNeedsBlobPdns || _foundryNeedsBlobPdns
-var _needSearchPdns = _appNeedsSearchPdns || _foundryNeedsSearchPdns
-var _needKvPdns = _appNeedsKvPdns || _foundryNeedsKvPdns
-
-// map caller links -> AVM link shape once
-// Converte PrivateDnsZoneNetworkLinkType -> shape do AVM
-var _pdnsLinksFromParam = [
-  for l in privateDnsZones.networkLinks: {
-    name: l.vnetLinkName
-    registrationEnabled: false
-    virtualNetworkResourceId: l.vnetId
-  }
-]
 
 // Cognitiveservices
 module privateDnsZoneCogSvcs 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.cognitiveservices) {
@@ -1326,19 +1450,7 @@ module privateDnsZoneInsights 'br/public:avm/res/network/private-dns-zone:0.8.0'
 // ─────────────────────────────────────────────────────────────────────-
 // 3.4 Private Endpoints (helpers + per-service)
 // ─────────────────────────────────────────────────────────────────────-
-var _peSubnetName = 'pe-subnet'
 
-var _peSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _peSubnetName)
-  : '${existingVNet.id}/subnets/${_peSubnetName}'
-
-var _appConfigResourceId = !empty(resourceIds.appConfigResourceId)
-  ? resourceIds.appConfigResourceId
-  : (_deployAppConfig ? resourceId('Microsoft.AppConfiguration/configurationStores', _appConfigName) : '')
-
-var _acrResourceId = !empty(resourceIds.containerRegistryResourceId)
-  ? existingAcr.id
-  : (_deployAcr ? resourceId('Microsoft.ContainerRegistry/registries', _acrNameEffective) : '')
 
 // App Configuration
 module privateEndpointAppConfig 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasAppConfig) {
@@ -1596,33 +1708,16 @@ module privateEndpointKeyVault 'br/public:avm/res/network/private-endpoint:0.11.
 // ─────────────────────────────────────────────────────────────────────-
 // 3.5 Existing Resources (APIM, AGW, Firewall)
 // ─────────────────────────────────────────────────────────────────────-
-// Existing APIM
-var _apimIdSegments = empty(resourceIds.apimServiceResourceId) ? [''] : split(resourceIds.apimServiceResourceId, '/')
-var _apimSub = length(_apimIdSegments) >= 3 ? _apimIdSegments[2] : ''
-var _apimRg = length(_apimIdSegments) >= 5 ? _apimIdSegments[4] : ''
-var _apimNameExisting = length(_apimIdSegments) >= 1 ? last(_apimIdSegments) : ''
 resource existingApim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = if (!empty(resourceIds.apimServiceResourceId)) {
   name: _apimNameExisting
   scope: resourceGroup(_apimSub, _apimRg)
 }
 
-// Existing App Gateway
-var _agwIdSegments = empty(resourceIds.applicationGatewayResourceId)
-  ? ['']
-  : split(resourceIds.applicationGatewayResourceId, '/')
-var _agwSub = length(_agwIdSegments) >= 3 ? _agwIdSegments[2] : ''
-var _agwRg = length(_agwIdSegments) >= 5 ? _agwIdSegments[4] : ''
-var _agwNameExisting = length(_agwIdSegments) >= 1 ? last(_agwIdSegments) : ''
 resource existingAppGateway 'Microsoft.Network/applicationGateways@2024-07-01' existing = if (!empty(resourceIds.applicationGatewayResourceId)) {
   name: _agwNameExisting
   scope: resourceGroup(_agwSub, _agwRg)
 }
 
-// Existing Firewall
-var _afwIdSegments = empty(resourceIds.firewallResourceId) ? [''] : split(resourceIds.firewallResourceId, '/')
-var _afwSub = length(_afwIdSegments) >= 3 ? _afwIdSegments[2] : ''
-var _afwRg = length(_afwIdSegments) >= 5 ? _afwIdSegments[4] : ''
-var _afwNameExisting = length(_afwIdSegments) >= 1 ? last(_afwIdSegments) : ''
 resource existingFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' existing = if (!empty(resourceIds.firewallResourceId)) {
   name: _afwNameExisting
   scope: resourceGroup(_afwSub, _afwRg)
@@ -1631,13 +1726,6 @@ resource existingFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' existing
 // ─────────────────────────────────────────────────────────────────────-
 // 3.6 Observability (LAW, App Insights)
 // ─────────────────────────────────────────────────────────────────────-
-// Log Analytics (helper vars before existing)
-var _lawIdSegments = empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? ['']
-  : split(resourceIds.logAnalyticsWorkspaceResourceId, '/')
-var _existingLawSubscriptionId = length(_lawIdSegments) >= 3 ? _lawIdSegments[2] : ''
-var _existingLawResourceGroupName = length(_lawIdSegments) >= 5 ? _lawIdSegments[4] : ''
-var _existingLawName = length(_lawIdSegments) >= 1 ? last(_lawIdSegments) : ''
 
 resource existingLogAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = if (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) {
   name: _existingLawName
@@ -1658,10 +1746,6 @@ module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.12.0' = 
 }
 
 // App Insights
-var _aiIdSegments = empty(resourceIds.appInsightsResourceId) ? [''] : split(resourceIds.appInsightsResourceId, '/')
-var _existingAISubscriptionId = length(_aiIdSegments) >= 3 ? _aiIdSegments[2] : ''
-var _existingAIResourceGroupName = length(_aiIdSegments) >= 5 ? _aiIdSegments[4] : ''
-var _existingAIName = length(_aiIdSegments) >= 1 ? last(_aiIdSegments) : ''
 
 resource existingAppInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(resourceIds.appInsightsResourceId)) {
   name: _existingAIName
@@ -1689,36 +1773,12 @@ module appInsights 'br/public:avm/res/insights/component:0.6.0' = if (_deployApp
 // ─────────────────────────────────────────────────────────────────────-
 // 3.7 Container Apps Environment (reuse or create)
 // ─────────────────────────────────────────────────────────────────────-
-var _envIdSegments = empty(resourceIds.containerEnvResourceId) ? [''] : split(resourceIds.containerEnvResourceId, '/')
-var _existingEnvSubscriptionId = length(_envIdSegments) >= 3 ? _envIdSegments[2] : ''
-var _existingEnvResourceGroup = length(_envIdSegments) >= 5 ? _envIdSegments[4] : ''
-var _existingEnvName = length(_envIdSegments) >= 1 ? last(_envIdSegments) : ''
 
 resource existingContainerEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' existing = if (!empty(resourceIds.containerEnvResourceId)) {
   name: _existingEnvName
   scope: resourceGroup(_existingEnvSubscriptionId, _existingEnvResourceGroup)
 }
 
-// Effective LAW resourceId (reuse or newly created)
-var _laIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? resourceIds.logAnalyticsWorkspaceResourceId
-  : (_deployLogAnalytics ? logAnalytics!.outputs.resourceId : '')
-
-// Effective LAW customer GUID + shared key:
-// - If reusing an existing LAW, call reference/listKeys directly on the literal ID
-// - If we created the LAW here, use AVM module outputs (no early GETs)
-var _laCustomerIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? reference(resourceIds.logAnalyticsWorkspaceResourceId, '2022-10-01', 'Full').properties.customerId
-  : (_deployLogAnalytics ? logAnalytics!.outputs.logAnalyticsWorkspaceId : '')
-
-var _laSharedKeyEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? listKeys(resourceIds.logAnalyticsWorkspaceResourceId, '2020-08-01').primarySharedKey
-  #disable-next-line BCP318
-  : (_deployLogAnalytics ? logAnalytics.outputs.primarySharedKey : '')
-
-var _acaInfraSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, containerAppEnvDefinition.subnetName!)
-  : '${existingVNet.id}/subnets/${containerAppEnvDefinition.subnetName!}'
 
 module containerEnv 'br/public:avm/res/app/managed-environment:0.11.3' = if (_deployContainerAppEnv) {
   name: 'deployContainerEnv'
@@ -1763,10 +1823,6 @@ module containerEnv 'br/public:avm/res/app/managed-environment:0.11.3' = if (_de
 // 3.8 Container Apps
 // ─────────────────────────────────────────────────────────────────────-
 
-var _containerEnvIdEffective = !empty(resourceIds.containerEnvResourceId)
-  ? resourceIds.containerEnvResourceId
-  #disable-next-line BCP318
-  : containerEnv.outputs.resourceId
 
 @batchSize(4)
 module containerApps 'br/public:avm/res/app/container-app:0.18.1' = [
@@ -1836,22 +1892,11 @@ module containerApps 'br/public:avm/res/app/container-app:0.18.1' = [
 // 3.9 App Services Backing Services — GenAI app scope (reuse or create)
 // ─────────────────────────────────────────────────────────────────────-
 // -------- ACR
-var _acrIdSegments = empty(resourceIds.containerRegistryResourceId)
-  ? ['']
-  : split(resourceIds.containerRegistryResourceId, '/')
-var _existingAcrSub = length(_acrIdSegments) >= 3 ? _acrIdSegments[2] : ''
-var _existingAcrRg = length(_acrIdSegments) >= 5 ? _acrIdSegments[4] : ''
-var _existingAcrName = length(_acrIdSegments) >= 1 ? last(_acrIdSegments) : ''
 
 resource existingAcr 'Microsoft.ContainerRegistry/registries@2025-05-01-preview' existing = if (!empty(resourceIds.containerRegistryResourceId)) {
   name: _existingAcrName
   scope: resourceGroup(_existingAcrSub, _existingAcrRg)
 }
-
-var _acrEffectiveSku = !empty(containerRegistryDefinition.sku!) ? containerRegistryDefinition.sku! : 'Premium'
-var _acrNameEffective = !empty(containerRegistryDefinition.name!)
-  ? containerRegistryDefinition.name!
-  : '${_acr}${baseName}'
 
 module registry 'br/public:avm/res/container-registry/registry:0.9.3' = if (_deployAcr) {
   name: 'registryDeployment'
@@ -1867,19 +1912,12 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.3' = if (_dep
 }
 
 // -------- Cosmos DB (GenAI)
-var _cosmosIdSegments = empty(resourceIds.dbAccountResourceId) ? [''] : split(resourceIds.dbAccountResourceId, '/')
-var _existingCosmosSub = length(_cosmosIdSegments) >= 3 ? _cosmosIdSegments[2] : ''
-var _existingCosmosRg = length(_cosmosIdSegments) >= 5 ? _cosmosIdSegments[4] : ''
-var _existingCosmosName = length(_cosmosIdSegments) >= 1 ? last(_cosmosIdSegments) : ''
 
 resource existingCosmos 'Microsoft.DocumentDB/databaseAccounts@2025-04-15' existing = if (!empty(resourceIds.dbAccountResourceId)) {
   name: _existingCosmosName
   scope: resourceGroup(_existingCosmosSub, _existingCosmosRg)
 }
 
-var _cosmosDef = cosmosDbDefinition ?? {
-  name: ''
-}
 module databaseAccount 'br/public:avm/res/document-db/database-account:0.15.1' = if (_deployCosmos) {
   name: 'databaseAccountDeployment'
   params: {
@@ -1890,10 +1928,6 @@ module databaseAccount 'br/public:avm/res/document-db/database-account:0.15.1' =
 }
 
 // -------- Key Vault (GenAI)
-var _kvIdSegments = empty(resourceIds.keyVaultResourceId) ? [''] : split(resourceIds.keyVaultResourceId, '/')
-var _existingKvSub = length(_kvIdSegments) >= 3 ? _kvIdSegments[2] : ''
-var _existingKvRg = length(_kvIdSegments) >= 5 ? _kvIdSegments[4] : ''
-var _existingKvName = length(_kvIdSegments) >= 1 ? last(_kvIdSegments) : ''
 
 resource existingVault 'Microsoft.KeyVault/vaults@2024-12-01-preview' existing = if (!empty(resourceIds.keyVaultResourceId)) {
   name: _existingKvName
@@ -1911,23 +1945,12 @@ module vault 'br/public:avm/res/key-vault/vault:0.13.3' = if (_deployKv) {
 }
 
 // -------- Storage Account (GenAI)
-var _saIdSegments = empty(resourceIds.storageAccountResourceId)
-  ? ['']
-  : split(resourceIds.storageAccountResourceId, '/')
-var _existingSaSub = length(_saIdSegments) >= 3 ? _saIdSegments[2] : ''
-var _existingSaRg = length(_saIdSegments) >= 5 ? _saIdSegments[4] : ''
-var _existingSaName = length(_saIdSegments) >= 1 ? last(_saIdSegments) : ''
 
 resource existingStorage 'Microsoft.Storage/storageAccounts@2025-01-01' existing = if (!empty(resourceIds.storageAccountResourceId)) {
   name: _existingSaName
   scope: resourceGroup(_existingSaSub, _existingSaRg)
 }
 
-var _storageAccountDef = storageAccountDefinition ?? {
-  name: ''
-  publicNetworkAccessEnabled: false
-  tags: {}
-}
 module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (_deploySa) {
   name: 'storageAccountDeployment'
   params: {
@@ -1943,23 +1966,12 @@ module storageAccount 'br/public:avm/res/storage/storage-account:0.26.2' = if (_
 }
 
 // -------- AI Search (GenAI)
-var _searchIdSegments = empty(resourceIds.searchServiceResourceId)
-  ? ['']
-  : split(resourceIds.searchServiceResourceId, '/')
-var _existingSearchSub = length(_searchIdSegments) >= 3 ? _searchIdSegments[2] : ''
-var _existingSearchRg = length(_searchIdSegments) >= 5 ? _searchIdSegments[4] : ''
-var _existingSearchName = length(_searchIdSegments) >= 1 ? last(_searchIdSegments) : ''
-
 #disable-next-line BCP081
 resource existingSearch 'Microsoft.Search/searchServices@2024-03-01' existing = if (!empty(resourceIds.searchServiceResourceId)) {
   name: _existingSearchName
   scope: resourceGroup(_existingSearchSub, _existingSearchRg)
 }
 
-var _searchDef = searchDefinition ?? {
-  name: ''
-  tags: {}
-}
 module searchService 'br/public:avm/res/search/search-service:0.11.1' = if (_deploySearch) {
   name: 'searchServiceDeployment'
   params: {
@@ -1970,19 +1982,11 @@ module searchService 'br/public:avm/res/search/search-service:0.11.1' = if (_dep
 }
 
 // -------- App Configuration
-var _appcsIdSegments = empty(resourceIds.appConfigResourceId) ? [''] : split(resourceIds.appConfigResourceId, '/')
-var _existingAppcsSub = length(_appcsIdSegments) >= 3 ? _appcsIdSegments[2] : ''
-var _existingAppcsRg = length(_appcsIdSegments) >= 5 ? _appcsIdSegments[4] : ''
-var _existingAppcsName = length(_appcsIdSegments) >= 1 ? last(_appcsIdSegments) : ''
 
 resource existingAppConfig 'Microsoft.AppConfiguration/configurationStores@2024-06-01' existing = if (!empty(resourceIds.appConfigResourceId)) {
   name: _existingAppcsName
   scope: resourceGroup(_existingAppcsSub, _existingAppcsRg)
 }
-
-var _appConfigName = empty((appConfigurationDefinition ?? { name: '' }).name!)
-  ? '${_appcs}${baseName}'
-  : (appConfigurationDefinition.name!)
 
 module configurationStore 'br/public:avm/res/app-configuration/configuration-store:0.9.1' = if (_deployAppConfig) {
   name: 'configurationStoreDeployment'
@@ -1997,103 +2001,9 @@ module configurationStore 'br/public:avm/res/app-configuration/configuration-sto
 // 3.10 AI Foundry (AVM Pattern Module)
 // ─────────────────────────────────────────────────────────────────────-
 
-// 1) Source entries (array in the param type)
-var _afModelEntries = _afParam.aiModelDeployments
-
-// 2) Build the array AVM expects
-var _afModelDeployments = [
-  for (md, idx) in _afModelEntries: union(
-    {
-      // name from element; fallback if blank
-      name: empty(md.name) ? 'model-${idx}' : string(md.name)
-
-      model: {
-        format: md.model.format
-        name: md.model.name
-        version: md.model.version
-      }
-
-      // map scale.type -> sku.name
-      sku: {
-        capacity: int(md.scale.capacity)
-        name: empty(md.scale.type) ? 'Standard' : string(md.scale.type)
-      }
-    },
-    // Optionals only when provided
-    empty(md.raiPolicyName!) ? {} : { raiPolicyName: md.raiPolicyName! },
-    empty(md.versionUpgradeOption!) ? {} : { versionUpgradeOption: md.versionUpgradeOption! }
-  )
-]
-
-// Let the AVM module create its associated resources (Search/Cosmos/Storage/KV)
-// If Agent Service is disabled, force no AF-associated deps
-var _afWantsDeps = _afAgentSvcEnabled && (_afParam.includeAssociatedResources! ?? true)
-
-var _agentSubnetName = 'agent-subnet'
-var _agentSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agentSubnetName)
-  : '${existingVNet.id}/subnets/${_agentSubnetName}'
-
-// Only include AI Services PDNS bindings when agent service is enabled
-var _afNetworkingConfig = !flagPlatformLandingZone && _afAgentSvcEnabled
-  ? {
-      networking: {
-        agentServiceSubnetResourceId: _agentSubnetId
-        aiServicesPrivateDnsZoneResourceId: !_useExistingPdz.aiServices
-          #disable-next-line BCP318
-          ? privateDnsZoneAiService.outputs.resourceId
-          : privateDnsZoneIds.aiServices
-        cognitiveServicesPrivateDnsZoneResourceId: !_useExistingPdz.cognitiveservices
-          #disable-next-line BCP318
-          ? privateDnsZoneCogSvcs.outputs.resourceId
-          : privateDnsZoneIds.cognitiveservices
-        openAiPrivateDnsZoneResourceId: !_useExistingPdz.openai
-          #disable-next-line BCP318
-          ? privateDnsZoneOpenAi.outputs.resourceId
-          : privateDnsZoneIds.openai
-      }
-    }
-  : {}
-
-var _afAiSearchPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.search
-        #disable-next-line BCP318
-        ? privateDnsZoneSearch.outputs.resourceId
-        : privateDnsZoneIds.search
-    }
-  : {}
-
-var _afCosmosPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.cosmosSql
-        #disable-next-line BCP318
-        ? privateDnsZoneCosmos.outputs.resourceId
-        : privateDnsZoneIds.cosmosSql
-    }
-  : {}
-
-var _afKvPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.keyVault
-        #disable-next-line BCP318
-        ? privateDnsZoneKeyVault.outputs.resourceId
-        : privateDnsZoneIds.keyVault
-    }
-  : {}
-
-var _afBlobPdzBinding = !flagPlatformLandingZone
-  ? {
-      blobPrivateDnsZoneResourceId: !_useExistingPdz.blob
-        #disable-next-line BCP318
-        ? privateDnsZoneBlob.outputs.resourceId
-        : privateDnsZoneIds.blob
-    }
-  : {}
-
 // module aiFoundry 'br/public:avm/ptn/ai-ml/ai-foundry:0.3.0' = {
 // Note: temporarily using custom module to avoid deployment scripts creation by AI Foundry AVM Module
-module aiFoundry 'ai-foundry/main.bicep' = {
+module aiFoundry 'modules/ai-foundry/main.bicep' = {
   name: 'aiFoundryDeployment'
   params: {
     baseUniqueName: _afBaseUniqueName
@@ -2153,17 +2063,6 @@ module aiFoundry 'ai-foundry/main.bicep' = {
 // ─────────────────────────────────────────────────────────────────────-
 // 3.11 Gateways (WAF policy, App Gateway, Azure Firewall, APIM)
 // ─────────────────────────────────────────────────────────────────────-
-var _wafName = empty(wafPolicyDefinition.name!) ? '${_waf}${baseName}' : wafPolicyDefinition.name!
-
-var _policySettingsForModule = {
-  state: wafPolicyDefinition.policySettings.enabledState
-  mode: wafPolicyDefinition.policySettings.mode
-  requestBodyCheck: wafPolicyDefinition.policySettings.requestBodyCheck
-  maxRequestBodySizeInKb: wafPolicyDefinition.policySettings.maxRequestBodySizeInKb
-  fileUploadLimitInMb: wafPolicyDefinition.policySettings.fileUploadLimitInMb
-}
-
-var _deployWafPolicy = _deployAppGateway && deployToggles.wafPolicy
 
 module wafPolicy 'br/public:avm/res/network/application-gateway-web-application-firewall-policy:0.2.0' = if (_deployWafPolicy) {
   name: 'wafPolicyDeployment'
@@ -2183,15 +2082,6 @@ module wafPolicy 'br/public:avm/res/network/application-gateway-web-application-
     customRules: []
   }
 }
-
-var _agwName = empty(appGatewayDefinition.name!) ? '${_agw}${baseName}' : appGatewayDefinition.name!
-
-var agwName = _agwName
-var agwId = resourceId('Microsoft.Network/applicationGateways', agwName)
-var agwSubnet = _agwSubnetId
-
-var _wafPolicyResourceId = _deployWafPolicy ? wafPolicy!.outputs.resourceId : ''
-var _agwPipName = '${_pip}${_agw}${baseName}'
 
 module applicationGateway 'br/public:avm/res/network/application-gateway:0.7.1' = if (_deployAppGateway) {
   name: 'applicationGatewayDeployment'
@@ -2292,26 +2182,6 @@ module appGatewayPip 'br/public:avm/res/network/public-ip-address:0.9.0' = if (_
   }
 }
 
-// decide if we will wire a policy
-var _deployAfwPolicy = _deployFirewall && (length(firewallPolicyDefinition.networkRules) > 0 || !empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!))
-
-var _afwPolicyName = '${_afwp}${baseName}'
-var _rcgName = empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!)
-  ? 'networkRules'
-  : firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!
-var _rcgPriority = firewallPolicyDefinition.networkPolicyRuleCollectionGroupPriority! ?? 100
-var _networkRulesForModule = [
-  for r in firewallPolicyDefinition.networkRules: {
-    name: r.name
-    ruleType: 'NetworkRule'
-    ...(empty(r.description) ? {} : { description: r.description })
-    sourceAddresses: r.sourceAddresses
-    destinationAddresses: r.destinationAddresses
-    destinationPorts: r.destinationPorts
-    ipProtocols: r.protocols
-  }
-]
-
 module fwPolicy 'br/public:avm/res/network/firewall-policy:0.3.1' = if (_deployAfwPolicy) {
   name: 'firewallPolicyDeployment'
   params: {
@@ -2337,8 +2207,6 @@ module fwPolicy 'br/public:avm/res/network/firewall-policy:0.3.1' = if (_deployA
     ]
   }
 }
-
-var _afwName = empty(firewallDefinition.name!) ? '${_afw}${baseName}' : firewallDefinition.name!
 
 module firewallPip 'br/public:avm/res/network/public-ip-address:0.9.0' = if (_deployFirewall) {
   name: 'firewallPipDeployment'
@@ -2384,7 +2252,6 @@ module azureFirewall_withPolicy 'br/public:avm/res/network/azure-firewall:0.8.0'
   ]
 }
 
-var _apimName = empty(apimDefinition.name!) ? '${_apim}${baseName}' : apimDefinition.name!
 
 #disable-next-line BCP081
 module apim 'br/public:avm/res/api-management/service:0.11.0' = if (_deployApim) {
@@ -2449,12 +2316,6 @@ module existingSpokePeering 'br/public:avm/res/network/virtual-network:0.7.0' = 
   }
 }
 
-// Parse peer VNet ID
-var _peerVnetId = hubVnetPeeringDefinition.peerVnetResourceId
-var _peerParts = split(_peerVnetId, '/')
-var _peerSub = length(_peerParts) >= 3 ? _peerParts[2] : ''
-var _peerRg = length(_peerParts) >= 5 ? _peerParts[4] : ''
-var _peerVnetName = length(_peerParts) >= 9 ? _peerParts[8] : ''
 
 resource peerVnet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = if (!empty(_peerVnetId)) {
   name: _peerVnetName
@@ -2490,6 +2351,148 @@ module hubReversePeering 'br/public:avm/res/network/virtual-network:0.7.0' = if 
   dependsOn: [
     #disable-next-line BCP321
     (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+  ]
+}
+
+
+
+module bastionVault 'br/public:avm/res/key-vault/vault:0.13.3' = if (_deployJumpVm) {
+  name: 'bastionKeyVaultDeployment'
+  params: {
+    name: _bastionKvName
+    // Public by default (no private endpoints or firewall rules passed here)
+    enablePurgeProtection: true
+    tags: union(tags, bastionKeyVaultDefinition.tags! ?? {})
+    enableTelemetry: enableTelemetry
+  }
+}
+
+// Create/seed the admin password as a secret for operators (optional but handy)
+resource bastionVaultSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = if (_deployJumpVm) {
+  name: '${_bastionKvName}/${jumpVmDefinition.vmKeyVaultSecName}'
+  properties: {
+    value: jumpVmAdminPassword
+    contentType: 'text/plain'
+  }
+  dependsOn: [bastionVault]
+}
+
+
+module jumpVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployJumpVm) {
+  name: 'jumpVmDeployment'
+  params: {
+    name: empty(jumpVmDefinition.name!) ? '${_vm}${baseName}-jump' : jumpVmDefinition.name!
+    location: location
+    tags: union(tags, jumpVmDefinition.tags! ?? {})
+    enableTelemetry: jumpVmDefinition.enableTelemetry ?? enableTelemetry
+    osType: _jumpVmOsType
+    availabilityZone: -1
+    adminUsername: jumpVmDefinition.adminUsername
+    adminPassword: jumpVmAdminPassword
+    computerName: _jumpComputerName
+    imageReference: _jumpVmImageRef
+    vmSize: jumpVmDefinition.sku
+
+    osDisk: {
+      caching: 'ReadWrite'
+      diskSizeGB: 127
+      managedDisk: { storageAccountType: 'Premium_LRS' }
+    }
+
+    nicConfigurations: [
+      {
+        name: 'nic-jump-1'
+        ipConfigurations: [
+          {
+            name: 'ipconfig1'
+            subnetResourceId: _jumpSubnetId
+            privateIPAllocationMethod: 'Dynamic'
+          }
+        ]
+      }
+    ]
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+  ]
+}
+
+
+
+// Only deploy Build VM when an SSH key is provided
+module buildVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployBuildVm && !empty(buildVmDefinition.sshPublicKey)) {
+  name: 'buildVmDeployment'
+  params: {
+    name: empty(buildVmDefinition.name!) ? '${_vm}${baseName}-build' : buildVmDefinition.name!
+    location: location
+    tags: union(tags, buildVmDefinition.tags! ?? {})
+    enableTelemetry: buildVmDefinition.enableTelemetry! ?? enableTelemetry
+
+    osType: _buildVmOsType
+    availabilityZone: -1
+    adminUsername: buildVmDefinition.adminUsername
+    imageReference: _buildVmImageRef
+    vmSize: buildVmDefinition.sku
+
+    disablePasswordAuthentication: true
+    publicKeys: [
+      {
+        path: '/home/${buildVmDefinition.adminUsername}/.ssh/authorized_keys'
+        keyData: buildVmDefinition.sshPublicKey
+      }
+    ]
+
+    osDisk: {
+      caching: 'ReadWrite'
+      diskSizeGB: 64
+      managedDisk: { storageAccountType: 'Premium_LRS' }
+    }
+
+    nicConfigurations: [
+      {
+        name: 'nic-build-1'
+        ipConfigurations: [
+          {
+            name: 'ipconfig1'
+            subnetResourceId: _buildSubnetId
+            privateIPAllocationMethod: 'Dynamic'
+          }
+        ]
+      }
+    ]
+
+    customData: base64(_buildCloudInit)
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+  ]
+}
+
+// ─────────────────────────────────────────────────────────────────────-
+// 3.13 Grounding with Bing Search
+// ─────────────────────────────────────────────────────────────────────-
+
+// Run this module when:
+//  - creating a new Bing account (toggle true, no existing), OR
+//  - reusing an existing account (existing ID provided) but we still need to create the CS connection.
+module bingSearch 'modules/bing-search/main.bicep' = if (_invokeBingModule) {
+  name: 'bingsearchDeployment'
+  params: {
+    // AF context from the AVM/Foundry module outputs
+    account_name: aiFoundry.outputs.aiServicesName
+    project_name: aiFoundry.outputs.aiProjectName
+
+    // Deterministic default for the Bing account (only used on create path)
+    bingSearchName: _bingNameEffective
+
+    // Reuse path: when provided, the child module will NOT create the Bing account,
+    // it will use this existing one and still create the connection.
+    existingResourceId: resourceIds.groundingServiceResourceId
+  }
+  dependsOn: [
+    aiFoundry!
   ]
 }
 
@@ -2566,6 +2569,12 @@ output applicationGatewayResourceId string = _deployAppGateway
 output firewallResourceId string = _deployFirewall
   ? resourceId('Microsoft.Network/azureFirewalls', _afwName)
   : existingFirewall.id
+
+// Grounding with Bing
+output groundingServiceResourceId string = _invokeBingModule
+  ? bingSearch!.outputs.resourceId
+  : ''
+
 
 // WAF Policy
 output wafPolicyResourceId string = _deployAppGateway ? _wafPolicyResourceId : ''

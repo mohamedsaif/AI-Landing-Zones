@@ -64,7 +64,7 @@ module testDeployment '../../../infra/main.bicep' = [
 
         aiFoundryConfiguration: {
           createCapabilityHosts: true
-        }  
+        }
 
         // required config objects (BYO for these three)
         aiSearchConfiguration: {
