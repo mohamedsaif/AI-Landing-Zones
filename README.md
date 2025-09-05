@@ -4,14 +4,14 @@ This repository contains the **Bicep code** for the **AI Landing Zone Architectu
 
 ## Architecture
 
-The architecture delivers a full **AI Landing Zone** with **Azure AI Foundry** at the core. The **AI Foundry Agent service** runs together with its main dependencies — **Azure AI Search, Cosmos DB, Storage, and Key Vault** — inside a secured **Azure Container Apps** environment. Additional services for configuration, data handling, and observability are included. Because the design is component-based, you can deploy the complete stack or only the parts that match your project needs.
+The architecture delivers a complete **AI Landing Zone** with **Azure AI Foundry** at its core. The **AI Foundry Agent service** operates alongside its main dependencies — **Azure AI Search, Cosmos DB, Storage, and Key Vault** — within a secure and integrated setup. In addition, a dedicated **Azure Container Apps environment** is provisioned, enabling you to build and run your own **GenAI applications**. Supporting services for configuration, data management, and observability are also included. Thanks to the component-based design, you can deploy the full stack or only the parts that best match your project needs.
 
 ![Architecture](./docs/architecture.png)
 *AI Landing Zone*
 
-Flexibility comes from **feature toggles**: you choose whether to create, reuse, or share each service between your application and AI Foundry. This approach supports both greenfield deployments and integration with an existing platform landing zone.
+Flexibility comes from **feature toggles**: you choose whether to create or reuse each service. This approach supports both greenfield deployments and integration with an existing platform landing zone.
 
-When network isolation is enabled, traffic is routed only through Private Endpoints. Name resolution uses Private DNS zones — either created during deployment or linked from zones already managed at the platform level.
+By default, network isolation is enabled, ensuring that all traffic flows exclusively through Private Endpoints. Name resolution is handled via Private DNS zones, either created during deployment or linked to zones already managed at the platform level.
 
 ## Documentation
 
