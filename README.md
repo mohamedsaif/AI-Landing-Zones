@@ -36,7 +36,7 @@ The table represents the various reference implementations of the AI Landing Zon
 | Type | Description |
 | ----------- | ----------- |
 | Terraform | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
-| Bicep | Coming Soon in August 2025 |
+| Bicep | [AVM Repo]([https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone]) |
 | Portal | Coming Soon in September 2025 |
 
 ## Use cases & Scenarios
@@ -60,7 +60,7 @@ The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://le
 The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas of [AI workloads on Azure](https://learn.microsoft.com/en-us/azure/well-architected/ai/).
 ![image](https://learn.microsoft.com/en-us/azure/well-architected/ai/images/ai-architecture-pattern.png)
 
-## Design Areas
+## Design Framework
 The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
 
 - [Security](/docs/Security.md)
