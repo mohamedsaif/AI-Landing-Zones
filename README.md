@@ -36,7 +36,7 @@ The table represents the various reference implementations of the AI Landing Zon
 | Type | Description |
 | ----------- | ----------- |
 | Terraform | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
-| Bicep | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
+| Bicep | [AVM Repo](https://github.com/Azure/bicep-avm-ptn-aiml-landing-zone) |
 | Portal | Coming Soon in September 2025 |
 
 ## Design Framework
