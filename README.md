@@ -10,7 +10,7 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 - The AI Landing Zone leverages [Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/overview/) as the orchestration framework.
 - Given the pace of innovation and change in AI, the AI Landing Zone may leverage services in Preview to provide an architecture with latest features.
 
-## Reference Architecture
+## Reference Architectures
 
 ### AI Landing Zone with Platform Landing Zone
 The below diagram represents the reference architecture of the AI Landing Zone with Platform Landing Zone which is our recommended configuration.
@@ -29,7 +29,7 @@ The below diagram represents the reference architecture of the AI Landing Zone w
 - AI Landing Zone in Multi-cloud & Hybrid environments
 - AI Landing Zone with Data Landing Zone
 
-## Reference Implementation
+## Extensible Implementations
 
 The table represents the various reference implementations of the AI Landing Zone based on the service inventory & configuration
 
@@ -38,6 +38,23 @@ The table represents the various reference implementations of the AI Landing Zon
 | Terraform | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
 | Bicep | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
 | Portal | Coming Soon in September 2025 |
+
+## Design Framework
+The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
+
+- [Security](/docs/Security.md)
+- [Identity](/docs/Identity.md)
+- [Compute](/docs/Compute.md)
+- [Data](/docs/Data.md)
+- [Reliability](/docs/Reliability.md)
+- [Networking](/docs/Networking.md)
+- [Governance](/docs/Governance.md)
+- [Monitoring](/docs/Monitoring.md)
+- [Cost Optimization](/docs/Cost-Optimization.md)
+- [Platform Automation](/docs/Platform-Automation.md)
+- [Resource Organization](/docs/Resource-Organization.md)
+- [Operational Excellence](/docs/Operational-Excellence.md)
+- [Performance Efficiency](/docs/Performance-Efficiency.md)
 
 ## Use cases & Scenarios
 The AI Landing Zone act as a foundation architecture which can be leveraged to deploy a particular AI usecase & scenario on Azure, such as the below, either with its default architecture or by extending it with additional Azure services as needed.
@@ -59,23 +76,6 @@ The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://le
 ## Well-Architected Framework
 The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas of [AI workloads on Azure](https://learn.microsoft.com/en-us/azure/well-architected/ai/).
 ![image](https://learn.microsoft.com/en-us/azure/well-architected/ai/images/ai-architecture-pattern.png)
-
-## Design Framework
-The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
-
-- [Security](/docs/Security.md)
-- [Identity](/docs/Identity.md)
-- [Compute](/docs/Compute.md)
-- [Data](/docs/Data.md)
-- [Reliability](/docs/Reliability.md)
-- [Networking](/docs/Networking.md)
-- [Governance](/docs/Governance.md)
-- [Monitoring](/docs/Monitoring.md)
-- [Cost Optimization](/docs/Cost-Optimization.md)
-- [Platform Automation](/docs/Platform-Automation.md)
-- [Resource Organization](/docs/Resource-Organization.md)
-- [Operational Excellence](/docs/Operational-Excellence.md)
-- [Performance Efficiency](/docs/Performance-Efficiency.md)
 
 ## Contributing
 
