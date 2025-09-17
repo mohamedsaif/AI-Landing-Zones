@@ -673,7 +673,7 @@ type AppConfigurationDefinitionType = {
   }[]?
 }
 
-import { lockType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
+import { lockType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 
 @export()
 @description('Connection reference for BYOR resources inside AI Projects.')

@@ -36,11 +36,11 @@ param privateEndpointSubnetResourceId string?
 @description('Optional. Resource Id of an existing subnet to use for agent connectivity. This is required when using agents with private endpoints.')
 param agentSubnetResourceId string?
 
-import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
+import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 @description('Optional. Specifies the role assignments for the AI Foundry resource.')
 param roleAssignments roleAssignmentType[]?
 
-import { lockType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
+import { lockType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 @description('Optional. The lock settings of AI Foundry resources.')
 param lock lockType?
 

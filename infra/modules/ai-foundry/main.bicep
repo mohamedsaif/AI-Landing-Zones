@@ -267,7 +267,7 @@ output storageAccountName string = includeAssociatedResources ? storageAccount!.
 @description('Name of the deployed Azure Cosmos DB account.')
 output cosmosAccountName string = includeAssociatedResources ? cosmosDb!.outputs.name : ''
 
-import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.0'
+import { roleAssignmentType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
 
 @export()
 @description('Custom configuration for a resource, including optional name, existing resource ID, and role assignments.')

@@ -1918,7 +1918,7 @@ resource existingCosmos 'Microsoft.DocumentDB/databaseAccounts@2025-04-15' exist
   scope: resourceGroup(_existingCosmosSub, _existingCosmosRg)
 }
 
-module databaseAccount 'br/public:avm/res/document-db/database-account:0.15.1' = if (_deployCosmos) {
+module databaseAccount 'br/public:avm/res/document-db/database-account:0.16.0' = if (_deployCosmos) {
   name: 'databaseAccountDeployment'
   params: {
     name: empty(_cosmosDef.name!) ? '${_cos}${baseName}' : _cosmosDef.name!
@@ -1988,7 +1988,7 @@ resource existingAppConfig 'Microsoft.AppConfiguration/configurationStores@2024-
   scope: resourceGroup(_existingAppcsSub, _existingAppcsRg)
 }
 
-module configurationStore 'br/public:avm/res/app-configuration/configuration-store:0.9.1' = if (_deployAppConfig) {
+module configurationStore 'br/public:avm/res/app-configuration/configuration-store:0.9.2' = if (_deployAppConfig) {
   name: 'configurationStoreDeployment'
   params: {
     name: _appConfigName
@@ -2378,7 +2378,7 @@ resource bastionVaultSecret 'Microsoft.KeyVault/vaults/secrets@2024-11-01' = if 
 }
 
 
-module jumpVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployJumpVm) {
+module jumpVm 'br/public:avm/res/compute/virtual-machine:0.20.0' = if (_deployJumpVm) {
   name: 'jumpVmDeployment'
   params: {
     name: empty(jumpVmDefinition.name!) ? '${_vm}${baseName}-jump' : jumpVmDefinition.name!
@@ -2421,7 +2421,7 @@ module jumpVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployJu
 
 
 // Only deploy Build VM when an SSH key is provided
-module buildVm 'br/public:avm/res/compute/virtual-machine:0.18.0' = if (_deployBuildVm && !empty(buildVmDefinition.sshPublicKey)) {
+module buildVm 'br/public:avm/res/compute/virtual-machine:0.20.0' = if (_deployBuildVm && !empty(buildVmDefinition.sshPublicKey)) {
   name: 'buildVmDeployment'
   params: {
     name: empty(buildVmDefinition.name!) ? '${_vm}${baseName}-build' : buildVmDefinition.name!

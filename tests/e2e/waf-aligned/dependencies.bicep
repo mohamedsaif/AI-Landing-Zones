@@ -25,7 +25,7 @@ module searchService 'br/public:avm/res/search/search-service:0.11.1' = {
 }
 
 // Cosmos DB account
-module cosmosAccount 'br/public:avm/res/document-db/database-account:0.15.1' = {
+module cosmosAccount 'br/public:avm/res/document-db/database-account:0.16.0' = {
   name: 'dep-cosmos'
   params: {
     name: cosmosName
