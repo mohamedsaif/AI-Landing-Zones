@@ -302,7 +302,21 @@ function Get-BicepParameters {
         # Check if this parameter references a user-defined type
         if ($ParamDef.'$ref' -and $JsonContent.definitions) {
             $refName = $ParamDef.'$ref' -replace '^#/definitions/', ''
+            
+            Write-Host "[$fullParamName] PROCESSING $ref BRANCH" -ForegroundColor Cyan
+            Write-Host "  Ref: $($ParamDef.'$ref')" -ForegroundColor Yellow
+            Write-Host "  RefName: $refName" -ForegroundColor Yellow
+            
             $typeDef = $JsonContent.definitions.$refName
+            
+            Write-Host "  TypeDef found: $($null -ne $typeDef)" -ForegroundColor $(if ($typeDef) { 'Green' } else { 'Red' })
+            if ($typeDef) {
+                Write-Host "  TypeDef.type: $($typeDef.type)" -ForegroundColor Yellow
+                Write-Host "  Has properties: $($null -ne $typeDef.properties)" -ForegroundColor Yellow
+                if ($typeDef.properties) {
+                    Write-Host "  Property count: $($typeDef.properties.PSObject.Properties.Count)" -ForegroundColor Yellow
+                }
+            }
             
             if ($typeDef -and $typeDef.type -eq "object" -and $typeDef.properties) {
                 # Add the main parameter
@@ -317,12 +331,16 @@ function Get-BicepParameters {
                     IsSubProperty = $Depth -gt 0
                 }
                 
+                Write-Host "  Recursively expanding $($typeDef.properties.PSObject.Properties.Count) properties..." -ForegroundColor Green
+                
                 # Recursively expand sub-properties
                 foreach ($propName in $typeDef.properties.PSObject.Properties.Name) {
                     $prop = $typeDef.properties.$propName
                     $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1) -BicepFilePath $BicepFilePath
                     $expandedParams += $nestedParams
                 }
+                
+                Write-Host "  Finished expanding. Total params: $($expandedParams.Count)" -ForegroundColor Green
             } else {
                 # Non-object structured type
                 $expandedParams += [PSCustomObject]@{
@@ -503,20 +521,42 @@ function Get-BicepParameters {
             [string]$TypeName
         )
 
+        Write-Host "    [Resolve-UdtDefinitionName] TypeName: $TypeName" -ForegroundColor DarkCyan
+        
         if (-not $Definitions) {
+            Write-Host "      Definitions is NULL!" -ForegroundColor Red
             return $null
         }
 
+        $defNames = $Definitions.PSObject.Properties.Name
+        Write-Host "      Total definitions: $($defNames.Count)" -ForegroundColor DarkCyan
+        
+        # Try direct match first
         $directMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -eq $TypeName } | Select-Object -First 1
         if ($directMatch) {
+            Write-Host "      DIRECT MATCH: $($directMatch.Name)" -ForegroundColor Green
             return $directMatch.Name
         }
 
+        # Try plural variant (e.g., privateDnsZoneDefinitionType -> privateDnsZonesDefinitionType)
+        if ($TypeName -notmatch 's+DefinitionType$') {
+            $pluralVariant = $TypeName -replace 'DefinitionType$', 'sDefinitionType'
+            $pluralMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -eq $pluralVariant } | Select-Object -First 1
+            if ($pluralMatch) {
+                Write-Host "      PLURAL MATCH: $($pluralMatch.Name)" -ForegroundColor Green
+                return $pluralMatch.Name
+            }
+        }
+
+        # Try suffix match
+        Write-Host "      No direct/plural match, trying suffix match..." -ForegroundColor DarkYellow
         $suffixMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -like "*.$TypeName" } | Select-Object -First 1
         if ($suffixMatch) {
+            Write-Host "      SUFFIX MATCH: $($suffixMatch.Name)" -ForegroundColor Green
             return $suffixMatch.Name
         }
 
+        Write-Host "      NO MATCH FOUND!" -ForegroundColor Red
         return $null
     }
     
@@ -536,7 +576,24 @@ function Get-BicepParameters {
             if ($udtMappings.ContainsKey($paramName)) {
                 $udtTypeName = $udtMappings[$paramName]
                 
+                Write-Host "[$paramName] Checking UDT mapping" -ForegroundColor Cyan
+                Write-Host "  UDT Type Name: $udtTypeName" -ForegroundColor Yellow
+                
                 $definitionName = Resolve-UdtDefinitionName -Definitions $jsonContent.definitions -TypeName $udtTypeName
+
+                Write-Host "  Resolved Definition: $definitionName" -ForegroundColor $(if ($definitionName) { 'Green' } else { 'Red' })
+
+                if ($definitionName) {
+                    # Only use the resolved definition if it matches semantically
+                    # Don't use plural variant for singular type names (e.g., privateDnsZoneDefinitionType should NOT use privateDnsZonesDefinitionType)
+                    $isPluralMismatch = ($udtTypeName -notmatch 's+DefinitionType$' -and $definitionName -match 's+DefinitionType$')
+                    
+                    if ($isPluralMismatch) {
+                        Write-Host "  PLURAL MISMATCH DETECTED - Skipping resolved definition" -ForegroundColor Red
+                        Write-Host "  Will use fallback logic to parse from Bicep source" -ForegroundColor Yellow
+                        $definitionName = $null
+                    }
+                }
 
                 if ($definitionName) {
                     $syntheticParam = [pscustomobject]@{
@@ -554,6 +611,10 @@ function Get-BicepParameters {
                     if ($param.PSObject.Properties['nullable']) {
                         $syntheticParam | Add-Member -NotePropertyName 'nullable' -NotePropertyValue $param.nullable
                     }
+
+                    Write-Host "  Synthetic Ref: $($syntheticParam.'$ref')" -ForegroundColor Magenta
+                    Write-Host "  Nullable: $($syntheticParam.nullable)" -ForegroundColor Magenta
+                    Write-Host "  Calling Expand-StructuredParameter..." -ForegroundColor White
 
                     $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $syntheticParam -JsonContent $jsonContent -BicepFilePath $FilePath
                 } else {
