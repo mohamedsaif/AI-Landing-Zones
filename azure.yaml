@@ -1,11 +1,36 @@
-# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-name: azure-ai-landing-zone
+name: aiml-landing-zone
 metadata:
-  template: azure-ai-landing-zone
+  template: aiml-landing-zone
 
 infra:
-  provider: bicep
-  path: infra
-  module: main
-  parameters:
-    file: infra/main.bicepparam
+  path: deploy
+  module: ./main
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/preprovision.ps1 
+    posix:
+      shell: sh 
+      run: ./scripts/preprovision.sh           
+  # postprovision:
+  #   windows:
+  #     shell: pwsh
+  #     run: ./scripts/postprovision.ps1
+  #   posix:
+  #     shell: sh
+  #     run: ./scripts/postprovision.sh
+
+# Testing Guide:
+# 
+# Template Specs Mode (Default):
+#   azd provision
+#   Expected: Creates Template Specs, generates main_ts.bicep with TS references
+#
+# Direct Mode (Fast iteration):
+#   azd env set SKIP_TEMPLATE_SPECS true
+#   azd provision
+#   Expected: No Template Specs, copies main.bicep -> main_ts.bicep directly
+#
+# Reset to default:
+#   azd env unset SKIP_TEMPLATE_SPECS

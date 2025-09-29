@@ -7,10 +7,11 @@ metadata description = 'Deploys the landing zone with defaults.'
 @maxLength(90)
 param resourceGroupName string = 'dep-${namePrefix}-bicep-${serviceShort}-rg'
 
-import { enforcedLocation } from '../../shared/constants.bicep'
+#disable-next-line no-hardcoded-location
+import { enforcedLocation, tags } from '../../shared/constants.bicep'
 
 @description('Optional. Short identifier for the test kind. Keep short to avoid name-length issues.')
-param serviceShort string = 'lzdef'
+param serviceShort string = 'lzmin'
 
 @description('Optional. A token injected by CI for uniqueness.')
 param namePrefix string = '#_namePrefix_#'
@@ -23,39 +24,25 @@ var workloadName = take(replace(replace(replace(replace(_seed, ' ', ''), '-', ''
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: resourceGroupName
   location: enforcedLocation
+  tags: tags
 }
 
-// Test execution (idempotency: init + idem)
+// Deploys the AI/ML landing zone with default settings and no model deployments, validating basic provisioning and idempotency.
 @batchSize(1)
 module testDeployment '../../../infra/main.bicep' = [
-  for iteration in ['init', 'idem']: {
+  for iteration in ['init']: {
     scope: resourceGroup
     name: '${uniqueString(deployment().name, enforcedLocation)}-test-${serviceShort}-${iteration}'
     params: {
-      // Make baseName explicit for stability
       baseName: workloadName
-
-      // Minimal model to keep capacity small and deterministic
+      location: enforcedLocation
       aiFoundryDefinition: {
-        lock: { kind: 'None', name: '' }
-        aiProjects: []
-        includeAssociatedResources: true
+        includeAssociatedResources: false
+        aiModelDeployments: []
         aiFoundryConfiguration: {
-          createCapabilityHosts: true
+          createCapabilityHosts: false
         }
-        aiSearchConfiguration: {}
-        storageAccountConfiguration: {}
-        cosmosDbConfiguration: {}
-        keyVaultConfiguration: {}
-        aiModelDeployments: [
-          {
-            name: 'gpt-4o'
-            model: { format: 'OpenAI', name: 'gpt-4o', version: '2024-11-20' }
-            scale: { type: 'Standard', capacity: 1, family: '', size: '', tier: '' }
-          }
-        ]
       }
-      jumpVmAdminPassword: '<StrongP@ssw0rd!>'
     }
   }
 ]

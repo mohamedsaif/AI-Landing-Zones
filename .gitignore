@@ -12,6 +12,11 @@
 *.env
 .local/
 .azure
+main.bicepparam
+main_ts.bicep
+.bld/
+main.json
+deploy/
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
