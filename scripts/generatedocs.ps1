@@ -283,6 +283,17 @@ function Get-BicepParameters {
         
         $fullParamName = if ($ParentPath) { "$ParentPath.$ParamName" } else { $ParamName }
         
+        # DEBUG: Check if we should trigger nullable UDT detection
+        if ($ParamName -eq "acrPrivateDnsZoneDefinition" -and $Depth -eq 0) {
+            Write-Host "DEBUG acrPrivateDnsZoneDefinition:" -ForegroundColor Cyan
+            Write-Host "  Type: $($ParamDef.type)" -ForegroundColor Cyan
+            Write-Host "  Nullable: $($ParamDef.nullable)" -ForegroundColor Cyan
+            Write-Host "  Has properties: $([bool]$ParamDef.properties)" -ForegroundColor Cyan
+            Write-Host "  BicepFilePath: $BicepFilePath" -ForegroundColor Cyan
+            Write-Host "  Depth: $Depth" -ForegroundColor Cyan
+            Write-Host "  Condition result: $(($ParamDef.type -eq 'object') -and $ParamDef.nullable -and !$ParamDef.properties -and $BicepFilePath -and ($Depth -eq 0))" -ForegroundColor Cyan
+        }
+        
         # Debug: Log parameter being processed
         if ($fullParamName -like "*lock*") {
             Write-Verbose "DEBUG: Processing $fullParamName - Type: $($ParamDef.type), Has `$ref: $([bool]$ParamDef.'$ref'), Has properties: $([bool]$ParamDef.properties)"
@@ -349,11 +360,14 @@ function Get-BicepParameters {
         } elseif ($ParamDef.type -eq "object" -and $ParamDef.nullable -and !$ParamDef.properties -and $BicepFilePath -and $Depth -eq 0) {
             # Handle nullable UDT parameters that lost their $ref during Bicep compilation
             # This is a known Bicep limitation - nullable UDTs compile to plain "type: object" without $ref
+            Write-Host "DETECTED NULLABLE UDT WITHOUT PROPERTIES: $fullParamName" -ForegroundColor Magenta
             Write-Verbose "Detected nullable object without properties at top level: $fullParamName - attempting Bicep lookup"
             
             $udtType = Get-BicepParameterType -BicepFilePath $BicepFilePath -ParameterName $ParamName
+            Write-Host "  Found UDT Type: $udtType" -ForegroundColor Yellow
             
             if ($udtType -and $JsonContent.definitions.$udtType) {
+                Write-Host "  Type definition exists in JSON - expanding!" -ForegroundColor Green
                 Write-Verbose "Found UDT type '$udtType' in Bicep source for parameter '$ParamName'"
                 $typeDef = $JsonContent.definitions.$udtType
                 

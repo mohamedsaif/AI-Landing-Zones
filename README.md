@@ -1,4 +1,4 @@
-# AI Landing Zone (Bicep template based on AVM modules)
+# AI/ML Landing Zone — Built on AVM
 
 This repository provides a **Bicep template** that composes **Azure Verified Modules (AVM)** and a few custom modules to provision a secure, configurable environment for **generative AI workloads** on Azure.
 
