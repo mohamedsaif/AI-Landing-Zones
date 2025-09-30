@@ -80,7 +80,7 @@ print_white() {
 
 print_header
 
-# Validate required environment variables
+# Check and prompt for required environment variables
 missing_vars=""
 if [ -z "$LOCATION" ]; then
     missing_vars="${missing_vars}AZURE_LOCATION "
@@ -90,34 +90,57 @@ if [ -z "$RESOURCE_GROUP" ]; then
 fi
 
 if [ -n "$missing_vars" ]; then
-    print_error "Missing required environment variables:"
+    print_warning "Some required environment variables are missing:"
     for var in $missing_vars; do
-        printf "${RED}  - %s${NC}\n" "$var"
+        printf "${YELLOW}  - %s${NC}\n" "$var"
     done
     echo ""
-    print_warning "To set them, choose one option:"
+    printf "${CYAN}[?] Let's set them interactively...${NC}\n"
     echo ""
-    printf "${CYAN}  Option 1 - Using azd (if using Azure Developer CLI):${NC}\n"
-    for var in $missing_vars; do
-        case "$var" in
-            "AZURE_LOCATION") example="<region>" ;;
-            "AZURE_RESOURCE_GROUP") example="<name>" ;;
-            *) example="<value>" ;;
-        esac
-        printf "${WHITE}    azd env set %s %s${NC}\n" "$var" "$example"
-    done
+    
+    # Prompt for AZURE_LOCATION if missing
+    if [ -z "$LOCATION" ]; then
+        while [ -z "$LOCATION" ]; do
+            printf "${WHITE}Enter location (Azure region, e.g., eastus2, westus3, centralus): ${NC}"
+            read -r LOCATION
+            if [ -z "$LOCATION" ]; then
+                printf "${RED}  [!] Location cannot be empty. Please enter a valid Azure region.${NC}\n"
+            fi
+        done
+        
+        printf "${GREEN}  [+] Setting AZURE_LOCATION = '%s'${NC}\n" "$LOCATION"
+        if azd env set AZURE_LOCATION "$LOCATION" >/dev/null 2>&1; then
+            export AZURE_LOCATION="$LOCATION"
+            printf "${GREEN}  [+] Successfully set AZURE_LOCATION${NC}\n"
+        else
+            printf "${RED}  [X] Failed to set AZURE_LOCATION using azd${NC}\n"
+            printf "${YELLOW}  [i] Setting as environment variable for this session only${NC}\n"
+            export AZURE_LOCATION="$LOCATION"
+        fi
+    fi
+    
+    # Prompt for AZURE_RESOURCE_GROUP if missing
+    if [ -z "$RESOURCE_GROUP" ]; then
+        while [ -z "$RESOURCE_GROUP" ]; do
+            printf "${WHITE}Enter resourceGroup name (e.g., rg-myproject, rg-aiml-dev): ${NC}"
+            read -r RESOURCE_GROUP
+            if [ -z "$RESOURCE_GROUP" ]; then
+                printf "${RED}  [!] ResourceGroup name cannot be empty. Please enter a valid name.${NC}\n"
+            fi
+        done
+        
+        printf "${GREEN}  [+] Setting AZURE_RESOURCE_GROUP = '%s'${NC}\n" "$RESOURCE_GROUP"
+        if azd env set AZURE_RESOURCE_GROUP "$RESOURCE_GROUP" >/dev/null 2>&1; then
+            export AZURE_RESOURCE_GROUP="$RESOURCE_GROUP"
+            printf "${GREEN}  [+] Successfully set AZURE_RESOURCE_GROUP${NC}\n"
+        else
+            printf "${RED}  [X] Failed to set AZURE_RESOURCE_GROUP using azd${NC}\n"
+            printf "${YELLOW}  [i] Setting as environment variable for this session only${NC}\n"
+            export AZURE_RESOURCE_GROUP="$RESOURCE_GROUP"
+        fi
+    fi
+    
     echo ""
-    printf "${CYAN}  Option 2 - Using shell environment variables:${NC}\n"
-    for var in $missing_vars; do
-        case "$var" in
-            "AZURE_LOCATION") example="eastus2" ;;
-            "AZURE_RESOURCE_GROUP") example="rg-myproject" ;;
-            *) example="your-value" ;;
-        esac
-        printf "${WHITE}    export %s='%s'${NC}\n" "$var" "$example"
-    done
-    echo ""
-    exit 1
 fi
 
 # Determine behavior based on AZURE_TS_RG

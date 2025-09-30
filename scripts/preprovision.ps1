@@ -44,7 +44,7 @@ Write-Host "[*] AI/ML Landing Zone - Template Spec Preprovision" -ForegroundColo
 Write-Host ("=" * 50) -ForegroundColor DarkGray
 Write-Host ""
 
-# Validate required environment variables
+# Check and prompt for required environment variables
 $missingVars = @()
 if (-not $Location) {
   $missingVars += "AZURE_LOCATION"
@@ -54,34 +54,57 @@ if (-not $ResourceGroup) {
 }
 
 if ($missingVars.Count -gt 0) {
-  Write-Host "[X] Error: Missing required environment variables:" -ForegroundColor Red
+  Write-Host "[!] Some required environment variables are missing:" -ForegroundColor Yellow
   foreach ($var in $missingVars) {
-    Write-Host "  - $var" -ForegroundColor Red
+    Write-Host "  - $var" -ForegroundColor Yellow
   }
   Write-Host ""
-  Write-Host "[!] To set them, choose one option:" -ForegroundColor Yellow
+  Write-Host "[?] Let's set them interactively..." -ForegroundColor Cyan
   Write-Host ""
-  Write-Host "  Option 1 - Using azd (if using Azure Developer CLI):" -ForegroundColor Cyan
-  foreach ($var in $missingVars) {
-    $example = switch ($var) {
-      "AZURE_LOCATION" { "<region>" }
-      "AZURE_RESOURCE_GROUP" { "<name>" }
-      default { "<value>" }
+  
+  # Prompt for AZURE_LOCATION if missing
+  if (-not $Location) {
+    do {
+      $Location = Read-Host "Enter location (Azure region, e.g., eastus2, westus3, centralus)"
+      if (-not $Location -or $Location.Trim() -eq '') {
+        Write-Host "  [!] Location cannot be empty. Please enter a valid Azure region." -ForegroundColor Red
+      }
+    } while (-not $Location -or $Location.Trim() -eq '')
+    
+    Write-Host "  [+] Setting AZURE_LOCATION = '$Location'" -ForegroundColor Green
+    try {
+      & azd env set AZURE_LOCATION $Location
+      $env:AZURE_LOCATION = $Location
+      Write-Host "  [+] Successfully set AZURE_LOCATION" -ForegroundColor Green
+    } catch {
+      Write-Host "  [X] Failed to set AZURE_LOCATION using azd: $($_.Exception.Message)" -ForegroundColor Red
+      Write-Host "  [i] Setting as environment variable for this session only" -ForegroundColor Yellow
+      $env:AZURE_LOCATION = $Location
     }
-    Write-Host "    azd env set $var $example" -ForegroundColor White
   }
-  Write-Host ""
-  Write-Host "  Option 2 - Using PowerShell environment variables:" -ForegroundColor Cyan
-  foreach ($var in $missingVars) {
-    $example = switch ($var) {
-      "AZURE_LOCATION" { "eastus2" }
-      "AZURE_RESOURCE_GROUP" { "rg-myproject" }
-      default { "your-value" }
+  
+  # Prompt for AZURE_RESOURCE_GROUP if missing
+  if (-not $ResourceGroup) {
+    do {
+      $ResourceGroup = Read-Host "Enter resourceGroup name (e.g., rg-myproject, rg-aiml-dev)"
+      if (-not $ResourceGroup -or $ResourceGroup.Trim() -eq '') {
+        Write-Host "  [!] ResourceGroup name cannot be empty. Please enter a valid name." -ForegroundColor Red
+      }
+    } while (-not $ResourceGroup -or $ResourceGroup.Trim() -eq '')
+    
+    Write-Host "  [+] Setting AZURE_RESOURCE_GROUP = '$ResourceGroup'" -ForegroundColor Green
+    try {
+      & azd env set AZURE_RESOURCE_GROUP $ResourceGroup
+      $env:AZURE_RESOURCE_GROUP = $ResourceGroup
+      Write-Host "  [+] Successfully set AZURE_RESOURCE_GROUP" -ForegroundColor Green
+    } catch {
+      Write-Host "  [X] Failed to set AZURE_RESOURCE_GROUP using azd: $($_.Exception.Message)" -ForegroundColor Red
+      Write-Host "  [i] Setting as environment variable for this session only" -ForegroundColor Yellow
+      $env:AZURE_RESOURCE_GROUP = $ResourceGroup
     }
-    Write-Host "    `$env:$var = '$example'" -ForegroundColor White
   }
+  
   Write-Host ""
-  exit 1
 }
 
 # Determine behavior based on AZURE_TS_RG
