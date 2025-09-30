@@ -73,6 +73,9 @@
 > Provisioning uses Template Specs to bypass the 4 MB ARM template size limit.
 > Pre-provision scripts build and publish them, while post-provision scripts remove them after success.
 
+> [!TIP]  
+> **Alternative deployment with Azure CLI**: If you prefer using Azure CLI instead of `azd`, skip step 4 (initialize) and replace step 6 with `az deployment group create`. Ensure you run the pre-provision script before deployment and the post-provision script after deployment.
+
 ## 3) Configuration options
 
 Update parameters in the `infra/main.bicepparam` file:

@@ -152,7 +152,8 @@ Write-Host "[3] Step 3: Removing temporary tags..." -ForegroundColor Cyan
 if ($ResourceGroup) {
   try {
     Write-Host "  Removing temporary tags from resource group: $ResourceGroup" -ForegroundColor Gray
-    az group update --name $ResourceGroup --remove tags.SecurityControl --only-show-errors | Out-Null
+    $resourceId = "/subscriptions/$SubscriptionId/resourceGroups/$ResourceGroup"
+    az tag update --resource-id $resourceId --operation Delete --tags SecurityControl --only-show-errors | Out-Null
     Write-Host "  [+] Removed temporary tags from: $ResourceGroup" -ForegroundColor Green
   } catch {
     Write-Host "  [!] Warning: Failed to remove temporary tags from resource group: $ResourceGroup" -ForegroundColor Yellow
@@ -164,7 +165,8 @@ if ($ResourceGroup) {
 if ($TemplateSpecRG -and $TemplateSpecRG -ne $ResourceGroup) {
   try {
     Write-Host "  Removing temporary tags from Template Spec resource group: $TemplateSpecRG" -ForegroundColor Gray
-    az group update --name $TemplateSpecRG --remove tags.SecurityControl --only-show-errors | Out-Null
+    $resourceId = "/subscriptions/$SubscriptionId/resourceGroups/$TemplateSpecRG"
+    az tag update --resource-id $resourceId --operation Delete --tags SecurityControl --only-show-errors | Out-Null
     Write-Host "  [+] Removed temporary tags from: $TemplateSpecRG" -ForegroundColor Green
   } catch {
     Write-Host "  [!] Warning: Failed to remove temporary tags from Template Spec resource group: $TemplateSpecRG" -ForegroundColor Yellow
