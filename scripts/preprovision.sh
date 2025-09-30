@@ -100,9 +100,17 @@ if [ -n "$missing_vars" ]; then
     
     # Prompt for AZURE_LOCATION if missing
     if [ -z "$LOCATION" ]; then
+        attempts=0
+        max_attempts=50
         while [ -z "$LOCATION" ]; do
+            attempts=$((attempts + 1))
+            if [ $attempts -gt $max_attempts ]; then
+                printf "${RED}  [X] Too many attempts. Exiting...${NC}\n"
+                exit 1
+            fi
             printf "${WHITE}Enter location (Azure region, e.g., eastus2, westus3, centralus): ${NC}"
             read -r LOCATION
+            LOCATION=$(echo "$LOCATION" | xargs)  # Trim whitespace
             if [ -z "$LOCATION" ]; then
                 printf "${RED}  [!] Location cannot be empty. Please enter a valid Azure region.${NC}\n"
             fi
@@ -121,9 +129,17 @@ if [ -n "$missing_vars" ]; then
     
     # Prompt for AZURE_RESOURCE_GROUP if missing
     if [ -z "$RESOURCE_GROUP" ]; then
+        attempts=0
+        max_attempts=50
         while [ -z "$RESOURCE_GROUP" ]; do
+            attempts=$((attempts + 1))
+            if [ $attempts -gt $max_attempts ]; then
+                printf "${RED}  [X] Too many attempts. Exiting...${NC}\n"
+                exit 1
+            fi
             printf "${WHITE}Enter resourceGroup name (e.g., rg-myproject, rg-aiml-dev): ${NC}"
             read -r RESOURCE_GROUP
+            RESOURCE_GROUP=$(echo "$RESOURCE_GROUP" | xargs)  # Trim whitespace
             if [ -z "$RESOURCE_GROUP" ]; then
                 printf "${RED}  [!] ResourceGroup name cannot be empty. Please enter a valid name.${NC}\n"
             fi

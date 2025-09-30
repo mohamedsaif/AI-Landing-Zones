@@ -9,28 +9,16 @@ hooks:
   preprovision:
     windows:
       shell: pwsh
-      run: ./scripts/preprovision.ps1 
+      run: ./scripts/preprovision.ps1
+      interactive: true
     posix:
       shell: sh 
-      run: ./scripts/preprovision.sh           
-  # postprovision:
-  #   windows:
-  #     shell: pwsh
-  #     run: ./scripts/postprovision.ps1
-  #   posix:
-  #     shell: sh
-  #     run: ./scripts/postprovision.sh
-
-# Testing Guide:
-# 
-# Template Specs Mode (Default):
-#   azd provision
-#   Expected: Creates Template Specs, generates main_ts.bicep with TS references
-#
-# Direct Mode (Fast iteration):
-#   azd env set SKIP_TEMPLATE_SPECS true
-#   azd provision
-#   Expected: No Template Specs, copies main.bicep -> main_ts.bicep directly
-#
-# Reset to default:
-#   azd env unset SKIP_TEMPLATE_SPECS
+      run: ./scripts/preprovision.sh
+      interactive: true           
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/postprovision.ps1
+    posix:
+      shell: sh
+      run: ./scripts/postprovision.sh

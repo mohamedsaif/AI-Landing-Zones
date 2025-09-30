@@ -44,6 +44,12 @@ Write-Host "[*] AI/ML Landing Zone - Template Spec Preprovision" -ForegroundColo
 Write-Host ("=" * 50) -ForegroundColor DarkGray
 Write-Host ""
 
+# Force interactive mode for console input
+if (-not [Console]::IsInputRedirected) {
+  # Enable console input for interactive prompts
+  [Console]::TreatControlCAsInput = $false
+}
+
 # Check and prompt for required environment variables
 $missingVars = @()
 if (-not $Location) {
@@ -64,12 +70,21 @@ if ($missingVars.Count -gt 0) {
   
   # Prompt for AZURE_LOCATION if missing
   if (-not $Location) {
+    $attempts = 0
+    $maxAttempts = 50
     do {
-      $Location = Read-Host "Enter location (Azure region, e.g., eastus2, westus3, centralus)"
-      if (-not $Location -or $Location.Trim() -eq '') {
+      $attempts++
+      if ($attempts -gt $maxAttempts) {
+        Write-Host "  [X] Too many attempts. Exiting..." -ForegroundColor Red
+        exit 1
+      }
+      Write-Host "Enter location (Azure region, e.g., eastus2, westus3, centralus): " -NoNewline -ForegroundColor White
+      $Location = [Console]::ReadLine()
+      if ($Location) { $Location = $Location.Trim() }
+      if ([string]::IsNullOrWhiteSpace($Location)) {
         Write-Host "  [!] Location cannot be empty. Please enter a valid Azure region." -ForegroundColor Red
       }
-    } while (-not $Location -or $Location.Trim() -eq '')
+    } while ([string]::IsNullOrWhiteSpace($Location))
     
     Write-Host "  [+] Setting AZURE_LOCATION = '$Location'" -ForegroundColor Green
     try {
@@ -85,12 +100,21 @@ if ($missingVars.Count -gt 0) {
   
   # Prompt for AZURE_RESOURCE_GROUP if missing
   if (-not $ResourceGroup) {
+    $attempts = 0
+    $maxAttempts = 50
     do {
-      $ResourceGroup = Read-Host "Enter resourceGroup name (e.g., rg-myproject, rg-aiml-dev)"
-      if (-not $ResourceGroup -or $ResourceGroup.Trim() -eq '') {
+      $attempts++
+      if ($attempts -gt $maxAttempts) {
+        Write-Host "  [X] Too many attempts. Exiting..." -ForegroundColor Red
+        exit 1
+      }
+      Write-Host "Enter resourceGroup name (e.g., rg-myproject, rg-aiml-dev): " -NoNewline -ForegroundColor White
+      $ResourceGroup = [Console]::ReadLine()
+      if ($ResourceGroup) { $ResourceGroup = $ResourceGroup.Trim() }
+      if ([string]::IsNullOrWhiteSpace($ResourceGroup)) {
         Write-Host "  [!] ResourceGroup name cannot be empty. Please enter a valid name." -ForegroundColor Red
       }
-    } while (-not $ResourceGroup -or $ResourceGroup.Trim() -eq '')
+    } while ([string]::IsNullOrWhiteSpace($ResourceGroup))
     
     Write-Host "  [+] Setting AZURE_RESOURCE_GROUP = '$ResourceGroup'" -ForegroundColor Green
     try {
