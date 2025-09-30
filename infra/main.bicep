@@ -1,48 +1,183 @@
+metadata name = 'AI/ML Landing Zone'
+metadata description = 'Deploys a secure AI/ML landing zone (resource groups, networking, AI services, private endpoints, and guardrails) using AVM resource modules.'
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // main.bicep
 //
-// Purpose: Landing Zone for GenAI app resources + AI Foundry pattern, network-isolated by default.
+// Purpose: Landing Zone for AI/ML workloads, network-isolated by default.
 //
+// -----------------------------------------------------------------------------------------------
+// About this template
+//
+// - Strong typing: All parameter shapes are defined as User-Defined Types (UDTs) in `common/types.bicep`
+//   (e.g., `types.vNetDefinitionType`, `types.privateDnsZonesDefinitionType`, etc.).
+//
+// - AVM alignment: This template orchestrates multiple Azure Verified Modules (AVM) via local wrappers.
+//   Parameters are intentionally aligned to the upstream AVM schema. When a setting is not provided here,
+//   we pass `null` (or omit) so the AVM module's own default is used.
+//
+// - Pre-provisioning workflow: Before deployment execution, a pre-provisioning script automatically
+//   replaces wrapper module paths (`./wrappers/avm.res.*`) with their corresponding template
+//   specifications. This approach is required because the template is too large to compile as a
+//   single monolithic file, so it leverages pre-compiled template specs for deployment.
+//
+// - Opinionated defaults: Because this is a landing-zone template, some safe defaults are overridden here
+//   (e.g., secure network configurations, proper subnet sizing, zone redundancy settings).
+//
+// - Create vs. reuse: Each service follows a uniform pattern—`resourceIds.*` (reuse) + `deploy.*` (create).
+//   The computed flags `varDeploy*` determine whether a resource is created or referenced.
+//
+// - Section mapping: The numbered index below mirrors the actual module layout, making it easy to jump
+//   between the guide and the actual module blocks.
+//
+// - How to use: See the provided examples for end-to-end parameter files showing different deployment
+//   configurations (create-new vs. reuse-existing, etc.).
+//
+// - Component details: For detailed information about each deployed component, their configuration,
+//   and integration patterns, see `docs/components.md`.
+// -----------------------------------------------------------------------------------------------
+
 // How to read this file:
-//   1  PARAMETERS
+//   1  GLOBAL PARAMETERS AND VARIABLES
 //       1.1 Imports
-//       1.2 General configuration (location, tags, token)
-//       1.3 Reuse existing services (resourceIds)
-//       1.4 Deploy Toggles
-//       1.5 Service definitions (VNet, Observability, Containers, Data/Security, App Config, PDNS IDs,
-//           AI Foundry, Gateways, APIM, Firewall, Hub Peering)
-//   2  VARIABLES (globals)
-//   3  RESOURCES (grouped by domain)
-//       3.1 Networking (VNet)
-//       3.2 Deploy/has flags + subnet helpers
-//       3.3 Private DNS Zones
-//       3.4 Private Endpoints (helpers + per-service)
-//       3.5 Existing resources (APIM, AGW, Firewall)
-//       3.6 Observability (LAW, App Insights)
-//       3.7 Container Apps Environment
-//       3.8 Container Apps
-//       3.9  App Services Backing Services (ACR, Cosmos, KV, KV for AF, Storage, Search, App Config)
-//       3.10 AI Foundry (AVM pattern)
-//       3.11 Gateways (WAF policy, App Gateway, Azure Firewall, APIM)
-//       3.12 Hub/Spoke Peering
-//       3.13 Grounding with Bing Search
-//   4  OUTPUTS
-//
+//       1.2 General Configuration (location, tags, naming token, global flags)
+//       1.3 Deployment Toggles
+//       1.4 Reuse Existing Services (resourceIds)
+//       1.5 Global Configuration Flags
+//       1.6 Telemetry
+//   2  SECURITY - NETWORK SECURITY GROUPS
+//       2.1 Agent Subnet NSG
+//       2.2 Private Endpoints Subnet NSG
+//       2.3 Application Gateway Subnet NSG
+//       2.4 API Management Subnet NSG
+//       2.5 Azure Container Apps Environment Subnet NSG
+//       2.6 Jumpbox Subnet NSG
+//       2.7 DevOps Build Agents Subnet NSG
+//   3  NETWORKING - VIRTUAL NETWORK
+//       3.1 Virtual Network and Subnets
+//       3.2 Existing VNet Subnet Configuration (if applicable)
+//       3.3 VNet Resource ID Resolution
+//   4  NETWORKING - PRIVATE DNS ZONES
+//       4.1 Platform Landing Zone Integration Logic
+//       4.2 DNS Zone Configuration Variables
+//       4.3 API Management Private DNS Zone
+//       4.4 Cognitive Services Private DNS Zone
+//       4.5 OpenAI Private DNS Zone
+//       4.6 AI Services Private DNS Zone
+//       4.7 Azure AI Search Private DNS Zone
+//       4.8 Cosmos DB (SQL API) Private DNS Zone
+//       4.9 Blob Storage Private DNS Zone
+//       4.10 Key Vault Private DNS Zone
+//       4.11 App Configuration Private DNS Zone
+//       4.12 Container Apps Private DNS Zone
+//       4.13 Container Registry Private DNS Zone
+//       4.14 Application Insights Private DNS Zone
+//   5  NETWORKING - PUBLIC IP ADDRESSES
+//       5.1 Application Gateway Public IP
+//       5.2 Azure Firewall Public IP
+//   6  NETWORKING - VNET PEERING
+//       6.1 Hub VNet Peering Configuration
+//       6.2 Spoke VNet with Peering
+//       6.3 Hub-to-Spoke Reverse Peering
+//   7  NETWORKING - PRIVATE ENDPOINTS
+//       7.1 App Configuration Private Endpoint
+//       7.2 API Management Private Endpoint
+//       7.3 Container Apps Environment Private Endpoint
+//       7.4 Azure Container Registry Private Endpoint
+//       7.5 Storage Account (Blob) Private Endpoint
+//       7.6 Cosmos DB (SQL) Private Endpoint
+//       7.7 Azure AI Search Private Endpoint
+//       7.8 Key Vault Private Endpoint
+//   8  OBSERVABILITY
+//       8.1 Log Analytics Workspace
+//       8.2 Application Insights
+//   9  CONTAINER PLATFORM
+//       9.1 Container Apps Environment
+//       9.2 Container Registry
+//   10 STORAGE
+//       10.1 Storage Account
+//   11 APPLICATION CONFIGURATION
+//       11.1 App Configuration Store
+//   12 COSMOS DB
+//       12.1 Cosmos DB Database Account
+//   13 KEY VAULT
+//       13.1 Key Vault
+//   14 AI SEARCH
+//       14.1 AI Search Service
+//   15 API MANAGEMENT
+//       15.1 API Management Service
+//   16 AI FOUNDRY
+//       16.1 AI Foundry Configuration
+//   17 BING GROUNDING
+//       17.1 Bing Grounding Configuration
+//   18 GATEWAYS AND FIREWALL
+//       18.1 Web Application Firewall (WAF) Policy
+//       18.2 Application Gateway
+//       18.3 Azure Firewall Policy
+//       18.4 Azure Firewall
+//   19 OUTPUTS
+//       19.1 Network Security Group Outputs
+//       19.2 Virtual Network Outputs
+//       19.3 Private DNS Zone Outputs
+//       19.4 Public IP Outputs
+//       19.5 VNet Peering Outputs
+//       19.6 Observability Outputs
+//       19.7 Container Platform Outputs
+//       19.8 Storage Outputs
+//       19.9 Application Configuration Outputs
+//       19.10 Cosmos DB Outputs
+//       19.11 Key Vault Outputs
+//       19.12 AI Search Outputs
+//       19.13 API Management Outputs
+//       19.14 AI Foundry Outputs
+//       19.15 Bing Grounding Outputs
+//       19.16 Gateways and Firewall Outputs
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////
-// 1. PARAMETERS
-//////////////////////////////////////////////////////////////////////////
+targetScope = 'resourceGroup'
 
-// 1.1 Imports
-import * as types from 'common/types.bicep'
+import {
+  deployTogglesType
+  resourceIdsType
+  vNetDefinitionType
+  existingVNetSubnetsDefinitionType
+  publicIpDefinitionType
+  nsgPerSubnetDefinitionsType
+  hubVnetPeeringDefinitionType
+  privateDnsZonesDefinitionType
+  logAnalyticsDefinitionType
+  appInsightsDefinitionType
+  containerAppEnvDefinitionType
+  containerAppDefinitionType
+  appConfigurationDefinitionType
+  containerRegistryDefinitionType
+  storageAccountDefinitionType
+  genAIAppCosmosDbDefinitionType
+  keyVaultDefinitionType
+  kSAISearchDefinitionType
+  apimDefinitionType
+  aiFoundryDefinitionType
+  kSGroundingWithBingDefinitionType
+  wafPolicyDefinitionsType
+  appGatewayDefinitionType
+  firewallPolicyDefinitionType
+  firewallDefinitionType
+  vmDefinitionType
+  vmMaintenanceDefinitionType
+  privateDnsZoneDefinitionType
+} from './common/types.bicep'
 
-// 1.2 General Configuration (location, tags, naming token, global flags)
-@description('Required.  Azure region for AI Foundry resources. Defaults to the resource group location.')
+@description('Required. Per-service deployment toggles.')
+param deployToggles deployTogglesType
+
+@description('Optional. Enable platform landing zone integration. When true, private DNS zones and private endpoints are managed by the platform landing zone.')
+param flagPlatformLandingZone bool = false
+
+@description('Optional. Existing resource IDs to reuse (can be empty).')
+param resourceIds resourceIdsType = {}
+
+@description('Optional. Azure region for AI LZ resources. Defaults to the resource group location.')
 param location string = resourceGroup().location
-
-@description('Optional.  Tags applied to all deployed resources.')
-param tags object = {}
 
 @description('Optional.  Deterministic token for resource names; auto-generated if not provided.')
 param resourceToken string = toLower(uniqueString(subscription().id, resourceGroup().name, location))
@@ -50,1118 +185,37 @@ param resourceToken string = toLower(uniqueString(subscription().id, resourceGro
 @description('Optional.  Base name to seed resource names; defaults to a 12-char token.')
 param baseName string = substring(resourceToken, 0, 12)
 
-@description('Optional.  Enable module telemetry. See https://aka.ms/avm/telemetryinfo.')
+@description('Optional. Enable/Disable usage telemetry for module.')
 param enableTelemetry bool = true
 
-@description('Optional. Enable network isolation posture (Private Endpoints + Private DNS).')
-param networkIsolation bool = true
+@description('Optional. Tags to apply to all resources.')
+param tags object = {}
 
-@description('Optional.  Enable platform landing zone integration.')
-param flagPlatformLandingZone bool = false
-
-@description('Optional.  Deploy GenAI app services; defaults to true.')
-param deployGenAiAppBackingServices bool = true
-
-// 1.3 Reuse Existing Services (resource IDs to reuse, leave empty to create)
-@description('Optional.  Existing resource IDs to reuse; leave empty to create new resources.')
-param resourceIds types.ResourceIdsType = {
-  virtualNetworkResourceId: ''
-  logAnalyticsWorkspaceResourceId: ''
-  appInsightsResourceId: ''
-  containerEnvResourceId: ''
-  containerRegistryResourceId: ''
-  dbAccountResourceId: ''
-  keyVaultResourceId: ''
-  storageAccountResourceId: ''
-  searchServiceResourceId: ''
-  appConfigResourceId: ''
-  apimServiceResourceId: ''
-  applicationGatewayResourceId: ''
-  bastionHostResourceId: ''
-  firewallResourceId: ''
-  groundingServiceResourceId: ''
-}
-
-// 1.4 Deploy Toggles (per-service on/off; reuse still works via resourceIds)
-@description('Optional.  Per-service deployment toggles; set false to skip creating a service. Reuse still works via resourceIds.')
-param deployToggles types.DeployTogglesType = {
-  logAnalytics: true
-  appInsights: true
-
-  containerEnv: true
-  containerRegistry: true
-  containerApps: true
-
-  cosmosDb: true
-  keyVault: true
-  storageAccount: true
-  searchService: true
-  groundingWithBingSearch: true
-  appConfig: true
-
-  apiManagement: true
-  applicationGateway: true
-  firewall: true
-
-  buildVm: true
-  jumpVm: true
-  virtualNetwork: true
-  wafPolicy: true
-}
-
-// 1.5 Service Definitions
-// 1.5.1 Virtual Network
-@description('Required.  Virtual Network configuration (created when not reusing an existing VNet).')
-param vnetDefinition types.VNetDefinitionType = {
-  name: ''
-  addressSpace: '192.168.0.0/16'
-  dnsServers: []
-  subnets: [
-    {
-      enabled: true
-      name: 'agent-subnet'
-      addressPrefix: '192.168.0.0/24'
-      delegation: 'Microsoft.app/environments'
-      serviceEndpoints: ['Microsoft.CognitiveServices']
-    }
-    {
-      enabled: true
-      name: 'pe-subnet'
-      addressPrefix: '192.168.1.0/24'
-      serviceEndpoints: ['Microsoft.AzureCosmosDB']
-      privateEndpointNetworkPolicies: 'Disabled'
-    }
-    {
-      enabled: true
-      name: 'gateway-subnet'
-      addressPrefix: '192.168.2.0/26'
-    }
-    {
-      enabled: true
-      name: 'AzureBastionSubnet'
-      addressPrefix: '192.168.2.64/26'
-    }
-    {
-      enabled: true
-      name: 'AzureFirewallSubnet'
-      addressPrefix: '192.168.2.128/26'
-    }
-    {
-      enabled: true
-      name: 'AppGatewaySubnet'
-      addressPrefix: '192.168.3.0/24'
-    }
-    {
-      enabled: true
-      name: 'jumpbox-subnet'
-      addressPrefix: '192.168.4.0/27'
-    }
-    {
-      enabled: true
-      name: 'aca-environment-subnet'
-      addressPrefix: '192.168.4.64/27'
-      delegation: 'Microsoft.app/environments'
-      serviceEndpoints: ['Microsoft.AzureCosmosDB']
-    }
-    {
-      enabled: true
-      name: 'devops-build-agents-subnet'
-      addressPrefix: '192.168.4.96/27'
-    }
-  ]
-
-  // vnetPeeringConfiguration: {
-  //   peerVnetResourceId: ''
-  //   firewallIpAddress: ''
-  //   name: ''
-  //   allowForwardedTraffic: true
-  //   allowGatewayTransit: false
-  //   allowVirtualNetworkAccess: true
-  //   createReversePeering: true
-  //   reverseAllowForwardedTraffic: true
-  //   reverseAllowGatewayTransit: false
-  //   reverseAllowVirtualNetworkAccess: true
-  //   reverseName: ''
-  //   reverseUseRemoteGateways: false
-  //   useRemoteGateways: false
-  // }
-
-  // vwanHubPeeringConfiguration: {
-  //   peerVwanHubResourceId: ''
-  // }
-
-  tags: {}
-}
-
-// 1.5.2 Log Analytics Workspace
-@description('Conditional.  Log Analytics Workspace configuration (required if you deploy App Insights and are not reusing an existing workspace).')
-param logAnalyticsDefinition types.LogAnalyticsWorkspaceDefinitionType = {
-  name: ''
-  retention: 30
-  sku: 'PerGB2018'
-  tags: {}
-}
-
-// 1.5.3 Application Insights
-@description('Conditional.  Application Insights configuration (used when App Insights is deployed).')
-param appInsightsDefinition types.AppInsightsDefinitionType = {
-  name: ''
-  applicationType: 'web'
-  kind: 'web'
-  disableIpMasking: false
-  tags: {}
-}
-
-// 1.5.4 Container App Environment
-@description('Conditional.  Container App Environment configuration (used when Container Apps are deployed).')
-param containerAppEnvDefinition types.ContainerAppEnvDefinitionType = {
-  name: ''
-  tags: {}
-  subnetName: 'aca-environment-subnet'
-  internalLoadBalancerEnabled: true
-  zoneRedundancyEnabled: true
-  userAssignedManagedIdentityIds: []
-  workloadProfiles: [
-    {
-      name: 'Consumption'
-      workloadProfileType: 'Consumption'
-    }
-    {
-      workloadProfileType: 'D4'
-      name: 'default'
-      minimumCount: 1
-      maximumCount: 3
-    }
-  ]
-  enableDiagnosticSettings: true
-  logAnalyticsWorkspaceResourceId: ''
-  roleAssignments: []
-}
-
-// 1.5.5 Container Apps
-@description('Optional. List of Container Apps to create.')
-param containerAppsList types.ContainerAppDefinitionType[] = [
-  {
-    name: ''
-    app_id: 'hello-world'
-    profile_name: 'default'
-    min_replicas: 1
-    max_replicas: 1
-    external: true
-  }
-]
-
-// 1.5.6 Container Registry
-@description('Conditional.  Container Registry configuration (used when ACR is deployed).')
-param containerRegistryDefinition types.ContainerRegistryDefinitionType = {
-  name: ''
-  sku: 'Premium'
-  tags: {}
-}
-
-// 1.5.7 Cosmos DB Account (GenAI app scope)
-@description('Conditional.  Cosmos DB account configuration for the GenAI app (used when Cosmos DB is deployed).')
-param cosmosDbDefinition types.GenAIAppCosmosDbDefinitionType = {
-  name: ''
-  publicNetworkAccessEnabled: false
-  automaticFailoverEnabled: true
-}
-
-// 1.5.8 Key Vault (GenAI app scope)
-@description('Conditional.  Key Vault configuration for the GenAI app (used when KV is deployed).')
-param keyVaultDefinition types.KeyVaultDefinitionType = {
-  name: ''
-  sku: 'standard'
-  tenantId: subscription().tenantId
-  roleAssignments: []
-  tags: {}
-}
-
-// 1.5.9 Storage Account (GenAI app scope)
-@description('Conditional.  Storage Account configuration for the GenAI app (used when Storage is deployed).')
-param storageAccountDefinition types.StorageAccountDefinitionType = {
-  name: ''
-  accountKind: 'StorageV2'
-  accountTier: 'Standard'
-  accountReplicationType: 'GRS'
-  tags: {}
-}
-
-// 1.5.10 AI Search (GenAI app scope)
-@description('Conditional.  Azure AI Search configuration for the GenAI app (used when Search is deployed).')
-param searchDefinition types.KSAISearchDefinitionType = {
-  name: ''
-  sku: 'standard'
-  publicNetworkAccessEnabled: false
-  replicaCount: 2
-  partitionCount: 1
-  localAuthenticationEnabled: true
-  semanticSearchSku: 'standard'
-  tags: {}
-}
-
-// 1.5.11 App Configuration
-@description('Conditional.  App Configuration store settings (used when App Configuration is deployed).')
-param appConfigurationDefinition types.AppConfigurationDefinitionType = {
-  name: ''
-  sku: 'standard'
-  localAuthEnabled: false
-  purgeProtectionEnabled: true
-  softDeleteRetentionInDays: 7
-  tags: {}
-  roleAssignments: []
-}
-
-// 1.5.12 Private DNS
-// 1.5.12a Private DNS Zone IDs (optional reuse)
-@description('Conditional.  Existing Private DNS Zone resource IDs per service; provide to reuse, or leave empty to create.')
-param privateDnsZoneIds object = {
-  cognitiveservices: ''
-  openai: ''
-  aiServices: ''
-  search: ''
-  cosmosSql: ''
-  blob: ''
-  keyVault: ''
-  appConfig: ''
-  containerApps: ''
-  acr: ''
-  appInsights: ''
-}
-
-// 1.5.12b Private DNS Zones (creation + VNet links)
-@description('Conditional.  Private DNS Zones and VNet links configuration (used when creating zones).')
-param privateDnsZones types.PrivateDnsZoneDefinitionsType = {
-  existingZonesResourceGroupResourceId: ''
+@description('Optional. Private DNS Zone configuration for private endpoints. Used when not in platform landing zone mode.')
+param privateDnsZonesDefinition privateDnsZonesDefinitionType = {
   allowInternetResolutionFallback: false
-  networkLinks: [
-    // Example (remove if not needed):
-    // {
-    //   vnetLinkName: 'link-to-spoke'
-    //   vnetId: '/subscriptions/<subId>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>'
-    //   resolutionPolicy: 'Default'
-    // }
-  ]
-}
-
-// 1.5.13 AI Foundry
-@description('Optional.  AI Foundry project configuration (account/project, networking, associated resources, and deployments).')
-param aiFoundryDefinition types.AiFoundryDefinitionType?
-
-// 1.5.14 Grounding with Bing
-@description('Optional.  Grounding with Bing Configuration.')
-param groundingWithBingDefinition types.KSGroundingWithBingDefinitionType = {
-  name: ''
-  sku: 'G1'
+  createNetworkLinks: true
+  cognitiveservicesZoneId: ''
+  apimZoneId: ''
+  openaiZoneId: ''
+  aiServicesZoneId: ''
+  searchZoneId: ''
+  cosmosSqlZoneId: ''
+  blobZoneId: ''
+  keyVaultZoneId: ''
+  appConfigZoneId: ''
+  containerAppsZoneId: ''
+  acrZoneId: ''
+  appInsightsZoneId: ''
   tags: {}
 }
 
-// 1.5.15 WAF Policy
-@description('Conditional.  Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed).')
-param wafPolicyDefinition types.WafPolicyDefinitionsType = {
-  name: ''
-  policySettings: {
-    enabledState: 'Enabled'
-    mode: 'Prevention'
-    requestBodyCheck: true
-    maxRequestBodySizeInKb: 128
-    fileUploadLimitInMb: 100
-  }
-  managedRules: {
-    exclusions: []
-    managedRuleSets: [
-      {
-        type: 'OWASP'
-        version: '3.2'
-        ruleGroupOverride: []
-      }
-    ]
-  }
-  tags: {}
-}
-
-// 1.5.16 Application Gateway
-@description('Conditional.  Application Gateway configuration (used when AGW is deployed).')
-param appGatewayDefinition types.AppGatewayDefinitionType = {
-  name: ''
-  http2Enable: true
-  authenticationCertificate: {}
-  sku: { name: 'WAF_v2', tier: 'WAF_v2', capacity: 0 } // capacity 0 when autoscale is used
-  autoscaleConfiguration: { minCapacity: 2, maxCapacity: 10 }
-  backendAddressPools: {
-    defaultPool: { name: 'defaultPool', fqdns: [], ipAddresses: [] }
-  }
-  backendHttpSettings: {
-    defaultSetting: {
-      cookieBasedAffinity: 'Disabled'
-      name: 'defaultSetting'
-      port: 80
-      protocol: 'Http'
-      affinityCookieName: ''
-      hostName: ''
-      path: ''
-      pickHostNameFromBackendAddress: false
-      probeName: ''
-      requestTimeout: 30
-      trustedRootCertificateNames: []
-      authenticationCertificate: []
-      connectionDraining: { enabled: false, drainTimeoutSec: 0 }
-    }
-  }
-  frontendPorts: { port80: { name: 'port80', port: 80 } }
-  httpListeners: {
-    defaultListener: {
-      name: 'defaultListener'
-      frontendPortName: 'port80'
-      frontendIpConfigurationName: 'privateFrontend'
-      firewallPolicyId: ''
-      requireSni: false
-      hostName: ''
-      hostNames: []
-      sslCertificateName: ''
-      sslProfileName: ''
-      customErrorConfiguration: []
-    }
-  }
-  probeConfigurations: {}
-  redirectConfiguration: {
-    defaultRedirect: {
-      includePath: true
-      includeQueryString: true
-      name: 'defaultRedirect'
-      redirectType: 'Permanent'
-      targetListenerName: ''
-      targetUrl: 'https://example.com'
-    }
-  }
-  requestRoutingRules: {
-    defaultRule: {
-      name: 'defaultRule'
-      ruleType: 'Basic'
-      httpListenerName: 'defaultListener'
-      backendAddressPoolName: ''
-      priority: 100
-      urlPathMapName: ''
-      backendHttpSettingsName: ''
-      redirectConfigurationName: 'defaultRedirect'
-      rewriteRuleSetName: ''
-    }
-  }
-  rewriteRuleSet: {}
-  sslCertificates: {}
-  sslPolicy: {
-    cipherSuites: []
-    disabledProtocols: []
-    minProtocolVersion: 'TLSv1_2'
-    policyName: ''
-    policyType: 'Custom'
-  }
-  sslProfile: {}
-  trustedClientCertificate: {}
-  trustedRootCertificate: {}
-  urlPathMapConfigurations: {}
-  tags: {}
-  roleAssignments: []
-  createPublicFrontend: true
-}
-
-// 1.5.17 API Management
-@description('Conditional.  API Management configuration (used when APIM is deployed).')
-param apimDefinition types.ApimDefinitionType = {
-  name: ''
-  publisherEmail: 'admin@example.com'
-  publisherName: 'Contoso'
-  additionalLocations: {}
-  certificate: {}
-  clientCertificateEnabled: false
-  hostnameConfiguration: { management: {}, portal: {}, developerPortal: {}, proxy: {}, scm: {} }
-  minApiVersion: '2019-12-01'
-  notificationSenderEmail: 'apimgmt-noreply@azure.com'
-  protocols: { enableHttp2: true }
-  roleAssignments: []
-  signIn: { enabled: true }
-  signUp: { enabled: false, termsOfService: { consentRequired: false, enabled: false, text: '' } }
-  skuRoot: 'Developer'
-  skuCapacity: 1
-  tags: {}
-  tenantAccess: { enabled: true }
-}
-
-// 1.5.18 Azure Firewall
-@description('Conditional.  Azure Firewall configuration (used when Firewall is deployed).')
-param firewallDefinition types.FirewallDefinitionType = {
-  name: ''
-  sku: 'AZFW_VNet'
-  tier: 'Standard'
-  zones: []
-  tags: {}
-}
-
-// 1.5.19 Azure Firewall Policy
-@description('Optional.  Azure Firewall Policy configuration (only used if your deployment wires a policy).')
-param firewallPolicyDefinition types.FirewallPolicyDefinitionType = {
-  networkPolicyRuleCollectionGroupName: null
-  networkPolicyRuleCollectionGroupPriority: 100
-  networkRules: []
-}
-
-// 1.5.20 Hub VNet Peering
-@description('Conditional.  Hub VNet peering configuration (required only when establishing hub-spoke peering).')
-param hubVnetPeeringDefinition types.HuVnetPeeringDefinitionType = {
-  name: ''
-  peerVnetResourceId: ''
-  firewallIpAddress: ''
-  allowForwardedTraffic: true
-  allowGatewayTransit: false
-  allowVirtualNetworkAccess: true
-  createReversePeering: true
-  reverseAllowForwardedTraffic: true
-  reverseAllowGatewayTransit: false
-  reverseAllowVirtualNetworkAccess: true
-  reverseName: ''
-  reverseUseRemoteGateways: false
-  useRemoteGateways: false
-}
-
-// 1.5.21 Build VM configuration
-@description('Optional.  Build VM configuration to support CI/CD workers (Linux).')
-param buildVmDefinition types.BuildVmDefinitionType = {
-  name: ''
-  sku: 'Standard_D2s_v5'
-  adminUsername: 'azureuser'
-  sshPublicKey: ''
-  runner: 'azdo'
-  azdo: {
-    orgUrl: 'https://dev.azure.com/<org>'
-    pool: 'Default'
-  }
-  tags: {}
-  enableTelemetry: enableTelemetry
-}
-
-// 1.5.22 Jump VM configuration (Windows, Bastion-accessed)
-@description('Optional.  Jump (bastion) VM configuration (Windows).')
-param jumpVmDefinition types.JumpVmDefinitionType = {
-  name: ''
-  sku: 'Standard_D2s_v5'
-  adminUsername: 'azureuser'
-  vmKeyVaultSecName: 'jump-admin-password'
-  tags: {}
-  enableTelemetry: enableTelemetry
-}
-
-// 1.5.23 Dedicated Key Vault for JumpVM password (public network access for convenience with Bastion operators)
-@description('Conditional.  Dedicated Key Vault for JumpVM secrets (public network).')
-param bastionKeyVaultDefinition types.KeyVaultDefinitionType = {
-  name: ''
-  sku: 'standard'
-  tenantId: subscription().tenantId
-  roleAssignments: []
-  tags: {}
-}
-
-// 1.6 Secrets/Tokens
-@secure()
-@description('Conditional. Required when deploying Jump VM. Local admin password to set on the Windows JumpVM.')
-param jumpVmAdminPassword string = ''
-
-@secure()
-@description('Optional. PAT used to register the Azure DevOps agent (when runner = azdo).')
-param azdoPat string = ''
-
-@secure()
-@description('Optional. PAT used to request a GitHub runner registration token (when runner = github).')
-param githubPat string = ''
-
-
-//////////////////////////////////////////////////////////////////////////
-// 2. VARIABLES 
-//////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-// 2. VARIABLES 
-//////////////////////////////////////////////////////////////////////////
-
-// ── 2.1 Tags & naming helpers
-// Merge top-level tags once; used across modules
-var _tags = union(tags, vnetDefinition.tags! ?? {})
-
-// CAF-style abbreviations (drives consistent resource naming)
-var _abbrs = loadJsonContent('./common/abbreviations.json')
-
-// Name prefixes derived from abbreviations (some cannot contain hyphen)
-var _acr = _abbrs.containers.containerRegistry // no hyphen allowed in ACR
-var _bing = '${_abbrs.ai.bing}-'
-var _ca = '${_abbrs.containers.containerApp}-'
-var _cae = '${_abbrs.containers.containerAppsEnvironment}-'
-var _afw = '${_abbrs.networking.firewall}-'
-var _afwp = '${_abbrs.networking.firewallPolicy}-'
-var _agw = '${_abbrs.networking.applicationGateway}-'
-var _pe = '${_abbrs.networking.privateEndpoint}-'
-var _pip = '${_abbrs.networking.publicIPAddress}-'
-var _vnet = '${_abbrs.networking.virtualNetwork}-'
-var _ai = '${_abbrs.managementGovernance.applicationInsights}-'
-var _apim = '${_abbrs.integration.apiManagement}-'
-var _appcs = '${_abbrs.configuration.appConfiguration}-'
-var _law = '${_abbrs.managementGovernance.logAnalyticsWorkspace}-'
-var _cos = '${_abbrs.databases.cosmosDbAccount}-'
-var _kv = '${_abbrs.security.keyVault}-'
-var _srch = '${_abbrs.ai.aiSearch}-'
-var _st = _abbrs.storage.storageAccount // no hyphen allowed in Storage
-var _vm = '${_abbrs.compute.virtualMachine}-'
-var _waf = '${_abbrs.networking.webApplicationFirewallPolicy}-'
-
-
-// ── 2.2 Common names & defaults (env, images, flags)
-var _containerDummyImageName = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-var _containerEnvName = empty(containerAppEnvDefinition.name!) ? '${_cae}${baseName}' : containerAppEnvDefinition.name!
-var _agwCreatePublicFrontend = bool(appGatewayDefinition.createPublicFrontend! ?? true)
-
-
-// ── 2.3 Virtual network & subnets (reuse/new) + peering helpers
-// Parse existing VNet Id (if provided)
-var _vnetIdSegments = empty(resourceIds.virtualNetworkResourceId) ? [''] : split(resourceIds.virtualNetworkResourceId, '/')
-var _existingVNetSubscriptionId = length(_vnetIdSegments) >= 3 ? _vnetIdSegments[2] : ''
-var _existingVNetResourceGroupName = length(_vnetIdSegments) >= 5 ? _vnetIdSegments[4] : ''
-var _existingVNetName = length(_vnetIdSegments) >= 1 ? last(_vnetIdSegments) : ''
-
-// Effective VNet name (create path)
-var _vnetName = empty(vnetDefinition.name!) ? '${_vnet}${baseName}' : vnetDefinition.name!
-
-// Optional peering configuration (read safely without try/?.)
-var _hasPeerCfg = contains(vnetDefinition, 'vnetPeeringConfiguration') && !empty(vnetDefinition.vnetPeeringConfiguration!)
-
-// Read values with defaults
-#disable-next-line BCP318
-var _peerCfgName = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'name') && !empty(vnetDefinition.vnetPeeringConfiguration!.name!)
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.name!
-  : ''
-#disable-next-line BCP318
-var _peerCfgVnetId = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'peerVnetResourceId') && !empty(vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId)
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.peerVnetResourceId!
-  : ''
-var _peerAllowVna = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowVirtualNetworkAccess')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowVirtualNetworkAccess
-  : true
-var _peerAllowFwd = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowForwardedTraffic')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowForwardedTraffic
-  : true
-var _peerAllowGw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'allowGatewayTransit')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.allowGatewayTransit
-  : false
-var _peerUseRgw = _hasPeerCfg && contains(vnetDefinition.vnetPeeringConfiguration!, 'useRemoteGateways')
-  #disable-next-line BCP318
-  ? vnetDefinition.vnetPeeringConfiguration!.useRemoteGateways
-  : false
-
-// Final peering helpers
-var _hasPeer = !empty(_peerCfgVnetId)
-var _peerName = empty(_peerCfgName) ? '${_vnetName}-to-peer' : _peerCfgName
-
-// Whether we will deploy the VNet (vs reuse)
-var _deployVnet = empty(resourceIds.virtualNetworkResourceId) && deployToggles.virtualNetwork
-
-// VNet resourceId that works for both reuse/new
-#disable-next-line BCP318
-var _vnetResourceId = !empty(resourceIds.virtualNetworkResourceId)
-  ? existingVNet.id
-  : (_deployVnet ? virtualNetwork!.outputs.resourceId : '')
-
-// Subnets used across modules (computed once)
-var _peSubnetName = 'pe-subnet'
-var _peSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _peSubnetName)
-  : '${existingVNet.id}/subnets/${_peSubnetName}'
-
-var _agentSubnetName = 'agent-subnet'
-var _agentSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agentSubnetName)
-  : '${existingVNet.id}/subnets/${_agentSubnetName}'
-
-var _agwSubnetName = 'AppGatewaySubnet'
-var _agwSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _agwSubnetName)
-  : '${existingVNet.id}/subnets/${_agwSubnetName}'
-
-var _acaInfraSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, containerAppEnvDefinition.subnetName!)
-  : '${existingVNet.id}/subnets/${containerAppEnvDefinition.subnetName!}'
-
-// Compute subnets (Jump/Build)
-var _jumpSubnetName = 'jumpbox-subnet'
-var _buildSubnetName = 'devops-build-agents-subnet'
-var _jumpSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _jumpSubnetName)
-  : '${existingVNet.id}/subnets/${_jumpSubnetName}'
-var _buildSubnetId = empty(resourceIds.virtualNetworkResourceId)
-  ? resourceId('Microsoft.Network/virtualNetworks/subnets', _vnetName, _buildSubnetName)
-  : '${existingVNet.id}/subnets/${_buildSubnetName}'
-
-
-// ── 2.4 Existing resource parsing (IDs → subscription/rg/name)
-var _apimIdSegments = empty(resourceIds.apimServiceResourceId) ? [''] : split(resourceIds.apimServiceResourceId, '/')
-var _apimSub = length(_apimIdSegments) >= 3 ? _apimIdSegments[2] : ''
-var _apimRg = length(_apimIdSegments) >= 5 ? _apimIdSegments[4] : ''
-var _apimNameExisting = length(_apimIdSegments) >= 1 ? last(_apimIdSegments) : ''
-
-var _agwIdSegments = empty(resourceIds.applicationGatewayResourceId) ? [''] : split(resourceIds.applicationGatewayResourceId, '/')
-var _agwSub = length(_agwIdSegments) >= 3 ? _agwIdSegments[2] : ''
-var _agwRg = length(_agwIdSegments) >= 5 ? _agwIdSegments[4] : ''
-var _agwNameExisting = length(_agwIdSegments) >= 1 ? last(_agwIdSegments) : ''
-
-var _afwIdSegments = empty(resourceIds.firewallResourceId) ? [''] : split(resourceIds.firewallResourceId, '/')
-var _afwSub = length(_afwIdSegments) >= 3 ? _afwIdSegments[2] : ''
-var _afwRg = length(_afwIdSegments) >= 5 ? _afwIdSegments[4] : ''
-var _afwNameExisting = length(_afwIdSegments) >= 1 ? last(_afwIdSegments) : ''
-
-var _lawIdSegments = empty(resourceIds.logAnalyticsWorkspaceResourceId) ? [''] : split(resourceIds.logAnalyticsWorkspaceResourceId, '/')
-var _existingLawSubscriptionId = length(_lawIdSegments) >= 3 ? _lawIdSegments[2] : ''
-var _existingLawResourceGroupName = length(_lawIdSegments) >= 5 ? _lawIdSegments[4] : ''
-var _existingLawName = length(_lawIdSegments) >= 1 ? last(_lawIdSegments) : ''
-
-var _aiIdSegments = empty(resourceIds.appInsightsResourceId) ? [''] : split(resourceIds.appInsightsResourceId, '/')
-var _existingAISubscriptionId = length(_aiIdSegments) >= 3 ? _aiIdSegments[2] : ''
-var _existingAIResourceGroupName = length(_aiIdSegments) >= 5 ? _aiIdSegments[4] : ''
-var _existingAIName = length(_aiIdSegments) >= 1 ? last(_aiIdSegments) : ''
-
-var _envIdSegments = empty(resourceIds.containerEnvResourceId) ? [''] : split(resourceIds.containerEnvResourceId, '/')
-var _existingEnvSubscriptionId = length(_envIdSegments) >= 3 ? _envIdSegments[2] : ''
-var _existingEnvResourceGroup = length(_envIdSegments) >= 5 ? _envIdSegments[4] : ''
-var _existingEnvName = length(_envIdSegments) >= 1 ? last(_envIdSegments) : ''
-
-var _acrIdSegments = empty(resourceIds.containerRegistryResourceId) ? [''] : split(resourceIds.containerRegistryResourceId, '/')
-var _existingAcrSub = length(_acrIdSegments) >= 3 ? _acrIdSegments[2] : ''
-var _existingAcrRg = length(_acrIdSegments) >= 5 ? _acrIdSegments[4] : ''
-var _existingAcrName = length(_acrIdSegments) >= 1 ? last(_acrIdSegments) : ''
-
-var _cosmosIdSegments = empty(resourceIds.dbAccountResourceId) ? [''] : split(resourceIds.dbAccountResourceId, '/')
-var _existingCosmosSub = length(_cosmosIdSegments) >= 3 ? _cosmosIdSegments[2] : ''
-var _existingCosmosRg = length(_cosmosIdSegments) >= 5 ? _cosmosIdSegments[4] : ''
-var _existingCosmosName = length(_cosmosIdSegments) >= 1 ? last(_cosmosIdSegments) : ''
-
-var _kvIdSegments = empty(resourceIds.keyVaultResourceId) ? [''] : split(resourceIds.keyVaultResourceId, '/')
-var _existingKvSub = length(_kvIdSegments) >= 3 ? _kvIdSegments[2] : ''
-var _existingKvRg = length(_kvIdSegments) >= 5 ? _kvIdSegments[4] : ''
-var _existingKvName = length(_kvIdSegments) >= 1 ? last(_kvIdSegments) : ''
-
-var _saIdSegments = empty(resourceIds.storageAccountResourceId) ? [''] : split(resourceIds.storageAccountResourceId, '/')
-var _existingSaSub = length(_saIdSegments) >= 3 ? _saIdSegments[2] : ''
-var _existingSaRg = length(_saIdSegments) >= 5 ? _saIdSegments[4] : ''
-var _existingSaName = length(_saIdSegments) >= 1 ? last(_saIdSegments) : ''
-
-var _searchIdSegments = empty(resourceIds.searchServiceResourceId) ? [''] : split(resourceIds.searchServiceResourceId, '/')
-var _existingSearchSub = length(_searchIdSegments) >= 3 ? _searchIdSegments[2] : ''
-var _existingSearchRg = length(_searchIdSegments) >= 5 ? _searchIdSegments[4] : ''
-var _existingSearchName = length(_searchIdSegments) >= 1 ? last(_searchIdSegments) : ''
-
-var _appcsIdSegments = empty(resourceIds.appConfigResourceId) ? [''] : split(resourceIds.appConfigResourceId, '/')
-var _existingAppcsSub = length(_appcsIdSegments) >= 3 ? _appcsIdSegments[2] : ''
-var _existingAppcsRg = length(_appcsIdSegments) >= 5 ? _appcsIdSegments[4] : ''
-var _existingAppcsName = length(_appcsIdSegments) >= 1 ? last(_appcsIdSegments) : ''
-
-
-// ── 2.5 Service defaults for create path (compact objects)
-var _cosmosDef = cosmosDbDefinition ?? { name: '' }
-var _storageAccountDef = storageAccountDefinition ?? { name: '', publicNetworkAccessEnabled: false, tags: {} }
-var _searchDef = searchDefinition ?? { name: '', tags: {} }
-
-
-// ── 2.6 Effective names/SKUs (create path) + friendly names
-var _acrEffectiveSku = !empty(containerRegistryDefinition.sku!) ? containerRegistryDefinition.sku! : 'Premium'
-var _acrNameEffective = !empty(containerRegistryDefinition.name!) ? containerRegistryDefinition.name! : '${_acr}${baseName}'
-
-var _appConfigName = empty((appConfigurationDefinition ?? { name: '' }).name!)
-  ? '${_appcs}${baseName}'
-  : (appConfigurationDefinition.name!)
-
-var _wafName = empty(wafPolicyDefinition.name!) ? '${_waf}${baseName}' : wafPolicyDefinition.name!
-var _agwName = empty(appGatewayDefinition.name!) ? '${_agw}${baseName}' : appGatewayDefinition.name!
-
-// Convenience alias for downstream modules
-var agwName = _agwName
-var agwId = resourceId('Microsoft.Network/applicationGateways', agwName)
-var agwSubnet = _agwSubnetId
-
-var _afwPolicyName = '${_afwp}${baseName}'
-var _afwName = empty(firewallDefinition.name!) ? '${_afw}${baseName}' : firewallDefinition.name!
-var _apimName = empty(apimDefinition.name!) ? '${_apim}${baseName}' : apimDefinition.name!
-var _bastionKvName = empty(bastionKeyVaultDefinition.name!) ? '${_kv}${baseName}-jump' : bastionKeyVaultDefinition.name!
-var _bingNameEffective = empty(groundingWithBingDefinition.name!) ? '${_bing}${baseName}' : groundingWithBingDefinition.name!
-
-
-// ── 2.7 Deployment switches & “has” state (create vs reuse)
-var _deploySa = empty(resourceIds.storageAccountResourceId) && deployGenAiAppBackingServices && deployToggles.storageAccount
-var _deployCosmos = empty(resourceIds.dbAccountResourceId) && deployGenAiAppBackingServices && deployToggles.cosmosDb
-var _deploySearch = empty(resourceIds.searchServiceResourceId) && deployGenAiAppBackingServices && deployToggles.searchService
-var _deployKv = empty(resourceIds.keyVaultResourceId) && deployGenAiAppBackingServices && deployToggles.keyVault
-var _deployContainerAppEnv = empty(resourceIds.containerEnvResourceId) && deployGenAiAppBackingServices && deployToggles.containerEnv
-var _deployContainerApps = deployGenAiAppBackingServices && _hasContainerEnv && deployToggles.containerApps && length(containerAppsList) > 0
-var _deployAppConfig = empty(resourceIds.appConfigResourceId) && deployGenAiAppBackingServices && deployToggles.appConfig
-var _deployAcr = empty(resourceIds.containerRegistryResourceId) && deployGenAiAppBackingServices && deployToggles.containerRegistry
-var _deployApim = empty(resourceIds.apimServiceResourceId) && deployToggles.apiManagement
-var _deployAppGateway = empty(resourceIds.applicationGatewayResourceId) && deployToggles.applicationGateway
-var _deployFirewall = empty(resourceIds.firewallResourceId) && deployToggles.firewall
-
-var _isPlatformLz = flagPlatformLandingZone
-var _deployPdnsAndPe = networkIsolation && !_isPlatformLz
-var _deployBuildVm = deployToggles.buildVm && !_isPlatformLz
-var _deployJumpVm = deployToggles.jumpVm && !_isPlatformLz && !empty(jumpVmAdminPassword)
-
-// Observability coupling (App Insights requires LAW)
-var _deployLogAnalytics = empty(resourceIds.logAnalyticsWorkspaceResourceId) && deployToggles.logAnalytics
-var _hasLogAnalytics = (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) || (_deployLogAnalytics)
-var _deployAppInsights = empty(resourceIds.appInsightsResourceId) && deployToggles.appInsights && _hasLogAnalytics
-var _hasAppInsights = (!empty(resourceIds.appInsightsResourceId)) || (_deployAppInsights)
-
-// Decide if Bing module runs (create or reuse+connect)
-var _invokeBingModule = (!empty(resourceIds.groundingServiceResourceId)) || (deployToggles.groundingWithBingSearch && empty(resourceIds.groundingServiceResourceId))
-
-// “Has” state for GenAI app stack (create or reuse)
-var _hasStorage = (!empty(resourceIds.storageAccountResourceId)) || (_deploySa)
-var _hasCosmos = (!empty(resourceIds.dbAccountResourceId)) || (_deployCosmos)
-var _hasSearch = (!empty(resourceIds.searchServiceResourceId)) || (_deploySearch)
-var _hasKv = (!empty(resourceIds.keyVaultResourceId)) || (_deployKv)
-var _hasContainerEnv = (!empty(resourceIds.containerEnvResourceId)) || (_deployContainerAppEnv)
-var _hasAppConfig = (!empty(resourceIds.appConfigResourceId)) || (_deployAppConfig)
-var _hasAcr = (!empty(resourceIds.containerRegistryResourceId)) || (_deployAcr)
-
-
-// ── 2.8 Observability effective values (LAW Id, AI connection)
-var _laIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? resourceIds.logAnalyticsWorkspaceResourceId
-  : (_deployLogAnalytics ? logAnalytics!.outputs.resourceId : '')
-var _laCustomerIdEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? reference(resourceIds.logAnalyticsWorkspaceResourceId, '2022-10-01', 'Full').properties.customerId
-  : (_deployLogAnalytics ? logAnalytics!.outputs.logAnalyticsWorkspaceId : '')
-var _laSharedKeyEffective = !empty(resourceIds.logAnalyticsWorkspaceResourceId)
-  ? listKeys(resourceIds.logAnalyticsWorkspaceResourceId, '2020-08-01').primarySharedKey
-  #disable-next-line BCP318
-  : (_deployLogAnalytics ? logAnalytics.outputs.primarySharedKey : '')
-
-
-// ── 2.9 Effective resourceIds for dependent modules (env, ACR, App Config)
-var _containerEnvIdEffective = !empty(resourceIds.containerEnvResourceId)
-  ? resourceIds.containerEnvResourceId
-  #disable-next-line BCP318
-  : containerEnv.outputs.resourceId
-
-var _acrResourceId = !empty(resourceIds.containerRegistryResourceId)
-  ? existingAcr.id
-  : (_deployAcr ? resourceId('Microsoft.ContainerRegistry/registries', _acrNameEffective) : '')
-
-var _appConfigResourceId = !empty(resourceIds.appConfigResourceId)
-  ? resourceIds.appConfigResourceId
-  : (_deployAppConfig ? resourceId('Microsoft.AppConfiguration/configurationStores', _appConfigName) : '')
-
-
-// ── 2.10 AI Foundry inputs & derived values
-var _afDefaults = {
-  baseUniqueName: ''
-  location: location
-  enableTelemetry: enableTelemetry
-  aiProjects: []
-  aiModelDeployments: [
-    {
-      name: 'chat'
-      raiPolicyName: ''
-      versionUpgradeOption: ''
-      model: {
-        format: 'OpenAI'
-        name: 'gpt-4o'
-        version: '2024-11-20'
-      }
-      scale: {
-        capacity: 1
-        family: ''
-        size: ''
-        tier: ''
-        type: 'Standard'
-      }
-    }
-    {
-      name: 'text-embedding'
-      raiPolicyName: ''
-      versionUpgradeOption: ''
-      model: {
-        format: 'OpenAI'
-        name: 'text-embedding-3-large'
-        version: '1'
-      }
-      scale: {
-        capacity: 1
-        family: ''
-        size: ''
-        tier: ''
-        type: 'Standard'
-      }
-    }
-  ]
-  lock: { kind: 'None', name: '' }
-  includeAssociatedResources: true
-  privateEndpointSubnetResourceId: ''
-  aiFoundryConfiguration: {
-    accountName: ''
-    location: location
-    sku: 'S0'
-    createCapabilityHosts: false
-    allowProjectManagement: true
-    networking: {
-      agentServiceSubnetResourceId: ''
-      cognitiveServicesPrivateDnsZoneResourceId: ''
-      openAiPrivateDnsZoneResourceId: ''
-      aiServicesPrivateDnsZoneResourceId: ''
-    }
-    project: { name: '', displayName: '', desc: 'This is the default project for AI Foundry.' }
-    roleAssignments: []
-  }
-  aiSearchConfiguration: {
-    existingResourceId: ''
-    name: 'srch-${baseName}-af'
-    privateDnsZoneResourceId: ''
-    roleAssignments: []
-  }
-  keyVaultConfiguration: {
-    existingResourceId: ''
-    name: 'kv-${baseName}-af'
-    privateDnsZoneResourceId: ''
-    roleAssignments: []
-  }
-  storageAccountConfiguration: {
-    existingResourceId: ''
-    name: 'st${baseName}af'
-    blobPrivateDnsZoneResourceId: ''
-    roleAssignments: []
-  }
-  cosmosDbConfiguration: {
-    existingResourceId: ''
-    name: 'cos${baseName}af'
-    privateDnsZoneResourceId: ''
-    roleAssignments: []
-  }
-}
-
-var _afParam = union(_afDefaults, aiFoundryDefinition ?? {})
-
-// Safe defaults from _afParam 
-var _afBaseUniqueName = contains(_afParam!, 'baseUniqueName') && !empty(_afParam!.baseUniqueName!) ? _afParam.baseUniqueName! : ''
-var _afLocation = contains(_afParam, 'location') && !empty(_afParam.location!) ? _afParam.location! : location
-var _afConfigObj = contains(_afParam, 'aiFoundryConfiguration') ? _afParam.aiFoundryConfiguration! : {}
-var _afAgentSvcEnabled = bool((_afConfigObj.?createCapabilityHosts ?? false))
-var _afPeSubnetParam = contains(_afParam, 'privateEndpointSubnetResourceId') && !empty(_afParam.privateEndpointSubnetResourceId!) ? _afParam.privateEndpointSubnetResourceId! : ''
-var _afSearchCfg = contains(_afParam, 'aiSearchConfiguration') ? _afParam.aiSearchConfiguration! : {}
-var _afCosmosCfg = contains(_afParam, 'cosmosDbConfiguration') ? _afParam.cosmosDbConfiguration! : {}
-var _afKvCfg = contains(_afParam, 'keyVaultConfiguration') ? _afParam.keyVaultConfiguration! : {}
-var _afStorageCfg = contains(_afParam, 'storageAccountConfiguration') ? _afParam.storageAccountConfiguration! : {}
-
-// Source entries and mapped AVM model deployments
-var _afModelEntries = _afParam.aiModelDeployments
-var _afModelDeployments = [
-  for (md, idx) in _afModelEntries: union(
-    {
-      name: empty(md.name) ? 'model-${idx}' : string(md.name)
-      model: { format: md.model.format, name: md.model.name, version: md.model.version }
-      sku: { capacity: int(md.scale.capacity), name: empty(md.scale.type) ? 'Standard' : string(md.scale.type) }
-    },
-    empty(md.raiPolicyName!) ? {} : { raiPolicyName: md.raiPolicyName! },
-    empty(md.versionUpgradeOption!) ? {} : { versionUpgradeOption: md.versionUpgradeOption! }
-  )
-]
-
-// Ask AVM to create AF-associated deps only if Agent Service is enabled
-var _afWantsDeps = _afAgentSvcEnabled && (_afParam.includeAssociatedResources! ?? true)
-
-
-// ── 2.11 Private DNS decisions (reuse/create) + AF PDNS bindings
-// Which PDNS zones are being reused vs. created here?
-var _useExistingPdz = {
-  cognitiveservices: !empty(privateDnsZoneIds.cognitiveservices)
-  openai: !empty(privateDnsZoneIds.openai)
-  aiServices: !empty(privateDnsZoneIds.aiServices)
-  search: !empty(privateDnsZoneIds.search)
-  cosmosSql: !empty(privateDnsZoneIds.cosmosSql)
-  blob: !empty(privateDnsZoneIds.blob)
-  keyVault: !empty(privateDnsZoneIds.keyVault)
-  appConfig: !empty(privateDnsZoneIds.appConfig)
-  containerApps: !empty(privateDnsZoneIds.containerApps)
-  acr: !empty(privateDnsZoneIds.acr)
-  appInsights: !empty(privateDnsZoneIds.appInsights)
-}
-
-// Whether AF/app stacks require specific PDNS zones
-var _foundryNeedsCosmosPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsBlobPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsSearchPdns = _afWantsDeps && _afAgentSvcEnabled
-var _foundryNeedsKvPdns = _afWantsDeps && _afAgentSvcEnabled
-
-var _appNeedsCosmosPdns = _hasCosmos
-var _appNeedsBlobPdns = _hasStorage
-var _appNeedsSearchPdns = _hasSearch
-var _appNeedsKvPdns = _hasKv
-
-var _needCosmosPdns = _appNeedsCosmosPdns || _foundryNeedsCosmosPdns
-var _needBlobPdns = _appNeedsBlobPdns || _foundryNeedsBlobPdns
-var _needSearchPdns = _appNeedsSearchPdns || _foundryNeedsSearchPdns
-var _needKvPdns = _appNeedsKvPdns || _foundryNeedsKvPdns
-
-// Map caller-provided VNet links to AVM shape once
-var _pdnsLinksFromParam = [
-  for l in privateDnsZones.networkLinks: {
-    name: l.vnetLinkName
-    registrationEnabled: false
-    virtualNetworkResourceId: l.vnetId
-  }
-]
-
-// AF networking & PDNS bindings (only when not platform-managed)
-var _afNetworkingConfig = !flagPlatformLandingZone && _afAgentSvcEnabled
-  ? {
-      networking: {
-        agentServiceSubnetResourceId: _agentSubnetId
-        aiServicesPrivateDnsZoneResourceId: !_useExistingPdz.aiServices
-          #disable-next-line BCP318
-          ? privateDnsZoneAiService.outputs.resourceId
-          : privateDnsZoneIds.aiServices
-        cognitiveServicesPrivateDnsZoneResourceId: !_useExistingPdz.cognitiveservices
-          #disable-next-line BCP318
-          ? privateDnsZoneCogSvcs.outputs.resourceId
-          : privateDnsZoneIds.cognitiveservices
-        openAiPrivateDnsZoneResourceId: !_useExistingPdz.openai
-          #disable-next-line BCP318
-          ? privateDnsZoneOpenAi.outputs.resourceId
-          : privateDnsZoneIds.openai
-      }
-    }
-  : {}
-
-var _afAiSearchPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.search
-        #disable-next-line BCP318
-        ? privateDnsZoneSearch.outputs.resourceId
-        : privateDnsZoneIds.search
-    }
-  : {}
-
-var _afCosmosPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.cosmosSql
-        #disable-next-line BCP318
-        ? privateDnsZoneCosmos.outputs.resourceId
-        : privateDnsZoneIds.cosmosSql
-    }
-  : {}
-
-var _afKvPdzBinding = !flagPlatformLandingZone
-  ? {
-      privateDnsZoneResourceId: !_useExistingPdz.keyVault
-        #disable-next-line BCP318
-        ? privateDnsZoneKeyVault.outputs.resourceId
-        : privateDnsZoneIds.keyVault
-    }
-  : {}
-
-var _afBlobPdzBinding = !flagPlatformLandingZone
-  ? {
-      blobPrivateDnsZoneResourceId: !_useExistingPdz.blob
-        #disable-next-line BCP318
-        ? privateDnsZoneBlob.outputs.resourceId
-        : privateDnsZoneIds.blob
-    }
-  : {}
-
-// ── 2.12 WAF/AGW/Firewall policy helpers
-var _policySettingsForModule = {
-  state: wafPolicyDefinition.policySettings.enabledState
-  mode: wafPolicyDefinition.policySettings.mode
-  requestBodyCheck: wafPolicyDefinition.policySettings.requestBodyCheck
-  maxRequestBodySizeInKb: wafPolicyDefinition.policySettings.maxRequestBodySizeInKb
-  fileUploadLimitInMb: wafPolicyDefinition.policySettings.fileUploadLimitInMb
-}
-
-// Whether to deploy a WAF policy for AGW
-var _deployWafPolicy = _deployAppGateway && deployToggles.wafPolicy
-
-// If deploying WAF policy, cache its resourceId for AGW wiring
-var _wafPolicyResourceId = _deployWafPolicy ? wafPolicy!.outputs.resourceId : ''
-
-// Public IP name for AGW (only used if public frontend is enabled)
-var _agwPipName = '${_pip}${_agw}${baseName}'
-
-// Firewall policy wiring and rules (optional)
-var _deployAfwPolicy = _deployFirewall && (length(firewallPolicyDefinition.networkRules) > 0 || !empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!))
-var _rcgName = empty(firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!) ? 'networkRules' : firewallPolicyDefinition.networkPolicyRuleCollectionGroupName!
-var _rcgPriority = firewallPolicyDefinition.networkPolicyRuleCollectionGroupPriority! ?? 100
-var _networkRulesForModule = [
-  for r in firewallPolicyDefinition.networkRules: {
-    name: r.name
-    ruleType: 'NetworkRule'
-    ...(empty(r.description) ? {} : { description: r.description })
-    sourceAddresses: r.sourceAddresses
-    destinationAddresses: r.destinationAddresses
-    destinationPorts: r.destinationPorts
-    ipProtocols: r.protocols
-  }
-]
-
-
-// ── 2.13 Compute helpers (Jump VM, Build VM)
-// Jump VM OS/image and computerName normalization
-var _jumpVmOsType = contains(jumpVmDefinition, 'osType') && !empty(jumpVmDefinition.osType!) ? jumpVmDefinition.osType! : 'Windows'
-var _defaultJumpWindows = { publisher: 'MicrosoftWindowsServer', offer: 'WindowsServer', sku: '2022-datacenter-azure-edition', version: 'latest' }
-var _jumpVmImageRef = contains(jumpVmDefinition, 'imageReference') && !empty(string(jumpVmDefinition.imageReference!)) ? jumpVmDefinition.imageReference! : _defaultJumpWindows
-
-var _rawJumpName = empty(jumpVmDefinition.name!) ? '${_vm}${baseName}jmp' : replace(replace(replace(jumpVmDefinition.name!, ' ', ''), '_', ''), '.', '')
-var _maxComputerNameLength = 15
-var _jumpNameLen = min(_maxComputerNameLength, length(_rawJumpName))
-var _jumpComputerName = toLower(substring(_rawJumpName, 0, _jumpNameLen))
-
-// Build VM OS/image and cloud-init templating
-var _buildVmOsType = contains(buildVmDefinition, 'osType') && !empty(buildVmDefinition.osType!) ? buildVmDefinition.osType! : 'Linux'
-var _defaultBuildUbuntu = { publisher: 'Canonical', offer: '0001-com-ubuntu-server-jammy', sku: '22_04-lts', version: 'latest' }
-var _buildVmImageRef = contains(buildVmDefinition, 'imageReference') && !empty(string(buildVmDefinition.imageReference!)) ? buildVmDefinition.imageReference! : _defaultBuildUbuntu
-
-// Normalize entire build VM object so nested props always exist
-var _buildVmNormalized = union({ azdo: { orgUrl: '', pool: '', agentName: '', workFolder: '' }, github: { owner: '', repo: '', labels: '', agentName: '', workFolder: '' } }, buildVmDefinition)
-
-// Render cloud-init from template with placeholders
-var _t0 = loadTextContent('./common/build-cloudinit.yaml')
-var _t1 = replace(_t0, '{0}', string(_buildVmNormalized.runner))
-var _t2 = replace(_t1, '{1}', string(_buildVmNormalized.azdo.orgUrl))
-var _t3 = replace(_t2, '{2}', string(_buildVmNormalized.azdo.pool))
-var _t4 = replace(_t3, '{3}', string(_buildVmNormalized.azdo.agentName))
-var _t5 = replace(_t4, '{4}', string(_buildVmNormalized.azdo.workFolder))
-var _t6 = replace(_t5, '{5}', string(_buildVmNormalized.github.owner))
-var _t7 = replace(_t6, '{6}', string(_buildVmNormalized.github.repo))
-var _t8 = replace(_t7, '{7}', string(_buildVmNormalized.github.labels))
-var _t9 = replace(_t8, '{8}', string(_buildVmNormalized.github.agentName))
-var _t10 = replace(_t9, '{9}', string(_buildVmNormalized.github.workFolder))
-var _t11 = replace(_t10, '{10}', string(azdoPat))
-var _t12 = replace(_t11, '{11}', string(githubPat))
-var _t13 = replace(_t12, '{12}', string(_buildVmNormalized.adminUsername))
-var _t14 = replace(_t13, '{13}', string(_buildVmNormalized.sshPublicKey))
-var _t15 = replace(_t14, '{14}', string(baseName))
-var _buildCloudInit = _t15
-
-
-// ── 2.14 Hub VNet (peer) parsing for reverse peering
-var _peerVnetId = hubVnetPeeringDefinition.peerVnetResourceId
-var _peerParts = split(_peerVnetId, '/')
-var _peerSub = length(_peerParts) >= 3 ? _peerParts[2] : ''
-var _peerRg = length(_peerParts) >= 5 ? _peerParts[4] : ''
-var _peerVnetName = length(_peerParts) >= 9 ? _peerParts[8] : ''
-
-//////////////////////////////////////////////////////////////////////////
-// 3. RESOURCES
-//////////////////////////////////////////////////////////////////////////
-
+// -----------------------
+// Telemetry
+// -----------------------
 #disable-next-line no-deployments-resources
 resource avmTelemetry 'Microsoft.Resources/deployments@2024-03-01' = if (enableTelemetry) {
-  name: '46d3xbcp.ptn.aiml-landingzone.${replace('-..--..-', '.', '-')}.${substring(uniqueString(deployment().name, location), 0, 4)}'
+  name: '46d3xbcp.ptn.aiml-lz.${substring(uniqueString(deployment().name, location), 0, 4)}'
   properties: {
     mode: 'Incremental'
     template: {
@@ -1178,729 +232,1583 @@ resource avmTelemetry 'Microsoft.Resources/deployments@2024-03-01' = if (enableT
   }
 }
 
-// ──────────────────────────────────────────────────────────────────────
-// 3.1 Networking — VNet (reuse or create)
-// ─────────────────────────────────────────────────────────────────────-
+// -----------------------
+// 1.7 Unique Naming for Deployments
+// -----------------------
+// Generate unique suffixes to prevent deployment name conflicts
+var varUniqueSuffix = substring(uniqueString(deployment().name, location, resourceGroup().id), 0, 8)
 
-resource existingVNet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = if (!empty(resourceIds.virtualNetworkResourceId)) {
-  name: _existingVNetName
-  scope: resourceGroup(_existingVNetSubscriptionId, _existingVNetResourceGroupName)
-}
+// -----------------------
+// 2 SECURITY - NETWORK SECURITY GROUPS
+// -----------------------
 
-module virtualNetwork 'br/public:avm/res/network/virtual-network:0.7.0' = if (_deployVnet) {
-  name: 'virtualNetworkDeployment'
+@description('Optional. NSG definitions per subnet role; each entry deploys an NSG for that subnet when a non-empty NSG definition is provided.')
+param nsgDefinitions nsgPerSubnetDefinitionsType?
+
+var varDeployAgentNsg = deployToggles.agentNsg && empty(resourceIds.?agentNsgResourceId)
+
+// 2.1 Agent Subnet NSG
+module agentNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployAgentNsg) {
+  name: 'm-nsg-agent'
   params: {
-    name: _vnetName
-    location: location
-    tags: _tags
-    addressPrefixes: [vnetDefinition.addressSpace]
-    dnsServers: vnetDefinition.dnsServers!
-    enableTelemetry: enableTelemetry
-    subnets: [
-      for s in vnetDefinition.subnets: {
-        name: s.name
-        addressPrefix: s.addressPrefix
-        ...(contains(s, 'delegation') && !empty(s.delegation!) ? { delegation: s.delegation! } : {})
-        ...(contains(s, 'serviceEndpoints') && !empty(s.serviceEndpoints!)
-          ? { serviceEndpoints: s.serviceEndpoints! }
-          : {})
-      }
-    ]
-    peerings: _hasPeer
-      ? [
-          {
-            name: _peerName
-            remoteVirtualNetworkResourceId: _peerCfgVnetId
-            allowVirtualNetworkAccess: _peerAllowVna
-            allowForwardedTraffic: _peerAllowFwd
-            allowGatewayTransit: _peerAllowGw
-            useRemoteGateways: _peerUseRgw
-          }
-        ]
-      : []
+    nsg: union(
+      {
+        name: 'nsg-agent-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?agent ?? {}
+    )
   }
 }
 
+var agentNsgResourceId = resourceIds.?agentNsgResourceId ?? (varDeployAgentNsg
+  ? agentNsgWrapper!.outputs.resourceId
+  : null)
 
-// ──────────────────────────────────────────────────────────────────────
-// 3.3 Private DNS Zones (create when isolated AND per-zone ID not provided)
-// ─────────────────────────────────────────────────────────────────────-
+var varDeployPeNsg = deployToggles.peNsg && empty(resourceIds.?peNsgResourceId)
 
+// 2.2 Private Endpoints Subnet NSG
+module peNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployPeNsg) {
+  name: 'm-nsg-pe'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-pe-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?pe ?? {}
+    )
+  }
+}
 
-// Cognitiveservices
-module privateDnsZoneCogSvcs 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.cognitiveservices) {
+var peNsgResourceId = resourceIds.?peNsgResourceId ?? (varDeployPeNsg ? peNsgWrapper!.outputs.resourceId : null)
+
+var varDeployApplicationGatewayNsg = deployToggles.applicationGatewayNsg && empty(resourceIds.?applicationGatewayNsgResourceId)
+
+// 2.3 Application Gateway Subnet NSG
+module applicationGatewayNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployApplicationGatewayNsg) {
+  name: 'm-nsg-appgw'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-appgw-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+        // Required security rules for Application Gateway v2
+        securityRules: [
+          {
+            name: 'Allow-GatewayManager-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 100
+              protocol: 'Tcp'
+              description: 'Allow Azure Application Gateway management traffic on ports 65200-65535'
+              sourceAddressPrefix: 'GatewayManager'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '65200-65535'
+            }
+          }
+          {
+            name: 'Allow-Internet-HTTP-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 110
+              protocol: 'Tcp'
+              description: 'Allow HTTP traffic from Internet'
+              sourceAddressPrefix: 'Internet'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '80'
+            }
+          }
+          {
+            name: 'Allow-Internet-HTTPS-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 120
+              protocol: 'Tcp'
+              description: 'Allow HTTPS traffic from Internet'
+              sourceAddressPrefix: 'Internet'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '443'
+            }
+          }
+        ]
+      },
+      nsgDefinitions!.?applicationGateway ?? {}
+    )
+  }
+}
+
+var applicationGatewayNsgResourceId = resourceIds.?applicationGatewayNsgResourceId ?? (varDeployApplicationGatewayNsg
+  ? applicationGatewayNsgWrapper!.outputs.resourceId
+  : '')
+
+var varDeployApiManagementNsg = deployToggles.apiManagementNsg && empty(resourceIds.?apiManagementNsgResourceId)
+
+// 2.4 API Management Subnet NSG
+module apiManagementNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployApiManagementNsg) {
+  name: 'm-nsg-apim'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-apim-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?apiManagement ?? {}
+    )
+  }
+}
+
+var apiManagementNsgResourceId = resourceIds.?apiManagementNsgResourceId ?? (varDeployApiManagementNsg
+  ? apiManagementNsgWrapper!.outputs.resourceId
+  : '')
+
+var varDeployAcaEnvironmentNsg = deployToggles.acaEnvironmentNsg && empty(resourceIds.?acaEnvironmentNsgResourceId)
+
+// 2.5 Azure Container Apps Environment Subnet NSG
+module acaEnvironmentNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployAcaEnvironmentNsg) {
+  name: 'm-nsg-aca-env'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-aca-env-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?acaEnvironment ?? {}
+    )
+  }
+}
+
+var acaEnvironmentNsgResourceId = resourceIds.?acaEnvironmentNsgResourceId ?? (varDeployAcaEnvironmentNsg
+  ? acaEnvironmentNsgWrapper!.outputs.resourceId
+  : '')
+
+var varDeployJumpboxNsg = deployToggles.jumpboxNsg && empty(resourceIds.?jumpboxNsgResourceId)
+
+// 2.6 Jumpbox Subnet NSG
+module jumpboxNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployJumpboxNsg) {
+  name: 'm-nsg-jumpbox'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-jumpbox-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?jumpbox ?? {}
+    )
+  }
+}
+
+var jumpboxNsgResourceId = resourceIds.?jumpboxNsgResourceId ?? (varDeployJumpboxNsg
+  ? jumpboxNsgWrapper!.outputs.resourceId
+  : '')
+
+var varDeployDevopsBuildAgentsNsg = deployToggles.devopsBuildAgentsNsg && empty(resourceIds.?devopsBuildAgentsNsgResourceId)
+
+// 2.7 DevOps Build Agents Subnet NSG
+module devopsBuildAgentsNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployDevopsBuildAgentsNsg) {
+  name: 'm-nsg-devops-agents'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-devops-agents-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      nsgDefinitions!.?devopsBuildAgents ?? {}
+    )
+  }
+}
+
+var devopsBuildAgentsNsgResourceId = resourceIds.?devopsBuildAgentsNsgResourceId ?? (varDeployDevopsBuildAgentsNsg
+  ? devopsBuildAgentsNsgWrapper!.outputs.resourceId
+  : '')
+
+// -----------------------
+// 3 NETWORKING - VIRTUAL NETWORK
+// -----------------------
+
+@description('Conditional. Virtual Network configuration. Required if deploy.virtualNetwork is true and resourceIds.virtualNetworkResourceId is empty.')
+param vNetDefinition vNetDefinitionType?
+
+@description('Optional. Configuration for adding subnets to an existing VNet. Use this when you want to deploy subnets to an existing VNet instead of creating a new one.')
+param existingVNetSubnetsDefinition existingVNetSubnetsDefinitionType?
+
+var varDeployVnet = deployToggles.virtualNetwork && empty(resourceIds.?virtualNetworkResourceId)
+var varDeploySubnetsToExistingVnet = existingVNetSubnetsDefinition != null
+
+// Parse existing VNet Resource ID for cross-subscription/resource group support
+var varExistingVNetIdSegments = varDeploySubnetsToExistingVnet
+  ? split(existingVNetSubnetsDefinition!.existingVNetName, '/')
+  : array([])
+var varIsExistingVNetResourceId = varDeploySubnetsToExistingVnet && length(varExistingVNetIdSegments) > 1
+var varExistingVNetSubscriptionId = varDeploySubnetsToExistingVnet && varIsExistingVNetResourceId && length(varExistingVNetIdSegments) >= 3
+  ? varExistingVNetIdSegments[2]
+  : ''
+var varExistingVNetResourceGroupName = varDeploySubnetsToExistingVnet && varIsExistingVNetResourceId && length(varExistingVNetIdSegments) >= 5
+  ? varExistingVNetIdSegments[4]
+  : ''
+var varIsCrossScope = varIsExistingVNetResourceId && !empty(varExistingVNetSubscriptionId) && !empty(varExistingVNetResourceGroupName)
+
+// 3.1 Virtual Network and Subnets
+module vNetworkWrapper 'wrappers/avm.res.network.virtual-network.bicep' = if (varDeployVnet) {
+  name: 'm-vnet'
+  params: {
+    vnet: union(
+      {
+        name: 'vnet-${baseName}'
+        addressPrefixes: ['192.168.0.0/22']
+        location: location
+        enableTelemetry: enableTelemetry
+        subnets: [
+          {
+            enabled: true
+            name: 'agent-subnet'
+            addressPrefix: '192.168.0.0/27'
+            delegation: 'Microsoft.App/environments'
+            serviceEndpoints: ['Microsoft.CognitiveServices']
+            networkSecurityGroupResourceId: agentNsgResourceId
+            // Min: /27 (32 IPs) will work for small setups
+            // Recommended: /24 (256 IPs) per Microsoft guidance for delegated Agent subnets
+          }
+          {
+            enabled: true
+            name: 'pe-subnet'
+            addressPrefix: '192.168.0.32/27'
+            serviceEndpoints: ['Microsoft.AzureCosmosDB']
+            privateEndpointNetworkPolicies: 'Disabled'
+            networkSecurityGroupResourceId: peNsgResourceId
+            // Min: /28 (16 IPs) can work for a couple of Private Endpoints
+            // Recommended: /27 or larger if you expect many PEs (each uses 1 IP)
+          }
+          {
+            enabled: true
+            name: 'AzureBastionSubnet'
+            addressPrefix: '192.168.0.64/26'
+            // Min (required by Azure): /26 (64 IPs)
+            // Recommended: /26 (mandatory, cannot be smaller)
+          }
+          {
+            enabled: true
+            name: 'AzureFirewallSubnet'
+            addressPrefix: '192.168.0.128/26'
+            // Min (required by Azure): /26 (64 IPs)
+            // Recommended: /26 or /25 if you want future scale
+          }
+          {
+            enabled: true
+            name: 'appgw-subnet'
+            addressPrefix: '192.168.0.192/27'
+            networkSecurityGroupResourceId: applicationGatewayNsgResourceId
+            // Min: /29 (8 IPs) if very small, but not practical
+            // Recommended: /27 (32 IPs) or larger for production App Gateway
+          }
+          {
+            enabled: true
+            name: 'apim-subnet'
+            addressPrefix: '192.168.0.224/27'
+            networkSecurityGroupResourceId: apiManagementNsgResourceId
+            // Min: /28 (16 IPs) for dev/test SKUs
+            // Recommended: /27 or larger for production multi-zone APIM
+          }
+          {
+            enabled: true
+            name: 'jumpbox-subnet'
+            addressPrefix: '192.168.1.0/28'
+            networkSecurityGroupResourceId: jumpboxNsgResourceId
+            // Min: /29 (8 IPs) for 1–2 VMs
+            // Recommended: /28 (16 IPs) to host a couple of VMs comfortably
+          }
+          {
+            enabled: true
+            name: 'aca-env-subnet'
+            addressPrefix: '192.168.2.0/23' // ACA requires /23 minimum
+            delegation: 'Microsoft.App/environments'
+            serviceEndpoints: ['Microsoft.AzureCosmosDB']
+            networkSecurityGroupResourceId: acaEnvironmentNsgResourceId
+            // Min (required by Azure): /23 (512 IPs)
+            // Recommended: /23 or /22 if expecting many apps & scale-out
+          }
+          {
+            enabled: true
+            name: 'devops-agents-subnet'
+            addressPrefix: '192.168.1.32/27'
+            networkSecurityGroupResourceId: devopsBuildAgentsNsgResourceId
+            // Min: /28 (16 IPs) if you run few agents
+            // Recommended: /27 (32 IPs) to allow scaling
+          }
+        ]
+      },
+      vNetDefinition ?? {}
+    )
+  }
+}
+
+// Note: We need two module declarations because Bicep requires compile-time scope resolution.
+// The scope parameter cannot be conditionally determined at runtime, so we use two modules
+// with different scopes but the same template to handle both same-scope and cross-scope scenarios.
+
+// 3.2 Existing VNet Subnet Configuration (if applicable)
+module existingVNetSubnets './components/existing-vnet-subnets-wrapper/main.bicep' = if (varDeploySubnetsToExistingVnet && !varIsCrossScope) {
+  name: 'm-existing-vnet-subnets'
+  params: {
+    existingVNetSubnetsDefinition: existingVNetSubnetsDefinition!
+    nsgResourceIds: {
+      agentNsgResourceId: agentNsgResourceId!
+      peNsgResourceId: peNsgResourceId!
+      applicationGatewayNsgResourceId: applicationGatewayNsgResourceId!
+      apiManagementNsgResourceId: apiManagementNsgResourceId!
+      jumpboxNsgResourceId: jumpboxNsgResourceId!
+      acaEnvironmentNsgResourceId: acaEnvironmentNsgResourceId!
+      devopsBuildAgentsNsgResourceId: devopsBuildAgentsNsgResourceId!
+    }
+  }
+}
+
+// Deploy subnets to existing VNet (cross-scope)
+module existingVNetSubnetsCrossScope './components/existing-vnet-subnets-wrapper/main.bicep' = if (varDeploySubnetsToExistingVnet && varIsCrossScope) {
+  name: 'm-existing-vnet-subnets-cross-scope'
+  scope: resourceGroup(varExistingVNetSubscriptionId, varExistingVNetResourceGroupName)
+  params: {
+    existingVNetSubnetsDefinition: existingVNetSubnetsDefinition!
+    nsgResourceIds: {
+      agentNsgResourceId: agentNsgResourceId!
+      peNsgResourceId: peNsgResourceId!
+      applicationGatewayNsgResourceId: applicationGatewayNsgResourceId!
+      apiManagementNsgResourceId: apiManagementNsgResourceId!
+      jumpboxNsgResourceId: jumpboxNsgResourceId!
+      acaEnvironmentNsgResourceId: acaEnvironmentNsgResourceId!
+      devopsBuildAgentsNsgResourceId: devopsBuildAgentsNsgResourceId!
+    }
+  }
+}
+
+var existingVNetResourceId = varDeploySubnetsToExistingVnet
+  ? (varIsCrossScope
+      ? existingVNetSubnetsCrossScope!.outputs.virtualNetworkResourceId
+      : existingVNetSubnets!.outputs.virtualNetworkResourceId)
+  : ''
+
+// 3.3 VNet Resource ID Resolution
+var virtualNetworkResourceId = resourceIds.?virtualNetworkResourceId ?? (varDeployHubPeering && varDeployVnet
+  ? spokeVNetWithPeering!.outputs.resourceId
+  : (varDeployVnet ? vNetworkWrapper!.outputs.resourceId : existingVNetResourceId))
+
+// -----------------------
+// 4 NETWORKING - PRIVATE DNS ZONES
+// -----------------------
+
+// 4.1 Platform Landing Zone Integration Logic
+var varIsPlatformLz = flagPlatformLandingZone
+var varDeployPdnsAndPe = !varIsPlatformLz
+
+// 4.2 DNS Zone Configuration Variables
+var varUseExistingPdz = {
+  cognitiveservices: !empty(privateDnsZonesDefinition.?cognitiveservicesZoneId)
+  apim: !empty(privateDnsZonesDefinition.?apimZoneId)
+  openai: !empty(privateDnsZonesDefinition.?openaiZoneId)
+  aiServices: !empty(privateDnsZonesDefinition.?aiServicesZoneId)
+  search: !empty(privateDnsZonesDefinition.?searchZoneId)
+  cosmosSql: !empty(privateDnsZonesDefinition.?cosmosSqlZoneId)
+  blob: !empty(privateDnsZonesDefinition.?blobZoneId)
+  keyVault: !empty(privateDnsZonesDefinition.?keyVaultZoneId)
+  appConfig: !empty(privateDnsZonesDefinition.?appConfigZoneId)
+  containerApps: !empty(privateDnsZonesDefinition.?containerAppsZoneId)
+  acr: !empty(privateDnsZonesDefinition.?acrZoneId)
+  appInsights: !empty(privateDnsZonesDefinition.?appInsightsZoneId)
+}
+
+// Common variables for VNet name and resource ID (used in DNS zone VNet links)
+var varVnetName = split(virtualNetworkResourceId, '/')[8]
+var varVnetResourceId = virtualNetworkResourceId
+
+// 4.3 Private Endpoint Variables
+var varPeSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/pe-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/pe-subnet'
+
+// Service availability checks for private endpoints
+var varHasAppConfig = !empty(resourceIds.?appConfigResourceId!) || varDeployAppConfig
+var varHasApim = !empty(resourceIds.?apimServiceResourceId!) || varDeployApim
+var varHasContainerEnv = !empty(resourceIds.?containerEnvResourceId!) || varDeployContainerAppEnv
+var varHasAcr = !empty(resourceIds.?containerRegistryResourceId!) || varDeployAcr
+var varHasStorage = !empty(resourceIds.?storageAccountResourceId!) || varDeploySa
+var varHasCosmos = cosmosDbDefinition != null
+var varHasSearch = aiSearchDefinition != null
+var varHasKv = keyVaultDefinition != null
+
+// 4.4 API Management Private DNS Zone
+@description('Optional. API Management Private DNS Zone configuration.')
+param apimPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneApim 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.apim) {
+  name: 'dep-apim-private-dns-zone'
+  params: {
+    privateDnsZone: union(
+      {
+        name: 'privatelink.azure-api.net'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-apim-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      apimPrivateDnsZoneDefinition ?? {}
+    )
+  }
+}
+
+// 4.5 Cognitive Services Private DNS Zone
+@description('Optional. Cognitive Services Private DNS Zone configuration.')
+param cognitiveServicesPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneCogSvcs 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.cognitiveservices) {
   name: 'dep-cogsvcs-private-dns-zone'
   params: {
-    name: 'privatelink.cognitiveservices.azure.com'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-cogsvcs-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.cognitiveservices.azure.com'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-cogsvcs-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      cognitiveServicesPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// OpenAI
-module privateDnsZoneOpenAi 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.openai) {
+// 4.6 OpenAI Private DNS Zone
+@description('Optional. OpenAI Private DNS Zone configuration.')
+param openAiPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneOpenAi 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.openai) {
   name: 'dep-openai-private-dns-zone'
   params: {
-    name: 'privatelink.openai.azure.com'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-openai-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.openai.azure.com'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-openai-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      openAiPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// AI Services
-module privateDnsZoneAiService 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.aiServices) {
+// 4.7 AI Services Private DNS Zone
+@description('Optional. AI Services Private DNS Zone configuration.')
+param aiServicesPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneAiService 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.aiServices) {
   name: 'dep-aiservices-private-dns-zone'
   params: {
-    name: 'privatelink.services.ai.azure.com'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-aiservices-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.services.ai.azure.com'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-aiservices-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      aiServicesPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Search (needed by GenAI app and/or AF)
-module privateDnsZoneSearch 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.search && _needSearchPdns) {
+// 4.8 Azure AI Search Private DNS Zone
+@description('Optional. Azure AI Search Private DNS Zone configuration.')
+param searchPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneSearch 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.search) {
   name: 'dep-search-std-private-dns-zone'
   params: {
-    name: 'privatelink.search.windows.net'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-search-std-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.search.windows.net'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-search-std-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      searchPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Cosmos (SQL) (needed by GenAI app and/or AF)
-module privateDnsZoneCosmos 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.cosmosSql && _needCosmosPdns) {
+// 4.9 Cosmos DB (SQL API) Private DNS Zone
+@description('Optional. Cosmos DB Private DNS Zone configuration.')
+param cosmosPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneCosmos 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.cosmosSql) {
   name: 'dep-cosmos-std-private-dns-zone'
   params: {
-    name: 'privatelink.documents.azure.com'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-cosmos-std-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.documents.azure.com'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-cosmos-std-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      cosmosPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Blob (needed by GenAI app and/or AF)
-module privateDnsZoneBlob 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.blob && _needBlobPdns) {
+// 4.10 Blob Storage Private DNS Zone
+@description('Optional. Blob Storage Private DNS Zone configuration.')
+param blobPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneBlob 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.blob) {
   name: 'dep-blob-std-private-dns-zone'
   params: {
-    name: 'privatelink.blob.${environment().suffixes.storage}'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-blob-std-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.blob.${environment().suffixes.storage}'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-blob-std-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      blobPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Key Vault (tie creation to whether ANY stack needs KV)
-module privateDnsZoneKeyVault 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.keyVault && _needKvPdns) {
+// 4.11 Key Vault Private DNS Zone
+@description('Optional. Key Vault Private DNS Zone configuration.')
+param keyVaultPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneKeyVault 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.keyVault) {
   name: 'kv-private-dns-zone'
   params: {
-    name: 'privatelink.vaultcore.azure.net'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-kv-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.vaultcore.azure.net'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-kv-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      keyVaultPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// App Configuration
-module privateDnsZoneAppConfig 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.appConfig && _hasAppConfig) {
+// 4.12 App Configuration Private DNS Zone
+@description('Optional. App Configuration Private DNS Zone configuration.')
+param appConfigPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneAppConfig 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.appConfig) {
   name: 'appconfig-private-dns-zone'
   params: {
-    name: 'privatelink.azconfig.io'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-appcfg-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.azconfig.io'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-appcfg-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      appConfigPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Container Apps (regional PDNS zone)
-module privateDnsZoneContainerApps 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.containerApps && _hasContainerEnv) {
+// 4.13 Container Apps Private DNS Zone
+@description('Optional. Container Apps Private DNS Zone configuration.')
+param containerAppsPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneContainerApps 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.containerApps) {
   name: 'dep-containerapps-env-private-dns-zone'
   params: {
-    name: 'privatelink.${location}.azurecontainerapps.io'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-containerapps-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.${location}.azurecontainerapps.io'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-containerapps-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      containerAppsPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// Container Registry PDNS
-module privateDnsZoneAcr 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.acr && _hasAcr) {
+// 4.14 Container Registry Private DNS Zone
+@description('Optional. Container Registry Private DNS Zone configuration.')
+param acrPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneAcr 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.acr) {
   name: 'acr-private-dns-zone'
   params: {
-    name: 'privatelink.azurecr.io'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
-          {
-            name: '${_vnetName}-acr-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
-          }
-        ]
+    privateDnsZone: union(
+      {
+        name: 'privatelink.azurecr.io'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-acr-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      acrPrivateDnsZoneDefinition ?? {}
+    )
   }
 }
 
-// App Insights PDNS
-module privateDnsZoneInsights 'br/public:avm/res/network/private-dns-zone:0.8.0' = if (_deployPdnsAndPe && !_useExistingPdz.appInsights && _hasAppInsights) {
+// 4.15 Application Insights Private DNS Zone
+@description('Optional. Application Insights Private DNS Zone configuration.')
+param appInsightsPrivateDnsZoneDefinition privateDnsZoneDefinitionType?
+
+module privateDnsZoneInsights 'wrappers/avm.res.network.private-dns-zone.bicep' = if (varDeployPdnsAndPe && !varUseExistingPdz.appInsights) {
   name: 'ai-private-dns-zone'
   params: {
-    name: 'privatelink.applicationinsights.azure.com'
-    location: 'global'
-    tags: _tags
-    enableTelemetry: enableTelemetry
-    virtualNetworkLinks: length(_pdnsLinksFromParam) > 0
-      ? _pdnsLinksFromParam
-      : [
+    privateDnsZone: union(
+      {
+        name: 'privatelink.applicationinsights.azure.com'
+        location: 'global'
+        tags: !empty(privateDnsZonesDefinition.?tags) ? privateDnsZonesDefinition!.tags! : {}
+        enableTelemetry: enableTelemetry
+        virtualNetworkLinks: (privateDnsZonesDefinition.?createNetworkLinks ?? true)
+          ? [
+              {
+                name: '${varVnetName}-ai-link'
+                registrationEnabled: false
+                virtualNetworkResourceId: varVnetResourceId
+              }
+            ]
+          : []
+      },
+      appInsightsPrivateDnsZoneDefinition ?? {}
+    )
+  }
+}
+
+// -----------------------
+// 5 NETWORKING - PUBLIC IP ADDRESSES
+// -----------------------
+
+// 5.1 Application Gateway Public IP
+@description('Conditional Public IP for Application Gateway. Requred when deploy applicationGatewayPublicIp is true and no existing ID is provided.')
+param appGatewayPublicIp publicIpDefinitionType?
+
+var varDeployApGatewayPip = deployToggles.applicationGatewayPublicIp && empty(resourceIds.?appGatewayPublicIpResourceId)
+
+module appGatewayPipWrapper 'wrappers/avm.res.network.public-ip-address.bicep' = if (varDeployApGatewayPip) {
+  name: 'm-appgw-pip'
+  params: {
+    pip: union(
+      {
+        name: 'pip-agw-${baseName}'
+        skuName: 'Standard'
+        skuTier: 'Regional'
+        publicIPAllocationMethod: 'Static'
+        publicIPAddressVersion: 'IPv4'
+        zones: [1, 2, 3]
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      appGatewayPublicIp ?? {}
+    )
+  }
+}
+
+var appGatewayPublicIpResourceId = resourceIds.?appGatewayPublicIpResourceId ?? (varDeployApGatewayPip
+  ? appGatewayPipWrapper!.outputs.resourceId
+  : '')
+
+// 5.2 Azure Firewall Public IP
+@description('Conditional Public IP for Azure Firewall. Required when deploy firewall is true and no existing ID is provided.')
+param firewallPublicIp publicIpDefinitionType?
+
+var varDeployFirewallPip = deployToggles.?firewall && empty(resourceIds.?firewallPublicIpResourceId)
+
+module firewallPipWrapper 'wrappers/avm.res.network.public-ip-address.bicep' = if (varDeployFirewallPip) {
+  name: 'm-fw-pip'
+  params: {
+    pip: union(
+      {
+        name: 'pip-fw-${baseName}'
+        skuName: 'Standard'
+        skuTier: 'Regional'
+        publicIPAllocationMethod: 'Static'
+        publicIPAddressVersion: 'IPv4'
+        zones: [1, 2, 3]
+        location: location
+        enableTelemetry: enableTelemetry
+      },
+      firewallPublicIp ?? {}
+    )
+  }
+}
+
+var firewallPublicIpResourceId = resourceIds.?firewallPublicIpResourceId ?? (varDeployFirewallPip
+  ? firewallPipWrapper!.outputs.resourceId
+  : '')
+
+// -----------------------
+// 6 NETWORKING - VNET PEERING
+// -----------------------
+
+@description('Optional. Hub VNet peering configuration. Configure this to establish hub-spoke peering topology.')
+param hubVnetPeeringDefinition hubVnetPeeringDefinitionType?
+
+// 6.1 Hub VNet Peering Configuration
+var varDeployHubPeering = hubVnetPeeringDefinition != null && !empty(hubVnetPeeringDefinition.?peerVnetResourceId)
+
+// Parse hub VNet resource ID
+var varHubPeerVnetId = varDeployHubPeering ? hubVnetPeeringDefinition!.peerVnetResourceId! : ''
+var varHubPeerParts = split(varHubPeerVnetId, '/')
+var varHubPeerSub = varDeployHubPeering && length(varHubPeerParts) >= 3
+  ? varHubPeerParts[2]
+  : subscription().subscriptionId
+var varHubPeerRg = varDeployHubPeering && length(varHubPeerParts) >= 5 ? varHubPeerParts[4] : resourceGroup().name
+var varHubPeerVnetName = varDeployHubPeering && length(varHubPeerParts) >= 9 ? varHubPeerParts[8] : ''
+
+// 6.2 Spoke VNet with Peering
+module spokeVNetWithPeering 'wrappers/avm.res.network.virtual-network.bicep' = if (varDeployHubPeering && varDeployVnet) {
+  name: 'm-spoke-vnet-peering'
+  params: {
+    vnet: union(
+      {
+        name: 'vnet-${baseName}'
+        addressPrefixes: ['192.168.0.0/22']
+        location: location
+        enableTelemetry: enableTelemetry
+        peerings: [
           {
-            name: '${_vnetName}-ai-link'
-            registrationEnabled: false
-            virtualNetworkResourceId: _vnetResourceId
+            name: hubVnetPeeringDefinition!.?name ?? 'to-hub'
+            remoteVirtualNetworkResourceId: varHubPeerVnetId
+            allowVirtualNetworkAccess: hubVnetPeeringDefinition!.?allowVirtualNetworkAccess ?? true
+            allowForwardedTraffic: hubVnetPeeringDefinition!.?allowForwardedTraffic ?? true
+            allowGatewayTransit: hubVnetPeeringDefinition!.?allowGatewayTransit ?? false
+            useRemoteGateways: hubVnetPeeringDefinition!.?useRemoteGateways ?? false
           }
         ]
+      },
+      hubVnetPeeringDefinition ?? {}
+    )
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────-
-// 3.4 Private Endpoints (helpers + per-service)
-// ─────────────────────────────────────────────────────────────────────-
-
-
-// App Configuration
-module privateEndpointAppConfig 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasAppConfig) {
-  name: 'appconfig-private-endpoint'
+// 6.3 Hub-to-Spoke Reverse Peering
+module hubToSpokePeering './components/vnet-peering/main.bicep' = if (varDeployHubPeering && (hubVnetPeeringDefinition!.?createReversePeering ?? true)) {
+  name: 'm-hub-to-spoke-peering'
+  scope: resourceGroup(varHubPeerSub, varHubPeerRg)
   params: {
-    name: '${_pe}${_appcs}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
+    localVnetName: varHubPeerVnetName
+    remotePeeringName: hubVnetPeeringDefinition!.?reverseName ?? 'to-spoke-${baseName}'
+    remoteVirtualNetworkResourceId: varDeployVnet ? spokeVNetWithPeering!.outputs.resourceId : virtualNetworkResourceId
+    allowVirtualNetworkAccess: hubVnetPeeringDefinition!.?reverseAllowVirtualNetworkAccess ?? true
+    allowForwardedTraffic: hubVnetPeeringDefinition!.?reverseAllowForwardedTraffic ?? true
+    allowGatewayTransit: hubVnetPeeringDefinition!.?reverseAllowGatewayTransit ?? false
+    useRemoteGateways: hubVnetPeeringDefinition!.?reverseUseRemoteGateways ?? false
+  }
+}
+
+// -----------------------
+// Private DNS Zone Outputs
+// -----------------------
+
+@description('API Management Private DNS Zone resource ID (newly created or existing).')
+output apimPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?apimZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.apim
+  ? privateDnsZoneApim!.outputs.resourceId
+  : '')
+
+@description('Cognitive Services Private DNS Zone resource ID (newly created or existing).')
+output cognitiveServicesPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?cognitiveservicesZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.cognitiveservices
+  ? privateDnsZoneCogSvcs!.outputs.resourceId
+  : '')
+
+@description('OpenAI Private DNS Zone resource ID (newly created or existing).')
+output openAiPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?openaiZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.openai
+  ? privateDnsZoneOpenAi!.outputs.resourceId
+  : '')
+
+@description('AI Services Private DNS Zone resource ID (newly created or existing).')
+output aiServicesPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?aiServicesZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.aiServices
+  ? privateDnsZoneAiService!.outputs.resourceId
+  : '')
+
+@description('Azure AI Search Private DNS Zone resource ID (newly created or existing).')
+output searchPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?searchZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.search
+  ? privateDnsZoneSearch!.outputs.resourceId
+  : '')
+
+@description('Cosmos DB (SQL API) Private DNS Zone resource ID (newly created or existing).')
+output cosmosSqlPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?cosmosSqlZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.cosmosSql
+  ? privateDnsZoneCosmos!.outputs.resourceId
+  : '')
+
+@description('Blob Storage Private DNS Zone resource ID (newly created or existing).')
+output blobPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?blobZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.blob
+  ? privateDnsZoneBlob!.outputs.resourceId
+  : '')
+
+@description('Key Vault Private DNS Zone resource ID (newly created or existing).')
+output keyVaultPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?keyVaultZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.keyVault
+  ? privateDnsZoneKeyVault!.outputs.resourceId
+  : '')
+
+@description('App Configuration Private DNS Zone resource ID (newly created or existing).')
+output appConfigPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?appConfigZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.appConfig
+  ? privateDnsZoneAppConfig!.outputs.resourceId
+  : '')
+
+@description('Container Apps Private DNS Zone resource ID (newly created or existing).')
+output containerAppsPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?containerAppsZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.containerApps
+  ? privateDnsZoneContainerApps!.outputs.resourceId
+  : '')
+
+@description('Container Registry Private DNS Zone resource ID (newly created or existing).')
+output acrPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?acrZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.acr
+  ? privateDnsZoneAcr!.outputs.resourceId
+  : '')
+
+@description('Application Insights Private DNS Zone resource ID (newly created or existing).')
+output appInsightsPrivateDnsZoneResourceId string = privateDnsZonesDefinition.?appInsightsZoneId ?? (varDeployPdnsAndPe && !varUseExistingPdz.appInsights
+  ? privateDnsZoneInsights!.outputs.resourceId
+  : '')
+
+// -----------------------
+// 7 NETWORKING - PRIVATE ENDPOINTS
+// -----------------------
+
+// 7.1. App Configuration Private Endpoint
+@description('Optional. App Configuration Private Endpoint configuration.')
+param appConfigPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointAppConfig 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasAppConfig) {
+  name: 'appconfig-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
       {
-        name: 'appConfigConnection'
-        properties: {
-          privateLinkServiceId: empty(resourceIds.appConfigResourceId)
-            ? configurationStore!.outputs.resourceId
-            : existingAppConfig.id
-          groupIds: ['configurationStores']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'appConfigDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'appConfigARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.appConfig
-            ? privateDnsZoneAppConfig!.outputs.resourceId
-            : privateDnsZoneIds.appConfig
-        }
-      ]
-    }
-  }
-}
-
-// Container Apps Environment
-module privateEndpointContainerAppsEnv 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasContainerEnv) {
-  name: 'containerapps-env-private-endpoint'
-  params: {
-    name: '${_pe}${_cae}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'ccaConnection'
-        properties: {
-          privateLinkServiceId: empty(resourceIds.containerEnvResourceId)
-            ? containerEnv!.outputs.resourceId
-            : existingContainerEnv.id
-          groupIds: ['managedEnvironments']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'ccaDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'ccaARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.containerApps
-            ? privateDnsZoneContainerApps!.outputs.resourceId
-            : privateDnsZoneIds.containerApps
-        }
-      ]
-    }
-  }
-}
-
-// Azure Container Registry
-module privateEndpointAcr 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasAcr) {
-  name: 'acr-private-endpoint'
-  params: {
-    name: '${_pe}${_acr}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'acrConnection'
-        properties: {
-          privateLinkServiceId: _acrResourceId
-          groupIds: ['registry']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'acrDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'acrARecord'
-          #disable-next-line BCP318
-          privateDnsZoneResourceId: !_useExistingPdz.acr ? privateDnsZoneAcr.outputs.resourceId : privateDnsZoneIds.acr
-        }
-      ]
-    }
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (_deployAcr) ? registry : null
-  ]
-}
-
-// Storage (blob)
-module privateEndpointStorageBlob 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasStorage) {
-  name: 'blob-private-endpoint'
-  params: {
-    name: '${_pe}${_st}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'blobConnection'
-        properties: {
-          privateLinkServiceId: empty(resourceIds.storageAccountResourceId)
-            #disable-next-line BCP318
-            ? storageAccount.outputs.resourceId
-            : existingStorage.id
-          groupIds: ['blob']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'blobDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'blobARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.blob
-            #disable-next-line BCP318
-            ? privateDnsZoneBlob.outputs.resourceId
-            : privateDnsZoneIds.blob
-        }
-      ]
-    }
-  }
-}
-
-// Cosmos DB (SQL)
-module privateEndpointCosmos 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasCosmos) {
-  name: 'cosmos-private-endpoint'
-  params: {
-    name: '${_pe}${_cos}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'cosmosConnection'
-        properties: {
-          privateLinkServiceId: empty(resourceIds.dbAccountResourceId)
-            #disable-next-line BCP318
-            ? databaseAccount.outputs.resourceId
-            : existingCosmos.id
-          groupIds: ['Sql']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'cosmosDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'cosmosARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.cosmosSql
-            #disable-next-line BCP318
-            ? privateDnsZoneCosmos.outputs.resourceId
-            : privateDnsZoneIds.cosmosSql
-        }
-      ]
-    }
-  }
-}
-
-// Azure AI Search
-module privateEndpointSearch 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasSearch) {
-  name: 'search-private-endpoint'
-  params: {
-    name: '${_pe}${_srch}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'searchConnection'
-        properties: {
-          privateLinkServiceId: empty(resourceIds.searchServiceResourceId)
-            #disable-next-line BCP318
-            ? searchService.outputs.resourceId
-            : existingSearch.id
-          groupIds: ['searchService']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'searchDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'searchARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.search
-            #disable-next-line BCP318
-            ? privateDnsZoneSearch.outputs.resourceId
-            : privateDnsZoneIds.search
-        }
-      ]
-    }
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (empty(resourceIds.searchServiceResourceId)) ? searchService : null
-    #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
-    #disable-next-line BCP321
-    (_deployPdnsAndPe && !_useExistingPdz.search && _needSearchPdns) ? privateDnsZoneSearch : null
-  ]
-}
-
-// Key Vault (GenAI)
-module privateEndpointKeyVault 'br/public:avm/res/network/private-endpoint:0.11.0' = if (_deployPdnsAndPe && _hasKv) {
-  name: 'kv-private-endpoint'
-  params: {
-    name: '${_pe}${_kv}${baseName}'
-    location: location
-    tags: tags
-    subnetResourceId: _peSubnetId
-    enableTelemetry: enableTelemetry
-    privateLinkServiceConnections: [
-      {
-        name: 'kvConnection'
-        properties: {
-          #disable-next-line BCP318
-          privateLinkServiceId: empty(resourceIds.keyVaultResourceId) ? vault.outputs.resourceId : existingVault.id
-          groupIds: ['vault']
-        }
-      }
-    ]
-    privateDnsZoneGroup: {
-      name: 'kvDnsZoneGroup'
-      privateDnsZoneGroupConfigs: [
-        {
-          name: 'kvARecord'
-          privateDnsZoneResourceId: !_useExistingPdz.keyVault
-            #disable-next-line BCP318
-            ? privateDnsZoneKeyVault.outputs.resourceId
-            : privateDnsZoneIds.keyVault
-        }
-      ]
-    }
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────-
-// 3.5 Existing Resources (APIM, AGW, Firewall)
-// ─────────────────────────────────────────────────────────────────────-
-resource existingApim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = if (!empty(resourceIds.apimServiceResourceId)) {
-  name: _apimNameExisting
-  scope: resourceGroup(_apimSub, _apimRg)
-}
-
-resource existingAppGateway 'Microsoft.Network/applicationGateways@2024-07-01' existing = if (!empty(resourceIds.applicationGatewayResourceId)) {
-  name: _agwNameExisting
-  scope: resourceGroup(_agwSub, _agwRg)
-}
-
-resource existingFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' existing = if (!empty(resourceIds.firewallResourceId)) {
-  name: _afwNameExisting
-  scope: resourceGroup(_afwSub, _afwRg)
-}
-
-// ─────────────────────────────────────────────────────────────────────-
-// 3.6 Observability (LAW, App Insights)
-// ─────────────────────────────────────────────────────────────────────-
-
-resource existingLogAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = if (!empty(resourceIds.logAnalyticsWorkspaceResourceId)) {
-  name: _existingLawName
-  scope: resourceGroup(_existingLawSubscriptionId, _existingLawResourceGroupName)
-}
-
-module logAnalytics 'br/public:avm/res/operational-insights/workspace:0.12.0' = if (_deployLogAnalytics) {
-  name: 'deployLogAnalytics'
-  params: {
-    name: empty(logAnalyticsDefinition.name!) ? '${_law}${baseName}' : logAnalyticsDefinition.name!
-    location: location
-    skuName: logAnalyticsDefinition.sku
-    dataRetention: logAnalyticsDefinition.retention
-    tags: union(tags, logAnalyticsDefinition.tags! ?? {})
-    managedIdentities: { systemAssigned: true }
-    enableTelemetry: enableTelemetry
-  }
-}
-
-// App Insights
-
-resource existingAppInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(resourceIds.appInsightsResourceId)) {
-  name: _existingAIName
-  scope: resourceGroup(_existingAISubscriptionId, _existingAIResourceGroupName)
-}
-
-module appInsights 'br/public:avm/res/insights/component:0.6.0' = if (_deployAppInsights) {
-  name: 'deployAppInsights'
-  params: {
-    name: empty(appInsightsDefinition.name!) ? '${_ai}${baseName}' : appInsightsDefinition.name!
-    location: location
-    workspaceResourceId: _laIdEffective
-    applicationType: appInsightsDefinition.applicationType ?? 'web'
-    kind: appInsightsDefinition.kind ?? 'web'
-    disableIpMasking: appInsightsDefinition.disableIpMasking! ?? false
-    tags: union(tags, appInsightsDefinition.tags! ?? {})
-    enableTelemetry: enableTelemetry
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (empty(resourceIds.logAnalyticsWorkspaceResourceId)) ? logAnalytics : null
-  ]
-}
-
-// ─────────────────────────────────────────────────────────────────────-
-// 3.7 Container Apps Environment (reuse or create)
-// ─────────────────────────────────────────────────────────────────────-
-
-resource existingContainerEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' existing = if (!empty(resourceIds.containerEnvResourceId)) {
-  name: _existingEnvName
-  scope: resourceGroup(_existingEnvSubscriptionId, _existingEnvResourceGroup)
-}
-
-
-module containerEnv 'br/public:avm/res/app/managed-environment:0.11.3' = if (_deployContainerAppEnv) {
-  name: 'deployContainerEnv'
-  params: {
-    name: _containerEnvName
-    location: location
-    tags: union(tags, containerAppEnvDefinition.tags! ?? {})
-
-    appLogsConfiguration: (_hasLogAnalytics && (containerAppEnvDefinition.enableDiagnosticSettings! ?? false))
-      ? {
-          destination: 'log-analytics'
-          logAnalyticsConfiguration: {
-            customerId: _laCustomerIdEffective
-            sharedKey: _laSharedKeyEffective
+        name: 'pe-appcs-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'appConfigConnection'
+            properties: {
+              privateLinkServiceId: empty(resourceIds.?appConfigResourceId!)
+                ? configurationStore!.outputs.resourceId
+                : existingAppConfig.id
+              groupIds: ['configurationStores']
+            }
           }
-        }
-      : null
-
-    appInsightsConnectionString: empty(resourceIds.appInsightsResourceId)
-      #disable-next-line BCP318
-      ? appInsights.outputs.connectionString
-      #disable-next-line BCP318
-      : existingAppInsights.properties.ConnectionString
-
-    // Key network settings
-    internal: containerAppEnvDefinition.internalLoadBalancerEnabled
-    infrastructureSubnetResourceId: _acaInfraSubnetId
-    zoneRedundant: containerAppEnvDefinition.zoneRedundancyEnabled
-
-    // forward profiles (optional but recommended)
-    workloadProfiles: containerAppEnvDefinition.workloadProfiles
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
-    #disable-next-line BCP321
-    (empty(resourceIds.logAnalyticsWorkspaceResourceId)) ? logAnalytics : null
-  ]
-}
-
-// ─────────────────────────────────────────────────────────────────────-
-// 3.8 Container Apps
-// ─────────────────────────────────────────────────────────────────────-
-
-
-@batchSize(4)
-module containerApps 'br/public:avm/res/app/container-app:0.18.1' = [
-  for (app, index) in containerAppsList: if (_deployContainerApps) {
-    name: empty(app.name!) ? '${_ca}${baseName}-${app.app_id}' : app.name!
-    params: {
-      name: empty(app.name!) ? '${_ca}${baseName}-${app.app_id}' : app.name!
-      location: location
-      environmentResourceId: _containerEnvIdEffective
-      workloadProfileName: app.profile_name
-
-      ingressExternal: bool(app.external!)
-      ingressTargetPort: 80
-      ingressTransport: 'auto'
-      ingressAllowInsecure: false
-
-      dapr: {
-        enabled: true
-        appId: app.app_id
-        appPort: 80
-        appProtocol: 'http'
-      }
-
-      managedIdentities: {
-        systemAssigned: true
-        userAssignedResourceIds: []
-      }
-
-      scaleSettings: {
-        minReplicas: app.min_replicas
-        maxReplicas: app.max_replicas
-      }
-
-      containers: [
-        {
-          name: app.app_id
-          image: _containerDummyImageName
-          resources: {
-            cpu: '0.5'
-            memory: '1.0Gi'
-          }
-          env: [
+        ]
+        privateDnsZoneGroup: {
+          name: 'appConfigDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
             {
-              name: 'APP_CONFIG_ENDPOINT'
-              value: empty(_appConfigResourceId) ? '' : 'https://${_appConfigName}.azconfig.io'
+              name: 'appConfigARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.appConfig
+                ? privateDnsZoneAppConfig!.outputs.resourceId
+                : privateDnsZonesDefinition.appConfigZoneId!
             }
           ]
         }
-      ]
+      },
+      appConfigPrivateEndpointDefinition ?? {}
+    )
+  }
+}
 
-      tags: union(_tags, {
-        'azd-service-name': app.app_id
-      })
+// 7.2. API Management Private Endpoint
+@description('Optional. API Management Private Endpoint configuration.')
+param apimPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+// StandardV2 and Premium SKUs support Private Endpoints with gateway groupId
+// Basic and Developer SKUs do not support Private Endpoints
+var apimSupportsPe = contains(['StandardV2', 'Premium'], (apimDefinition.?sku ?? 'StandardV2'))
+
+module privateEndpointApim 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasApim && (apimDefinition.?virtualNetworkType ?? 'None') == 'None' && apimSupportsPe) {
+  name: 'apim-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-apim-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'apimGatewayConnection'
+            properties: {
+              privateLinkServiceId: empty(resourceIds.?apimServiceResourceId!)
+                ? apiManagement!.outputs.resourceId
+                : existingApim.id
+              groupIds: [
+                'Gateway'
+              ]
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'apimDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'apimARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.apim
+                ? privateDnsZoneApim!.outputs.resourceId
+                : privateDnsZonesDefinition.apimZoneId!
+            }
+          ]
+        }
+      },
+      apimPrivateEndpointDefinition ?? {}
+    )
+  }
+}
+
+// 7.3. Container Apps Environment Private Endpoint
+@description('Optional. Container Apps Environment Private Endpoint configuration.')
+param containerAppEnvPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointContainerAppsEnv 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasContainerEnv) {
+  name: 'containerapps-env-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-cae-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'ccaConnection'
+            properties: {
+              privateLinkServiceId: empty(resourceIds.?containerEnvResourceId!)
+                ? containerEnv!.outputs.resourceId
+                : existingContainerEnv.id
+              groupIds: ['managedEnvironments']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'ccaDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'ccaARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.containerApps
+                ? privateDnsZoneContainerApps!.outputs.resourceId
+                : privateDnsZonesDefinition.containerAppsZoneId!
+            }
+          ]
+        }
+      },
+      containerAppEnvPrivateEndpointDefinition ?? {}
+    )
+  }
+}
+
+// 7.4. Azure Container Registry Private Endpoint
+@description('Optional. Azure Container Registry Private Endpoint configuration.')
+param acrPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointAcr 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasAcr) {
+  name: 'acr-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-acr-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'acrConnection'
+            properties: {
+              privateLinkServiceId: varAcrResourceId
+              groupIds: ['registry']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'acrDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'acrARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.acr
+                ? privateDnsZoneAcr!.outputs.resourceId
+                : privateDnsZonesDefinition.acrZoneId!
+            }
+          ]
+        }
+      },
+      acrPrivateEndpointDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (varDeployAcr) ? containerRegistry : null
+  ]
+}
+
+// 7.5. Storage Account (Blob) Private Endpoint
+@description('Optional. Storage Account Private Endpoint configuration.')
+param storageBlobPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointStorageBlob 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasStorage) {
+  name: 'blob-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-st-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'blobConnection'
+            properties: {
+              privateLinkServiceId: empty(resourceIds.?storageAccountResourceId!)
+                ? storageAccount!.outputs.resourceId
+                : existingStorage.id
+              groupIds: ['blob']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'blobDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'blobARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.blob
+                ? privateDnsZoneBlob!.outputs.resourceId
+                : privateDnsZonesDefinition.blobZoneId!
+            }
+          ]
+        }
+      },
+      storageBlobPrivateEndpointDefinition ?? {}
+    )
+  }
+}
+
+// 7.6. Cosmos DB (SQL) Private Endpoint
+@description('Optional. Cosmos DB Private Endpoint configuration.')
+param cosmosPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointCosmos 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasCosmos) {
+  name: 'cosmos-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-cos-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'cosmosConnection'
+            properties: {
+              privateLinkServiceId: deployCosmosDb ? cosmosDbModule!.outputs.resourceId : ''
+              groupIds: ['Sql']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'cosmosDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'cosmosARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.cosmosSql
+                ? privateDnsZoneCosmos!.outputs.resourceId
+                : privateDnsZonesDefinition.cosmosSqlZoneId!
+            }
+          ]
+        }
+      },
+      cosmosPrivateEndpointDefinition ?? {}
+    )
+  }
+}
+
+// 7.7. Azure AI Search Private Endpoint
+@description('Optional. Azure AI Search Private Endpoint configuration.')
+param searchPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointSearch 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasSearch) {
+  name: 'search-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-srch-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'searchConnection'
+            properties: {
+              privateLinkServiceId: deployAiSearch ? aiSearchModule!.outputs.resourceId : ''
+              groupIds: ['searchService']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'searchDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'searchARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.search
+                ? privateDnsZoneSearch!.outputs.resourceId
+                : privateDnsZonesDefinition.searchZoneId!
+            }
+          ]
+        }
+      },
+      searchPrivateEndpointDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    deployAiSearch ? aiSearchModule : null
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+    #disable-next-line BCP321
+    (varDeployPdnsAndPe && !varUseExistingPdz.search) ? privateDnsZoneSearch : null
+  ]
+}
+
+// 7.8. Key Vault Private Endpoint
+@description('Optional. Key Vault Private Endpoint configuration.')
+param keyVaultPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+module privateEndpointKeyVault 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe && varHasKv) {
+  name: 'kv-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-kv-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'kvConnection'
+            properties: {
+              privateLinkServiceId: deployKeyVault ? keyVaultModule!.outputs.resourceId : ''
+              groupIds: ['vault']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'kvDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'kvARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.keyVault
+                ? privateDnsZoneKeyVault!.outputs.resourceId
+                : privateDnsZonesDefinition.keyVaultZoneId!
+            }
+          ]
+        }
+      },
+      keyVaultPrivateEndpointDefinition ?? {}
+    )
+  }
+}
+
+// -----------------------
+// 8 OBSERVABILITY
+// -----------------------
+
+// Deployment variables
+var varDeployLogAnalytics = empty(resourceIds.?logAnalyticsWorkspaceResourceId!) && deployToggles.logAnalytics
+var varDeployAppInsights = empty(resourceIds.?appInsightsResourceId!) && deployToggles.appInsights && varHasLogAnalytics
+
+var varHasLogAnalytics = (!empty(resourceIds.?logAnalyticsWorkspaceResourceId!)) || (varDeployLogAnalytics)
+
+// -----------------------
+// 8.1 Log Analytics Workspace
+// -----------------------
+
+@description('Conditional. Log Analytics Workspace configuration. Required if deploy.logAnalytics is true and resourceIds.logAnalyticsWorkspaceResourceId is empty.')
+param logAnalyticsDefinition logAnalyticsDefinitionType?
+
+resource existingLogAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' existing = if (!empty(resourceIds.?logAnalyticsWorkspaceResourceId!)) {
+  name: varExistingLawName
+  scope: resourceGroup(varExistingLawSubscriptionId, varExistingLawResourceGroupName)
+}
+var varLogAnalyticsWorkspaceResourceId = varDeployLogAnalytics
+  ? logAnalytics!.outputs.resourceId
+  : !empty(resourceIds.?logAnalyticsWorkspaceResourceId!) ? existingLogAnalytics.id : ''
+
+// Naming
+var varLawIdSegments = empty(resourceIds.?logAnalyticsWorkspaceResourceId!)
+  ? ['']
+  : split(resourceIds.logAnalyticsWorkspaceResourceId!, '/')
+var varExistingLawSubscriptionId = length(varLawIdSegments) >= 3 ? varLawIdSegments[2] : ''
+var varExistingLawResourceGroupName = length(varLawIdSegments) >= 5 ? varLawIdSegments[4] : ''
+var varExistingLawName = length(varLawIdSegments) >= 1 ? last(varLawIdSegments) : ''
+var varLawName = !empty(varExistingLawName)
+  ? varExistingLawName
+  : (empty(logAnalyticsDefinition.?name ?? '') ? 'log-${baseName}' : logAnalyticsDefinition!.name)
+
+module logAnalytics 'wrappers/avm.res.operational-insights.workspace.bicep' = if (varDeployLogAnalytics) {
+  name: 'deployLogAnalytics'
+  params: {
+    logAnalytics: union(
+      {
+        name: varLawName
+        location: location
+        enableTelemetry: enableTelemetry
+        tags: tags
+        dataRetention: 30
+      },
+      logAnalyticsDefinition ?? {}
+    )
+  }
+}
+
+// -----------------------
+// 8.2 Application Insights
+// -----------------------
+@description('Conditional. Application Insights configuration. Required if deploy.appInsights is true and resourceIds.appInsightsResourceId is empty; a Log Analytics workspace must exist or be deployed.')
+param appInsightsDefinition appInsightsDefinitionType?
+
+resource existingAppInsights 'Microsoft.Insights/components@2020-02-02' existing = if (!empty(resourceIds.?appInsightsResourceId!)) {
+  name: varExistingAIName
+  scope: resourceGroup(varExistingAISubscriptionId, varExistingAIResourceGroupName)
+}
+
+var varAppiResourceId = !empty(resourceIds.?appInsightsResourceId!)
+  ? existingAppInsights.id
+  : (varDeployAppInsights ? appInsights!.outputs.resourceId : '')
+
+// Naming
+var varAiIdSegments = empty(resourceIds.?appInsightsResourceId!) ? [''] : split(resourceIds.appInsightsResourceId!, '/')
+var varExistingAISubscriptionId = length(varAiIdSegments) >= 3 ? varAiIdSegments[2] : ''
+var varExistingAIResourceGroupName = length(varAiIdSegments) >= 5 ? varAiIdSegments[4] : ''
+var varExistingAIName = length(varAiIdSegments) >= 1 ? last(varAiIdSegments) : ''
+var varAppiName = !empty(varExistingAIName) ? varExistingAIName : 'appi-${baseName}'
+
+module appInsights 'wrappers/avm.res.insights.component.bicep' = if (varDeployAppInsights) {
+  name: 'deployAppInsights'
+  params: {
+    appInsights: union(
+      {
+        name: varAppiName
+        workspaceResourceId: varLogAnalyticsWorkspaceResourceId
+        location: location
+        enableTelemetry: enableTelemetry
+        tags: tags
+        disableIpMasking: true
+      },
+      appInsightsDefinition ?? {}
+    )
+  }
+}
+
+// -----------------------
+// 9 CONTAINER PLATFORM
+// -----------------------
+
+// 9.1 Container Apps Environment
+var varDeployContainerAppEnv = empty(resourceIds.?containerEnvResourceId!) && deployToggles.containerEnv
+var varAcaInfraSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/aca-env-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/aca-env-subnet'
+
+@description('Conditional. Container Apps Environment configuration. Required if deploy.containerEnv is true and resourceIds.containerEnvResourceId is empty.')
+param containerAppEnvDefinition containerAppEnvDefinitionType?
+
+resource existingContainerEnv 'Microsoft.App/managedEnvironments@2025-02-02-preview' existing = if (!empty(resourceIds.?containerEnvResourceId!)) {
+  name: varExistingEnvName
+  scope: resourceGroup(varExistingEnvSubscriptionId, varExistingEnvResourceGroup)
+}
+
+var varContainerEnvResourceId = !empty(resourceIds.?containerEnvResourceId!)
+  ? existingContainerEnv.id
+  : (varDeployContainerAppEnv ? containerEnv!.outputs.resourceId : '')
+
+// Naming
+var varEnvIdSegments = empty(resourceIds.?containerEnvResourceId!)
+  ? ['']
+  : split(resourceIds.containerEnvResourceId!, '/')
+var varExistingEnvSubscriptionId = length(varEnvIdSegments) >= 3 ? varEnvIdSegments[2] : ''
+var varExistingEnvResourceGroup = length(varEnvIdSegments) >= 5 ? varEnvIdSegments[4] : ''
+var varExistingEnvName = length(varEnvIdSegments) >= 1 ? last(varEnvIdSegments) : ''
+var varContainerEnvName = !empty(resourceIds.?containerEnvResourceId!)
+  ? varExistingEnvName
+  : (empty(containerAppEnvDefinition.?name ?? '') ? 'cae-${baseName}' : containerAppEnvDefinition!.name)
+
+module containerEnv 'wrappers/avm.res.app.managed-environment.bicep' = if (varDeployContainerAppEnv) {
+  name: 'deployContainerEnv'
+  params: {
+    containerAppEnv: union(
+      {
+        name: varContainerEnvName
+        location: location
+        enableTelemetry: enableTelemetry
+        tags: tags
+
+        // Keep only the profile you actually use (or omit to inherit module default)
+        workloadProfiles: [
+          {
+            workloadProfileType: 'D4'
+            name: 'default'
+            minimumCount: 1
+            maximumCount: 3
+          }
+        ]
+
+        infrastructureSubnetResourceId: !empty(varAcaInfraSubnetId) ? varAcaInfraSubnetId : null
+        internal: false
+        publicNetworkAccess: 'Disabled'
+        zoneRedundant: true
+
+        // Application Insights integration
+        appInsightsConnectionString: varDeployAppInsights ? appInsights!.outputs.connectionString : ''
+      },
+      containerAppEnvDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+    #disable-next-line BCP321
+    (empty(resourceIds.?logAnalyticsWorkspaceResourceId!)) ? logAnalytics : null
+  ]
+}
+
+// 9.2 Container Registry
+var varDeployAcr = empty(resourceIds.?containerRegistryResourceId!) && deployToggles.containerRegistry
+
+@description('Conditional. Container Registry configuration. Required if deploy.containerRegistry is true and resourceIds.containerRegistryResourceId is empty.')
+param containerRegistryDefinition containerRegistryDefinitionType?
+
+resource existingAcr 'Microsoft.ContainerRegistry/registries@2025-04-01' existing = if (!empty(resourceIds.?containerRegistryResourceId!)) {
+  name: varExistingAcrName
+  scope: resourceGroup(varExistingAcrSub, varExistingAcrRg)
+}
+
+var varAcrResourceId = !empty(resourceIds.?containerRegistryResourceId!)
+  ? existingAcr.id
+  : (varDeployAcr ? containerRegistry!.outputs.resourceId : '')
+
+// Naming
+var varAcrIdSegments = empty(resourceIds.?containerRegistryResourceId!)
+  ? ['']
+  : split(resourceIds.containerRegistryResourceId!, '/')
+var varExistingAcrSub = length(varAcrIdSegments) >= 3 ? varAcrIdSegments[2] : ''
+var varExistingAcrRg = length(varAcrIdSegments) >= 5 ? varAcrIdSegments[4] : ''
+var varExistingAcrName = length(varAcrIdSegments) >= 1 ? last(varAcrIdSegments) : ''
+var varAcrName = !empty(resourceIds.?containerRegistryResourceId!)
+  ? varExistingAcrName
+  : (empty(containerRegistryDefinition.?name!) ? 'cr${baseName}' : containerRegistryDefinition!.name!)
+
+module containerRegistry 'wrappers/avm.res.container-registry.registry.bicep' = if (varDeployAcr) {
+  name: 'deployContainerRegistry'
+  params: {
+    acr: union(
+      {
+        name: varAcrName
+        location: containerRegistryDefinition.?location ?? location
+        enableTelemetry: containerRegistryDefinition.?enableTelemetry ?? enableTelemetry
+        tags: containerRegistryDefinition.?tags ?? tags
+        publicNetworkAccess: containerRegistryDefinition.?publicNetworkAccess ?? 'Disabled'
+        acrSku: containerRegistryDefinition.?acrSku ?? 'Premium'
+      },
+      containerRegistryDefinition ?? {}
+    )
+  }
+}
+
+// 9.3 Container Apps
+@description('Optional. List of Container Apps to create.')
+param containerAppsList containerAppDefinitionType[] = []
+
+var varDeployContainerApps = !empty(containerAppsList) && (varDeployContainerAppEnv || !empty(resourceIds.?containerEnvResourceId!))
+
+@batchSize(4)
+module containerApps 'wrappers/avm.res.app.container-app.bicep' = [
+  for (app, index) in containerAppsList: if (varDeployContainerApps) {
+    name: 'ca-${app.name}-${varUniqueSuffix}'
+    params: {
+      containerApp: union(
+        {
+          name: app.name
+          environmentResourceId: !empty(resourceIds.?containerEnvResourceId!)
+            ? resourceIds.containerEnvResourceId!
+            : containerEnv!.outputs.resourceId
+          workloadProfileName: 'default'
+          location: location
+          tags: tags
+        },
+        app
+      )
     }
     dependsOn: [
       #disable-next-line BCP321
-      (empty(resourceIds.containerEnvResourceId)) ? containerEnv : null
+      (empty(resourceIds.?containerEnvResourceId!)) ? containerEnv : null
       #disable-next-line BCP321
-      (_deployPdnsAndPe && !_useExistingPdz.containerApps && _hasContainerEnv) ? privateDnsZoneContainerApps : null
+      (varDeployPdnsAndPe && !varUseExistingPdz.containerApps && varHasContainerEnv)
+        ? privateDnsZoneContainerApps
+        : null
       #disable-next-line BCP321
-      (_deployPdnsAndPe && _hasContainerEnv) ? privateEndpointContainerAppsEnv : null
+      (varDeployPdnsAndPe && varHasContainerEnv) ? privateEndpointContainerAppsEnv : null
     ]
   }
 ]
 
-// ─────────────────────────────────────────────────────────────────────-
-// 3.9 App Services Backing Services — GenAI app scope (reuse or create)
-// ─────────────────────────────────────────────────────────────────────-
-// -------- ACR
+// -----------------------
+// 10 STORAGE
+// -----------------------
 
-resource existingAcr 'Microsoft.ContainerRegistry/registries@2025-05-01-preview' existing = if (!empty(resourceIds.containerRegistryResourceId)) {
-  name: _existingAcrName
-  scope: resourceGroup(_existingAcrSub, _existingAcrRg)
+// 10.1 Storage Account
+var varDeploySa = empty(resourceIds.?storageAccountResourceId!) && deployToggles.storageAccount
+
+@description('Conditional. Storage Account configuration. Required if deploy.storageAccount is true and resourceIds.storageAccountResourceId is empty.')
+param storageAccountDefinition storageAccountDefinitionType?
+
+resource existingStorage 'Microsoft.Storage/storageAccounts@2025-01-01' existing = if (!empty(resourceIds.?storageAccountResourceId!)) {
+  name: varExistingSaName
+  scope: resourceGroup(varExistingSaSub, varExistingSaRg)
 }
 
-module registry 'br/public:avm/res/container-registry/registry:0.9.3' = if (_deployAcr) {
-  name: 'registryDeployment'
+var varSaResourceId = !empty(resourceIds.?storageAccountResourceId!)
+  ? existingStorage.id
+  : (varDeploySa ? storageAccount!.outputs.resourceId : '')
+
+// Naming
+var varSaIdSegments = empty(resourceIds.?storageAccountResourceId!)
+  ? ['']
+  : split(resourceIds.storageAccountResourceId!, '/')
+var varExistingSaSub = length(varSaIdSegments) >= 3 ? varSaIdSegments[2] : ''
+var varExistingSaRg = length(varSaIdSegments) >= 5 ? varSaIdSegments[4] : ''
+var varExistingSaName = length(varSaIdSegments) >= 1 ? last(varSaIdSegments) : ''
+var varSaName = !empty(resourceIds.?storageAccountResourceId!)
+  ? varExistingSaName
+  : (empty(storageAccountDefinition.?name!) ? 'st${baseName}' : storageAccountDefinition!.name!)
+
+module storageAccount 'wrappers/avm.res.storage.storage-account.bicep' = if (varDeploySa) {
+  name: 'deployStorageAccount'
   params: {
+<<<<<<< HEAD
+    storageAccount: union(
+      {
+        name: varSaName
+        location: storageAccountDefinition.?location ?? location
+        enableTelemetry: storageAccountDefinition.?enableTelemetry ?? enableTelemetry
+        tags: storageAccountDefinition.?tags ?? tags
+        kind: storageAccountDefinition.?kind ?? 'StorageV2'
+        skuName: storageAccountDefinition.?skuName ?? 'Standard_LRS'
+        publicNetworkAccess: storageAccountDefinition.?publicNetworkAccess ?? 'Disabled'
+      },
+      storageAccountDefinition ?? {}
+=======
     name: _acrNameEffective!
     acrSku: _acrEffectiveSku
     location: location
@@ -2114,242 +2022,389 @@ module applicationGateway 'br/public:avm/res/network/application-gateway:0.7.1' 
           }
         }
       ]
+>>>>>>> main
     )
+  }
+}
 
-    frontendPorts: [
-      { name: 'port80', properties: { port: 80 } }
-    ]
+// -----------------------
+// 11 APPLICATION CONFIGURATION
+// -----------------------
 
-    backendAddressPools: [
-      { name: 'defaultPool' }
-    ]
+// 11.1 App Configuration Store
+var varDeployAppConfig = empty(resourceIds.?appConfigResourceId!) && deployToggles.appConfig
 
-    backendHttpSettingsCollection: [
+@description('Conditional. App Configuration store settings. Required if deploy.appConfig is true and resourceIds.appConfigResourceId is empty.')
+param appConfigurationDefinition appConfigurationDefinitionType?
+
+#disable-next-line no-unused-existing-resources
+resource existingAppConfig 'Microsoft.AppConfiguration/configurationStores@2024-06-01' existing = if (!empty(resourceIds.?appConfigResourceId!)) {
+  name: varExistingAppcsName
+  scope: resourceGroup(varExistingAppcsSub, varExistingAppcsRg)
+}
+
+// Naming
+var varAppcsIdSegments = empty(resourceIds.?appConfigResourceId!) ? [''] : split(resourceIds.appConfigResourceId!, '/')
+var varExistingAppcsSub = length(varAppcsIdSegments) >= 3 ? varAppcsIdSegments[2] : ''
+var varExistingAppcsRg = length(varAppcsIdSegments) >= 5 ? varAppcsIdSegments[4] : ''
+var varExistingAppcsName = length(varAppcsIdSegments) >= 1 ? last(varAppcsIdSegments) : ''
+var varAppConfigName = !empty(resourceIds.?appConfigResourceId!)
+  ? varExistingAppcsName
+  : (empty(appConfigurationDefinition.?name ?? '') ? 'appcs-${baseName}' : appConfigurationDefinition!.name)
+
+module configurationStore 'wrappers/avm.res.app-configuration.configuration-store.bicep' = if (varDeployAppConfig) {
+  name: 'configurationStoreDeploymentFixed'
+  params: {
+    appConfiguration: union(
       {
-        name: 'defaultSetting'
-        properties: {
-          cookieBasedAffinity: 'Disabled'
-          port: 80
-          protocol: 'Http'
-        }
-      }
-    ]
+        name: varAppConfigName
+        location: location
+        enableTelemetry: enableTelemetry
+        tags: tags
+      },
+      appConfigurationDefinition ?? {}
+    )
+  }
+}
 
-    // keep listener on the private frontend
-    httpListeners: [
+// -----------------------
+// 12 COSMOS DB
+// -----------------------
+@description('Optional. Cosmos DB settings.')
+param cosmosDbDefinition genAIAppCosmosDbDefinitionType?
+
+var deployCosmosDb = cosmosDbDefinition != null
+
+module cosmosDbModule 'wrappers/avm.res.document-db.database-account.bicep' = if (deployCosmosDb) {
+  name: 'cosmosDbModule'
+  params: {
+    cosmosDb: union(
       {
-        name: 'defaultListener'
-        properties: {
-          frontendIPConfiguration: { id: '${agwId}/frontendIPConfigurations/privateFrontend' }
-          frontendPort: { id: '${agwId}/frontendPorts/port80' }
-          protocol: 'Http'
-        }
-      }
-    ]
+        name: 'cosmos-${baseName}'
+        location: location
+      },
+      cosmosDbDefinition ?? {}
+    )
+  }
+}
 
-    requestRoutingRules: [
+// -----------------------
+// 13 KEY VAULT
+// -----------------------
+@description('Optional. Key Vault settings.')
+param keyVaultDefinition keyVaultDefinitionType?
+
+var deployKeyVault = keyVaultDefinition != null
+
+module keyVaultModule 'wrappers/avm.res.key-vault.vault.bicep' = if (deployKeyVault) {
+  name: 'keyVaultModule'
+  params: {
+    keyVault: union(
       {
-        name: 'defaultRule'
-        properties: {
-          ruleType: 'Basic'
-          priority: 100
-          httpListener: { id: '${agwId}/httpListeners/defaultListener' }
-          backendAddressPool: { id: '${agwId}/backendAddressPools/defaultPool' }
-          backendHttpSettings: { id: '${agwId}/backendHttpSettingsCollection/defaultSetting' }
-        }
-      }
-    ]
-  }
-  dependsOn: [
-    #disable-next-line BCP321
-    (_deployWafPolicy) ? wafPolicy : null
-    #disable-next-line BCP321
-    (_agwCreatePublicFrontend) ? appGatewayPip : null
-    #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
-  ]
-}
-
-module appGatewayPip 'br/public:avm/res/network/public-ip-address:0.9.0' = if (_deployAppGateway && _agwCreatePublicFrontend) {
-  name: 'appGatewayPipDeployment'
-  params: {
-    name: _agwPipName
-    location: location
-    skuName: 'Standard'
-    publicIPAllocationMethod: 'Static'
-    tags: tags
-    enableTelemetry: enableTelemetry
+        name: 'kv-${baseName}'
+        location: location
+      },
+      keyVaultDefinition ?? {}
+    )
   }
 }
 
-module fwPolicy 'br/public:avm/res/network/firewall-policy:0.3.1' = if (_deployAfwPolicy) {
-  name: 'firewallPolicyDeployment'
-  params: {
-    name: _afwPolicyName
-    location: location
-    tags: tags
-    enableTelemetry: enableTelemetry
+// -----------------------
+// 14 AI SEARCH
+// -----------------------
+@description('Optional. AI Search settings.')
+param aiSearchDefinition kSAISearchDefinitionType?
 
-    // Single Rule Collection Group (configurable name/priority); "Allow" collection using provided networkRules
-    ruleCollectionGroups: [
+var deployAiSearch = aiSearchDefinition != null
+
+module aiSearchModule 'wrappers/avm.res.search.search-service.bicep' = if (deployAiSearch) {
+  name: 'aiSearchModule'
+  params: {
+    aiSearch: union(
       {
-        name: _rcgName
-        priority: _rcgPriority
-        ruleCollections: [
-          {
-            name: 'defaultNetworkRules'
-            ruleCollectionType: 'FirewallPolicyFilterRuleCollection'
-            action: { type: 'Allow' } // change to 'Deny' if you want
-            rules: _networkRulesForModule
-          }
-        ]
-      }
-    ]
+        name: empty(aiSearchDefinition!.?name!) ? 'search-${baseName}' : aiSearchDefinition!.name!
+        location: aiSearchDefinition!.?location ?? location
+      },
+      aiSearchDefinition!
+    )
   }
 }
 
-module firewallPip 'br/public:avm/res/network/public-ip-address:0.9.0' = if (_deployFirewall) {
-  name: 'firewallPipDeployment'
-  params: {
-    name: '${_pip}${_afw}${baseName}'
-    location: location
-    skuName: 'Standard'
-    publicIPAllocationMethod: 'Static'
-    tags: tags
-    enableTelemetry: enableTelemetry
-  }
+// -----------------------
+// 15 API MANAGEMENT
+// -----------------------
+
+@description('Optional. API Management configuration.')
+param apimDefinition apimDefinitionType?
+
+// 15.1. API Management Service
+var varDeployApim = empty(resourceIds.?apimServiceResourceId!) && deployToggles.apiManagement
+
+// Naming
+var varApimIdSegments = empty(resourceIds.?apimServiceResourceId!)
+  ? ['']
+  : split(resourceIds.apimServiceResourceId!, '/')
+var varApimSub = length(varApimIdSegments) >= 3 ? varApimIdSegments[2] : ''
+var varApimRg = length(varApimIdSegments) >= 5 ? varApimIdSegments[4] : ''
+var varApimNameExisting = length(varApimIdSegments) >= 1 ? last(varApimIdSegments) : ''
+
+resource existingApim 'Microsoft.ApiManagement/service@2024-06-01-preview' existing = if (!empty(resourceIds.?apimServiceResourceId!)) {
+  name: varApimNameExisting
+  scope: resourceGroup(varApimSub, varApimRg)
 }
 
-// 1) Azure Firewall without policy
-module azureFirewall_noPolicy 'br/public:avm/res/network/azure-firewall:0.8.0' = if (_deployFirewall && !_deployAfwPolicy) {
-  name: 'azureFirewallDeployment'
-  params: {
-    name: _afwName
-    location: location
-    tags: union(tags, firewallDefinition.tags! ?? {})
-    azureSkuTier: firewallDefinition.tier!
-    availabilityZones: firewallDefinition.zones
-    virtualNetworkResourceId: _vnetResourceId
-    enableTelemetry: enableTelemetry
-  }
-}
-
-// 2) Azure Firewall with policy
-module azureFirewall_withPolicy 'br/public:avm/res/network/azure-firewall:0.8.0' = if (_deployFirewall && _deployAfwPolicy) {
-  name: 'azureFirewallDeployment'
-  params: {
-    name: _afwName
-    location: location
-    tags: union(tags, firewallDefinition.tags! ?? {})
-    azureSkuTier: firewallDefinition.tier!
-    availabilityZones: firewallDefinition.zones
-    virtualNetworkResourceId: _vnetResourceId
-    enableTelemetry: enableTelemetry
-    firewallPolicyId: fwPolicy!.outputs.resourceId
-  }
-  dependsOn: [
-    fwPolicy!
-  ]
-}
-
+var varApimServiceResourceId = !empty(resourceIds.?apimServiceResourceId!)
+  ? existingApim.id
+  : (varDeployApim ? apiManagement!.outputs.resourceId : '')
 
 #disable-next-line BCP081
-module apim 'br/public:avm/res/api-management/service:0.11.0' = if (_deployApim) {
+module apiManagement 'wrappers/avm.res.api-management.service.bicep' = if (varDeployApim) {
   name: 'apimDeployment'
   params: {
-    name: _apimName
-    location: location
-    tags: union(tags, apimDefinition.tags! ?? {})
+    apiManagement: union(
+      {
+        // Required properties
+        name: 'apim-${baseName}'
+        publisherEmail: 'admin@contoso.com'
+        publisherName: 'Contoso'
 
-    // AVM expects these:
-    sku: apimDefinition.skuRoot! // Developer | Basic | Standard | Premium | Consumption
-    skuCapacity: apimDefinition.skuCapacity
+        // Default values for StandardV2 deployment with Private Endpoint support
+        sku: 'StandardV2'
+        skuCapacity: 1
 
-    publisherEmail: apimDefinition.publisherEmail
-    publisherName: apimDefinition.publisherName
+        // Network Configuration - Use 'None' for Private Endpoint access
+        // StandardV2 supports Private Endpoints for internal access within VNet
+        virtualNetworkType: 'None'
 
-    // Enable HTTP/2 via customProperties (string "true"/"false")
-    customProperties: apimDefinition.protocols != null && apimDefinition.protocols.enableHttp2
-      ? { 'Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2': 'true' }
-      : {}
+        // Basic Configuration
+        location: location
+        tags: tags
+        enableTelemetry: enableTelemetry
 
-    enableTelemetry: enableTelemetry
-    // Optional:
-    // minApiVersion: apimDefinition.minApiVersion
-    // notificationSenderEmail: apimDefinition.notificationSenderEmail
-    // hostnameConfigurations: apimDefinition.hostnameConfiguration
-    // additionalLocations: apimDefinition.additionalLocations
+        // API Management Configuration
+        minApiVersion: '2022-08-01'
+      },
+      apimDefinition ?? {}
+    )
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────-
-// 3.12 Hub/Spoke Peering
-// ─────────────────────────────────────────────────────────────────────-
+// -----------------------
+// 16 AI FOUNDRY
+// -----------------------
 
-// Spoke -> Hub
-module existingSpokePeering 'br/public:avm/res/network/virtual-network:0.7.0' = if (!empty(resourceIds.virtualNetworkResourceId) && _hasPeer) {
-  name: 'existingSpokePeering'
-  scope: resourceGroup(_existingVNetSubscriptionId, _existingVNetResourceGroupName)
-  params: {
-    // point the module at the existing spoke VNet
-    name: _existingVNetName
-    location: existingVNet!.location
-    // pass through current settings so we don't drift anything
-    addressPrefixes: existingVNet!.properties.addressSpace.addressPrefixes
-    dnsServers: empty(existingVNet!.properties.dhcpOptions!.dnsServers)
-      ? []
-      : existingVNet!.properties.dhcpOptions.dnsServers
-    tags: existingVNet!.tags
-    enableTelemetry: enableTelemetry
+// AI Foundry
 
-    // add only the peering we need
-    peerings: [
-      {
-        name: _peerName
-        remoteVirtualNetworkResourceId: _peerCfgVnetId
-        allowVirtualNetworkAccess: _peerAllowVna
-        allowForwardedTraffic: _peerAllowFwd
-        allowGatewayTransit: _peerAllowGw
-        useRemoteGateways: _peerUseRgw
-      }
-    ]
-  }
+@description('Optional. AI Foundry project configuration (account/project, networking, associated resources, and deployments).')
+param aiFoundryDefinition aiFoundryDefinitionType = {
+  // Required
+  baseName: baseName
 }
 
+// Agent subnet ID variable needed for AI Foundry capability hosts
+var varAgentSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/agent-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/agent-subnet'
 
-resource peerVnet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = if (!empty(_peerVnetId)) {
-  name: _peerVnetName
-  scope: resourceGroup(_peerSub, _peerRg)
-}
+// Holds the aiFoundryConfiguration object if defined in aiFoundryDefinition;
+// otherwise defaults to an empty object to avoid null reference errors.
+var varAfConfigObj = !empty(aiFoundryDefinition.?aiFoundryConfiguration)
+  ? aiFoundryDefinition.aiFoundryConfiguration!
+  : {}
 
-// Hub -> Spoke reverse peering
-module hubReversePeering 'br/public:avm/res/network/virtual-network:0.7.0' = if (!empty(_peerVnetId) && hubVnetPeeringDefinition.createReversePeering) {
-  name: 'hubReversePeering'
-  scope: resourceGroup(_peerSub, _peerRg)
-  params: {
-    // point the module at the existing hub VNet
-    name: _peerVnetName
-    location: peerVnet!.location
-    // preserve existing settings to avoid drift
-    addressPrefixes: peerVnet!.properties.addressSpace.addressPrefixes
-    dnsServers: empty(peerVnet!.properties.dhcpOptions!.dnsServers) ? [] : peerVnet!.properties.dhcpOptions.dnsServers
-    tags: peerVnet!.tags
-    enableTelemetry: enableTelemetry
+// Boolean flag indicating whether capability hosts should be created.
+// Safely checks for the property in varAfConfigObj, defaults to false if missing.
+var varAfAgentSvcEnabled = contains(varAfConfigObj, 'createCapabilityHosts')
+  ? bool(varAfConfigObj.createCapabilityHosts!)
+  : false
 
-    // add only the reverse peering we need
-    peerings: [
-      {
-        name: empty(hubVnetPeeringDefinition.reverseName) ? 'to-spoke' : hubVnetPeeringDefinition.reverseName
-        remoteVirtualNetworkResourceId: _vnetResourceId
-        allowVirtualNetworkAccess: hubVnetPeeringDefinition.reverseAllowVirtualNetworkAccess
-        allowForwardedTraffic: hubVnetPeeringDefinition.reverseAllowForwardedTraffic
-        allowGatewayTransit: hubVnetPeeringDefinition.reverseAllowGatewayTransit
-        useRemoteGateways: hubVnetPeeringDefinition.reverseUseRemoteGateways
+// Determines if dependent resources should be deployed for Ai Foundry.
+// This is true only if agent service is enabled AND includeAssociatedResources
+// is either true or not explicitly set (defaults to true).
+var varAfWantsDeps = varAfAgentSvcEnabled && (contains(aiFoundryDefinition, 'includeAssociatedResources')
+  ? aiFoundryDefinition.includeAssociatedResources!
+  : true)
+
+// Boolean flag indicating whether project management is allowed in the AI Foundry account.
+// Project management enabled? Respect explicit false; default to true only if absent.
+var varAfProjectEnabled = contains(varAfConfigObj, 'allowProjectManagement')
+  ? varAfConfigObj.allowProjectManagement!
+  : true
+
+// search
+var varAfSearchCfg = contains(aiFoundryDefinition, 'aiSearchConfiguration')
+  ? aiFoundryDefinition.aiSearchConfiguration!
+  : {}
+
+// Override Search PDZ binding if applicable
+var varAfAiSearchCfgComplete = union(
+  varAfSearchCfg,
+  (!empty((!varUseExistingPdz.search
+      ? privateDnsZoneSearch!.outputs.resourceId
+      : privateDnsZonesDefinition.searchZoneId!)))
+    ? {
+        privateDnsZoneResourceId: (!varUseExistingPdz.search
+          ? privateDnsZoneSearch!.outputs.resourceId
+          : privateDnsZonesDefinition.searchZoneId!)
       }
-    ]
+    : {}
+)
+
+// cosmos
+var varAfCosmosCfg = contains(aiFoundryDefinition, 'cosmosDbConfiguration')
+  ? aiFoundryDefinition.cosmosDbConfiguration!
+  : {}
+// Override Cosmos PDZ binding if applicable
+var varAfCosmosCfgComplete = union(
+  varAfCosmosCfg,
+  (!empty((!varUseExistingPdz.cosmosSql
+      ? privateDnsZoneCosmos!.outputs.resourceId
+      : privateDnsZonesDefinition.cosmosSqlZoneId!)))
+    ? {
+        privateDnsZoneResourceId: (!varUseExistingPdz.cosmosSql
+          ? privateDnsZoneCosmos!.outputs.resourceId
+          : privateDnsZonesDefinition.cosmosSqlZoneId!)
+      }
+    : {}
+)
+
+// keyvault
+var varAfKvCfg = contains(aiFoundryDefinition, 'keyVaultConfiguration')
+  ? aiFoundryDefinition.keyVaultConfiguration!
+  : {}
+// Override Key Vault PDZ binding if applicable
+var varAfKVCfgComplete = union(
+  varAfKvCfg,
+  (!empty((!varUseExistingPdz.keyVault
+      ? privateDnsZoneKeyVault!.outputs.resourceId
+      : privateDnsZonesDefinition.keyVaultZoneId!)))
+    ? {
+        privateDnsZoneResourceId: (!varUseExistingPdz.keyVault
+          ? privateDnsZoneKeyVault!.outputs.resourceId
+          : privateDnsZonesDefinition.keyVaultZoneId!)
+      }
+    : {}
+)
+
+// storage
+var varAfStorageCfg = contains(aiFoundryDefinition, 'storageAccountConfiguration')
+  ? aiFoundryDefinition.storageAccountConfiguration!
+  : {}
+
+// Override Storage (blob) PDZ binding if applicable
+var varAfStorageCfgComplete = union(
+  varAfStorageCfg,
+  (!empty((!varUseExistingPdz.blob ? privateDnsZoneBlob!.outputs.resourceId : privateDnsZonesDefinition.blobZoneId!)))
+    ? {
+        blobPrivateDnsZoneResourceId: (!varUseExistingPdz.blob
+          ? privateDnsZoneBlob!.outputs.resourceId
+          : privateDnsZonesDefinition.blobZoneId!)
+      }
+    : {}
+)
+
+// ai services
+var varAfAiServicesPdzId = !varUseExistingPdz.aiServices
+  ? privateDnsZoneAiService!.outputs.resourceId
+  : privateDnsZonesDefinition.aiServicesZoneId!
+
+// open ai
+var varAfOpenAIPdzId = !varUseExistingPdz.openai
+  ? privateDnsZoneOpenAi!.outputs.resourceId
+  : privateDnsZonesDefinition.openaiZoneId!
+
+// cognitive services
+var varAfCognitiveServicesPdzId = !varUseExistingPdz.cognitiveservices
+  ? privateDnsZoneCogSvcs!.outputs.resourceId
+  : privateDnsZonesDefinition.cognitiveservicesZoneId!
+
+// networking
+var varAfNetworkingOverride = union(
+  (varAfAgentSvcEnabled ? { agentServiceSubnetResourceId: varAgentSubnetId } : {}),
+  { aiServicesPrivateDnsZoneResourceId: varAfAiServicesPdzId },
+  { openAiPrivateDnsZoneResourceId: varAfOpenAIPdzId },
+  { cognitiveServicesPrivateDnsZoneResourceId: varAfCognitiveServicesPdzId }
+)
+
+// Module
+module aiFoundry 'wrappers/avm.ptn.ai-ml.ai-foundry.bicep' = {
+  name: 'aiFoundryDeployment-${varUniqueSuffix}'
+  params: {
+    aiFoundry: union(
+      {
+        // Required
+        baseName: baseName
+
+        // Optionals with defaults
+        includeAssociatedResources: varAfWantsDeps
+        location: location
+        tags: tags
+
+        privateEndpointSubnetResourceId: varPeSubnetId
+
+        aiFoundryConfiguration: {
+          accountName: 'ai${baseName}'
+          allowProjectManagement: varAfProjectEnabled
+          createCapabilityHosts: varAfAgentSvcEnabled
+          disableLocalAuth: false
+          location: location
+
+          networking: varDeployPdnsAndPe ? varAfNetworkingOverride : {}
+
+          project: varAfProjectEnabled
+            ? {
+                name: 'aifoundry-default-project'
+                displayName: 'Default AI Foundry Project.'
+                description: 'This is the default project for AI Foundry.'
+              }
+            : null
+        }
+
+        aiModelDeployments: !empty(aiFoundryDefinition.?aiModelDeployments)
+          ? aiFoundryDefinition.aiModelDeployments!
+          : [
+              {
+                model: {
+                  format: 'OpenAI'
+                  name: 'gpt-4o'
+                  version: '2024-11-20'
+                }
+                name: 'gpt-4o'
+                sku: {
+                  name: 'GlobalStandard'
+                  capacity: 10
+                }
+              }
+              {
+                model: {
+                  format: 'OpenAI'
+                  name: 'text-embedding-3-large'
+                  version: '1'
+                }
+                name: 'text-embedding-3-large'
+                sku: {
+                  name: 'Standard'
+                  capacity: 1
+                }
+              }
+            ]
+
+        aiSearchConfiguration: varAfAiSearchCfgComplete
+        cosmosDbConfiguration: varAfCosmosCfgComplete
+        keyVaultConfiguration: varAfKVCfgComplete
+        storageAccountConfiguration: varAfStorageCfgComplete
+      },
+      aiFoundryDefinition ?? {}
+    )
+    enableTelemetry: enableTelemetry
   }
   dependsOn: [
     #disable-next-line BCP321
+<<<<<<< HEAD
+    (empty(resourceIds.?searchServiceResourceId!)) ? aiSearchModule : null
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+=======
     (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
   ]
 }
@@ -2465,116 +2520,687 @@ module buildVm 'br/public:avm/res/compute/virtual-machine:0.20.0' = if (_deployB
     customData: base64(_buildCloudInit)
   }
   dependsOn: [
+>>>>>>> main
     #disable-next-line BCP321
-    (empty(resourceIds.virtualNetworkResourceId)) ? virtualNetwork : null
+    (varDeployPdnsAndPe && !varUseExistingPdz.search) ? privateDnsZoneSearch : null
+    #disable-next-line BCP321
+    (varDeployPdnsAndPe && !varUseExistingPdz.cognitiveservices) ? privateDnsZoneCogSvcs : null
+    #disable-next-line BCP321
+    (varDeployPdnsAndPe && !varUseExistingPdz.openai) ? privateDnsZoneOpenAi : null
+    #disable-next-line BCP321
+    (varDeployPdnsAndPe && !varUseExistingPdz.aiServices) ? privateDnsZoneAiService : null
   ]
 }
 
-// ─────────────────────────────────────────────────────────────────────-
-// 3.13 Grounding with Bing Search
-// ─────────────────────────────────────────────────────────────────────-
+// -----------------------
+// 17 BING GROUNDING
+// -----------------------
+
+// Grounding with Bing
+@description('Conditional. Grounding with Bing configuration. Required if deploy.groundingWithBingSearch is true and resourceIds.groundingServiceResourceId is empty.')
+param groundingWithBingDefinition kSGroundingWithBingDefinitionType?
+
+// Decide if Bing module runs (create or reuse+connect)
+var varInvokeBingModule = (!empty(resourceIds.?groundingServiceResourceId!)) || (deployToggles.groundingWithBingSearch && empty(resourceIds.?groundingServiceResourceId!))
+
+var varBingNameEffective = empty(groundingWithBingDefinition!.?name!)
+  ? 'bing-${baseName}'
+  : groundingWithBingDefinition!.name!
 
 // Run this module when:
 //  - creating a new Bing account (toggle true, no existing), OR
 //  - reusing an existing account (existing ID provided) but we still need to create the CS connection.
-module bingSearch 'modules/bing-search/main.bicep' = if (_invokeBingModule) {
+module bingSearch 'components/bing-search/main.bicep' = if (varInvokeBingModule) {
   name: 'bingsearchDeployment'
   params: {
     // AF context from the AVM/Foundry module outputs
-    account_name: aiFoundry.outputs.aiServicesName
-    project_name: aiFoundry.outputs.aiProjectName
+    accountName: aiFoundry.outputs.aiServicesName
+    projectName: aiFoundry.outputs.aiProjectName
 
     // Deterministic default for the Bing account (only used on create path)
-    bingSearchName: _bingNameEffective
+    bingSearchName: varBingNameEffective
 
     // Reuse path: when provided, the child module will NOT create the Bing account,
     // it will use this existing one and still create the connection.
-    existingResourceId: resourceIds.groundingServiceResourceId
+    existingResourceId: resourceIds.?groundingServiceResourceId ?? ''
   }
   dependsOn: [
     aiFoundry!
   ]
 }
 
-//////////////////////////////////////////////////////////////////////////
-// 4. OUTPUTS
-//////////////////////////////////////////////////////////////////////////
+// -----------------------
+// 18 GATEWAYS AND FIREWALL
+// -----------------------
 
-// General
-output tenantId string = tenant().tenantId
-output subscriptionId string = subscription().subscriptionId
-output resourceGroupName string = resourceGroup().name
-output location string = location
+// 18.1 Web Application Firewall (WAF) Policy
+@description('Conditional. Web Application Firewall (WAF) policy configuration. Required if deploy.wafPolicy is true and you are deploying Application Gateway via this template.')
+param wafPolicyDefinition wafPolicyDefinitionsType?
 
-// VNet
-output virtualNetworkResourceId string = empty(resourceIds.virtualNetworkResourceId)
-  #disable-next-line BCP318
-  ? virtualNetwork.outputs.resourceId
-  : existingVNet.id
+var varDeployWafPolicy = deployToggles.wafPolicy
+var varWafPolicyResourceId = varDeployWafPolicy ? wafPolicy!.outputs.resourceId : '' // cache resourceId for AGW wiring
 
-// Log Analytics
-output logAnalyticsWorkspaceResourceId string = _deployLogAnalytics
-  #disable-next-line BCP318
-  ? logAnalytics.outputs.resourceId
-  : (empty(resourceIds.logAnalyticsWorkspaceResourceId) ? '' : existingLogAnalytics.id)
+module wafPolicy 'wrappers/avm.res.network.waf-policy.bicep' = if (varDeployWafPolicy) {
+  name: 'wafPolicyDeployment'
+  params: {
+    wafPolicy: union(
+      {
+        // Required
+        name: 'afwp-${baseName}'
+        managedRules: {
+          exclusions: []
+          managedRuleSets: [
+            {
+              ruleSetType: 'OWASP'
+              ruleSetVersion: '3.2'
+              ruleGroupOverrides: []
+            }
+          ]
+        }
+        location: location
+        tags: tags
+      },
+      wafPolicyDefinition ?? {}
+    )
+  }
+}
 
-// App Insights
-output applicationInsightsResourceId string = _deployAppInsights
-  #disable-next-line BCP318
-  ? appInsights.outputs.resourceId
-  : (empty(resourceIds.appInsightsResourceId) ? '' : existingAppInsights.id)
+// 18.2 Application Gateway
+@description('Conditional. Application Gateway configuration. Required if deploy.applicationGateway is true and resourceIds.applicationGatewayResourceId is empty.')
+param appGatewayDefinition appGatewayDefinitionType?
 
-// Container Apps Environment
-output containerEnvResourceId string = !empty(resourceIds.containerEnvResourceId)
-  ? resourceIds.containerEnvResourceId
-  : (_deployContainerAppEnv ? resourceId('Microsoft.App/managedEnvironments', _containerEnvName) : '')
+var varDeployAppGateway = empty(resourceIds.?applicationGatewayResourceId!) && deployToggles.applicationGateway
 
-// ACR
-output containerRegistryResourceId string = !empty(resourceIds.containerRegistryResourceId)
-  ? resourceIds.containerRegistryResourceId
-  : (_deployAcr ? resourceId('Microsoft.ContainerRegistry/registries', _acrNameEffective) : '')
+resource existingAppGateway 'Microsoft.Network/applicationGateways@2024-07-01' existing = if (!empty(resourceIds.?applicationGatewayResourceId!)) {
+  name: varAgwNameExisting
+  scope: resourceGroup(varAgwSub, varAgwRg)
+}
 
-// Storage
-#disable-next-line BCP318
-output storageAccountResourceId string = _deploySa ? storageAccount.outputs.resourceId : existingStorage.id
+var varAppGatewayResourceId = !empty(resourceIds.?applicationGatewayResourceId!)
+  ? existingAppGateway.id
+  : (varDeployAppGateway ? applicationGateway!.outputs.resourceId : '')
 
-// Key Vault
-#disable-next-line BCP318
-output keyVaultResourceId string = _deployKv ? vault.outputs.resourceId : existingVault.id
+// Naming
+var varAgwIdSegments = empty(resourceIds.?applicationGatewayResourceId!)
+  ? ['']
+  : split(resourceIds.applicationGatewayResourceId!, '/')
+var varAgwSub = length(varAgwIdSegments) >= 3 ? varAgwIdSegments[2] : ''
+var varAgwRg = length(varAgwIdSegments) >= 5 ? varAgwIdSegments[4] : ''
+var varAgwNameExisting = length(varAgwIdSegments) >= 1 ? last(varAgwIdSegments) : ''
+var varAgwName = !empty(resourceIds.?applicationGatewayResourceId!)
+  ? varAgwNameExisting
+  : (empty(appGatewayDefinition.?name ?? '') ? 'agw-${baseName}' : appGatewayDefinition!.name)
 
-// Cosmos
-#disable-next-line BCP318
-output dbAccountResourceId string = _deployCosmos ? databaseAccount.outputs.resourceId : existingCosmos.id
+// Determine if we need to create a WAF policy
+var varAppGatewaySKU = appGatewayDefinition.?sku ?? 'WAF_v2'
+var varAppGatewayNeedFirewallPolicy = (varAppGatewaySKU == 'WAF_v2')
+var varAppGatewayFirewallPolicyId = (varAppGatewayNeedFirewallPolicy ? varWafPolicyResourceId : '')
 
-// Search
-#disable-next-line BCP318
-output searchServiceResourceId string = _deploySearch ? searchService.outputs.resourceId : existingSearch.id
+// Application Gateway subnet ID
+var varAgwSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/appgw-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/appgw-subnet'
 
-// App Configuration
-output appConfigResourceId string = !empty(resourceIds.appConfigResourceId)
-  ? resourceIds.appConfigResourceId
-  : (_deployAppConfig ? resourceId('Microsoft.AppConfiguration/configurationStores', _appConfigName) : '')
+module applicationGateway 'wrappers/avm.res.network.application-gateway.bicep' = if (varDeployAppGateway) {
+  name: 'applicationGatewayDeployment'
+  params: {
+    applicationGateway: union(
+      {
+        // Required parameters with defaults
+        name: varAgwName
+        sku: varAppGatewaySKU
 
-// APIM
-output apimServiceResourceId string = _deployApim
-  ? resourceId('Microsoft.ApiManagement/service', _apimName)
-  : existingApim.id
+        // Gateway IP configurations - required for Application Gateway
+        gatewayIPConfigurations: [
+          {
+            name: 'appGatewayIpConfig'
+            properties: {
+              subnet: {
+                id: varAgwSubnetId
+              }
+            }
+          }
+        ]
 
-// Application Gateway
-output applicationGatewayResourceId string = _deployAppGateway
-  ? resourceId('Microsoft.Network/applicationGateways', _agwName)
-  : existingAppGateway.id
+        // WAF policy wiring
+        firewallPolicyResourceId: varAppGatewayFirewallPolicyId
 
-// Azure Firewall
-output firewallResourceId string = _deployFirewall
-  ? resourceId('Microsoft.Network/azureFirewalls', _afwName)
-  : existingFirewall.id
+        // Location and tags
+        location: location
+        tags: tags
 
-// Grounding with Bing
-output groundingServiceResourceId string = _invokeBingModule
-  ? bingSearch!.outputs.resourceId
+        // Frontend IP configurations - default configuration
+        frontendIPConfigurations: concat(
+          varDeployApGatewayPip
+            ? [
+                {
+                  name: 'publicFrontend'
+                  properties: { publicIPAddress: { id: appGatewayPipWrapper!.outputs.resourceId } }
+                }
+              ]
+            : [],
+          [
+            {
+              name: 'privateFrontend'
+              properties: {
+                privateIPAllocationMethod: 'Static'
+                privateIPAddress: '192.168.0.200'
+                subnet: { id: varAgwSubnetId }
+              }
+            }
+          ]
+        )
+
+        // Frontend ports - required for Application Gateway
+        frontendPorts: [
+          {
+            name: 'port80'
+            properties: { port: 80 }
+          }
+        ]
+
+        // Backend address pools - required for Application Gateway
+        backendAddressPools: [
+          {
+            name: 'defaultBackendPool'
+          }
+        ]
+
+        // Backend HTTP settings - required for Application Gateway
+        backendHttpSettingsCollection: [
+          {
+            name: 'defaultHttpSettings'
+            properties: {
+              cookieBasedAffinity: 'Disabled'
+              port: 80
+              protocol: 'Http'
+              requestTimeout: 20
+            }
+          }
+        ]
+
+        // HTTP listeners - required for Application Gateway
+        httpListeners: [
+          {
+            name: 'httpListener'
+            properties: {
+              frontendIPConfiguration: {
+                id: '${resourceId('Microsoft.Network/applicationGateways', varAgwName)}/frontendIPConfigurations/${varDeployApGatewayPip ? 'publicFrontend' : 'privateFrontend'}'
+              }
+              frontendPort: {
+                id: '${resourceId('Microsoft.Network/applicationGateways', varAgwName)}/frontendPorts/port80'
+              }
+              protocol: 'Http'
+            }
+          }
+        ]
+
+        // Request routing rules - required for Application Gateway
+        requestRoutingRules: [
+          {
+            name: 'httpRoutingRule'
+            properties: {
+              backendAddressPool: {
+                id: '${resourceId('Microsoft.Network/applicationGateways', varAgwName)}/backendAddressPools/defaultBackendPool'
+              }
+              backendHttpSettings: {
+                id: '${resourceId('Microsoft.Network/applicationGateways', varAgwName)}/backendHttpSettingsCollection/defaultHttpSettings'
+              }
+              httpListener: {
+                id: '${resourceId('Microsoft.Network/applicationGateways', varAgwName)}/httpListeners/httpListener'
+              }
+              priority: 100
+              ruleType: 'Basic'
+            }
+          }
+        ]
+      },
+      appGatewayDefinition ?? {}
+    )
+    enableTelemetry: enableTelemetry
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (varDeployWafPolicy) ? wafPolicy : null
+    #disable-next-line BCP321
+    (varDeployApGatewayPip) ? appGatewayPipWrapper : null
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+  ]
+}
+
+// 18.3 Azure Firewall Policy
+@description('Conditional. Azure Firewall Policy configuration. Required if deploy.firewall is true and resourceIds.firewallPolicyResourceId is empty.')
+param firewallPolicyDefinition firewallPolicyDefinitionType?
+
+var varDeployAfwPolicy = deployToggles.firewall && empty(resourceIds.?firewallPolicyResourceId!)
+
+module fwPolicy 'wrappers/avm.res.network.firewall-policy.bicep' = if (varDeployAfwPolicy) {
+  name: 'firewallPolicyDeployment'
+  params: {
+    firewallPolicy: union(
+      {
+        // Required
+        name: empty(firewallPolicyDefinition.?name ?? '') ? 'afwp-${baseName}' : firewallPolicyDefinition!.name
+        location: location
+        tags: tags
+      },
+      firewallPolicyDefinition ?? {}
+    )
+    enableTelemetry: enableTelemetry
+  }
+}
+
+var firewallPolicyResourceId = resourceIds.?firewallPolicyResourceId ?? (varDeployAfwPolicy
+  ? fwPolicy!.outputs.resourceId
+  : '')
+
+// 18.4 Azure Firewall
+@description('Conditional. Azure Firewall configuration. Required if deploy.firewall is true and resourceIds.firewallResourceId is empty.')
+param firewallDefinition firewallDefinitionType?
+
+var varDeployFirewall = empty(resourceIds.?firewallResourceId!) && deployToggles.firewall
+
+resource existingFirewall 'Microsoft.Network/azureFirewalls@2024-07-01' existing = if (!empty(resourceIds.?firewallResourceId!)) {
+  name: varAfwNameExisting
+  scope: resourceGroup(varAfwSub, varAfwRg)
+}
+
+var varFirewallResourceId = !empty(resourceIds.?firewallResourceId!)
+  ? existingFirewall.id
+  : (varDeployFirewall ? azureFirewall!.outputs.resourceId : '')
+
+// Naming
+var varAfwIdSegments = empty(resourceIds.?firewallResourceId!) ? [''] : split(resourceIds.firewallResourceId!, '/')
+var varAfwSub = length(varAfwIdSegments) >= 3 ? varAfwIdSegments[2] : ''
+var varAfwRg = length(varAfwIdSegments) >= 5 ? varAfwIdSegments[4] : ''
+var varAfwNameExisting = length(varAfwIdSegments) >= 1 ? last(varAfwIdSegments) : ''
+var varAfwName = !empty(resourceIds.?firewallResourceId!)
+  ? varAfwNameExisting
+  : (empty(firewallDefinition.?name ?? '') ? 'afw-${baseName}' : firewallDefinition!.name)
+
+module azureFirewall 'wrappers/avm.res.network.azure-firewall.bicep' = if (varDeployFirewall) {
+  name: 'azureFirewallDeployment'
+  params: {
+    firewall: union(
+      {
+        // Required
+        name: varAfwName
+
+        // Network configuration - conditional based on resource availability
+        virtualNetworkResourceId: varVnetResourceId
+
+        // Public IP configuration - use existing or deployed IP
+        publicIPResourceID: !empty(resourceIds.?firewallPublicIpResourceId)
+          ? resourceIds.firewallPublicIpResourceId!
+          : firewallPublicIpResourceId
+
+        // Firewall Policy - use existing or deployed policy
+        firewallPolicyId: firewallPolicyResourceId
+
+        // Default configuration
+        availabilityZones: [1, 2, 3]
+        azureSkuTier: 'Standard'
+        location: location
+        tags: tags
+      },
+      firewallDefinition ?? {}
+    )
+    enableTelemetry: enableTelemetry
+  }
+  dependsOn: [
+    // Firewall Policy dependency
+    #disable-next-line BCP321
+    varDeployAfwPolicy ? fwPolicy : null
+    // Public IP dependency
+    #disable-next-line BCP321
+    varDeployFirewallPip ? firewallPipWrapper : null
+    // Virtual Network dependency
+    #disable-next-line BCP321
+    empty(resourceIds.?virtualNetworkResourceId!) ? vNetworkWrapper : null
+  ]
+}
+
+// -----------------------
+// 19 VIRTUAL MACHINES
+// -----------------------
+
+// 19.1 Build VM (Linux)
+@description('Conditional. Build VM configuration to support CI/CD workers (Linux). Required if deploy.buildVm is true.')
+param buildVmDefinition vmDefinitionType?
+
+@description('Optional. Build VM Maintenance Definition. Used when deploy.buildVm is true.')
+param buildVmMaintenanceDefinition vmMaintenanceDefinitionType?
+
+var varDeployBuildVm = deployToggles.?buildVm ?? false
+var varBuildSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/agent-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/agent-subnet'
+
+module buildVmMaintenanceConfiguration 'wrappers/avm.res.maintenance.maintenance-configuration.bicep' = if (varDeployBuildVm) {
+  name: 'buildVmMaintenanceConfigurationDeployment-${varUniqueSuffix}'
+  params: {
+    maintenanceConfig: union(
+      {
+        name: 'mc-${baseName}-build'
+        location: location
+        tags: tags
+      },
+      buildVmMaintenanceDefinition ?? {}
+    )
+  }
+}
+
+module buildVm 'wrappers/avm.res.compute.build-vm.bicep' = if (varDeployBuildVm) {
+  name: 'buildVmDeployment-${varUniqueSuffix}'
+  params: {
+    buildVm: union(
+      {
+        // Required parameters
+        name: 'vm-${substring(baseName, 0, 6)}-bld' // Shorter name to avoid length limits
+        sku: 'Standard_F4s_v2'
+        adminUsername: 'builduser'
+        osType: 'Linux'
+        imageReference: {
+          publisher: 'Canonical'
+          offer: '0001-com-ubuntu-server-jammy'
+          sku: '22_04-lts'
+          version: 'latest'
+        }
+        runner: 'github' // Default runner type
+        github: {
+          owner: 'your-org'
+          repo: 'your-repo'
+        }
+        nicConfigurations: [
+          {
+            nicSuffix: '-nic'
+            ipConfigurations: [
+              {
+                name: 'ipconfig01'
+                subnetResourceId: varBuildSubnetId
+              }
+            ]
+          }
+        ]
+        osDisk: {
+          caching: 'ReadWrite'
+          createOption: 'FromImage'
+          deleteOption: 'Delete'
+          managedDisk: {
+            storageAccountType: 'Standard_LRS'
+          }
+        }
+        // Linux-specific configuration - using password authentication like Jump VM
+        disablePasswordAuthentication: false
+        adminPassword: 'P@ssw0rd123!' // Temporary password for testing - expires on first login
+        // Infrastructure parameters
+        availabilityZone: 1 // Set availability zone directly in VM configuration
+        location: location
+        tags: tags
+        enableTelemetry: enableTelemetry
+      },
+      buildVmDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+  ]
+}
+
+// 19.2 Jump VM (Windows)
+@description('Conditional. Jump (bastion) VM configuration (Windows). Required if deploy.jumpVm is true.')
+param jumpVmDefinition vmDefinitionType?
+
+@description('Optional. Jump VM Maintenance Definition. Used when deploy.jumpVm is true.')
+param jumpVmMaintenanceDefinition vmMaintenanceDefinitionType?
+
+var varDeployJumpVm = deployToggles.?jumpVm ?? false
+var varJumpVmMaintenanceConfigured = varDeployJumpVm && (jumpVmMaintenanceDefinition != null)
+var varJumpSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/agent-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/agent-subnet'
+
+module jumpVmMaintenanceConfiguration 'wrappers/avm.res.maintenance.maintenance-configuration.bicep' = if (varJumpVmMaintenanceConfigured) {
+  name: 'jumpVmMaintenanceConfigurationDeployment-${varUniqueSuffix}'
+  params: {
+    maintenanceConfig: union(
+      {
+        name: 'mc-${baseName}-jump'
+        location: location
+        tags: tags
+      },
+      jumpVmMaintenanceDefinition ?? {}
+    )
+  }
+}
+
+module jumpVm 'wrappers/avm.res.compute.jump-vm.bicep' = if (varDeployJumpVm) {
+  name: 'jumpVmDeployment-${varUniqueSuffix}'
+  params: {
+    jumpVm: union(
+      {
+        // Required parameters
+        name: 'vm-${substring(baseName, 0, 6)}-jmp' // Shorter name to avoid Windows 15-char limit
+        sku: 'Standard_D4as_v5'
+        adminUsername: 'azureuser'
+        osType: 'Windows'
+        imageReference: {
+          publisher: 'MicrosoftWindowsServer'
+          offer: 'WindowsServer'
+          sku: '2022-datacenter-azure-edition'
+          version: 'latest'
+        }
+        // Temporary password - will be expired on first login
+        adminPassword: 'P@ssw0rd123!' // Temporary password for testing - expires on first login
+        nicConfigurations: [
+          {
+            nicSuffix: '-nic'
+            ipConfigurations: [
+              {
+                name: 'ipconfig01'
+                subnetResourceId: varJumpSubnetId
+              }
+            ]
+          }
+        ]
+        osDisk: {
+          caching: 'ReadWrite'
+          createOption: 'FromImage'
+          deleteOption: 'Delete'
+          managedDisk: {
+            storageAccountType: 'Standard_LRS'
+          }
+        }
+        // Infrastructure parameters
+        ...(varJumpVmMaintenanceConfigured
+          ? {
+              maintenanceConfigurationResourceId: jumpVmMaintenanceConfiguration!.outputs.resourceId
+            }
+          : {})
+        availabilityZone: 1 // Set availability zone directly in VM configuration
+        location: location
+        tags: tags
+        enableTelemetry: enableTelemetry
+      },
+      jumpVmDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    #disable-next-line BCP321
+    (empty(resourceIds.?virtualNetworkResourceId!)) ? vNetworkWrapper : null
+  ]
+}
+
+// -----------------------
+// 20 OUTPUTS
+// -----------------------
+
+// Network Security Group Outputs
+@description('Agent subnet Network Security Group resource ID (newly created or existing).')
+output agentNsgResourceId string = agentNsgResourceId!
+
+@description('Private Endpoints subnet Network Security Group resource ID (newly created or existing).')
+output peNsgResourceId string = peNsgResourceId!
+
+@description('Application Gateway subnet Network Security Group resource ID (newly created or existing).')
+output applicationGatewayNsgResourceId string = applicationGatewayNsgResourceId
+
+@description('API Management subnet Network Security Group resource ID (newly created or existing).')
+output apiManagementNsgResourceId string = apiManagementNsgResourceId
+
+@description('Azure Container Apps Environment subnet Network Security Group resource ID (newly created or existing).')
+output acaEnvironmentNsgResourceId string = acaEnvironmentNsgResourceId
+
+@description('Jumpbox subnet Network Security Group resource ID (newly created or existing).')
+output jumpboxNsgResourceId string = jumpboxNsgResourceId
+
+@description('DevOps Build Agents subnet Network Security Group resource ID (newly created or existing).')
+output devopsBuildAgentsNsgResourceId string = devopsBuildAgentsNsgResourceId
+
+// Virtual Network Outputs
+@description('Virtual Network resource ID (newly created or existing).')
+output virtualNetworkResourceId string = virtualNetworkResourceId
+
+// Public IP Outputs
+@description('Application Gateway Public IP resource ID (newly created or existing).')
+output appGatewayPublicIpResourceId string = appGatewayPublicIpResourceId
+
+@description('Firewall Public IP resource ID (newly created or existing).')
+output firewallPublicIpResourceId string = firewallPublicIpResourceId
+
+// VNet Peering Outputs
+@description('Hub to Spoke peering resource ID (if hub peering is enabled).')
+output hubToSpokePeeringResourceId string = varDeployHubPeering && (hubVnetPeeringDefinition!.?createReversePeering ?? true)
+  ? hubToSpokePeering!.outputs.peeringResourceId
   : ''
 
+// Observability Outputs
+@description('Log Analytics workspace resource ID.')
+output logAnalyticsWorkspaceResourceId string = varLogAnalyticsWorkspaceResourceId
 
-// WAF Policy
-output wafPolicyResourceId string = _deployAppGateway ? _wafPolicyResourceId : ''
+@description('Application Insights resource ID.')
+output appInsightsResourceId string = varAppiResourceId
+
+// Container Platform Outputs
+@description('Container App Environment resource ID.')
+output containerEnvResourceId string = varContainerEnvResourceId
+
+@description('Container Registry resource ID.')
+output containerRegistryResourceId string = varAcrResourceId
+
+// Storage Outputs
+@description('Storage Account resource ID.')
+output storageAccountResourceId string = varSaResourceId
+
+// Application Configuration Outputs
+@description('App Configuration Store resource ID.')
+output appConfigResourceId string = !empty(resourceIds.?appConfigResourceId!)
+  ? resourceIds.appConfigResourceId!
+  : (varDeployAppConfig ? configurationStore!.outputs.resourceId : '')
+
+// Cosmos DB Outputs
+@description('Cosmos DB resource ID.')
+output cosmosDbResourceId string = deployCosmosDb ? cosmosDbModule!.outputs.resourceId : ''
+
+@description('Cosmos DB name.')
+output cosmosDbName string = deployCosmosDb ? cosmosDbModule!.outputs.name : ''
+
+// Key Vault Outputs
+@description('Key Vault resource ID.')
+output keyVaultResourceId string = deployKeyVault ? keyVaultModule!.outputs.resourceId : ''
+
+@description('Key Vault name.')
+output keyVaultName string = deployKeyVault ? keyVaultModule!.outputs.name : ''
+
+// AI Search Outputs
+@description('AI Search resource ID.')
+output aiSearchResourceId string = deployAiSearch ? aiSearchModule!.outputs.resourceId : ''
+
+@description('AI Search name.')
+output aiSearchName string = deployAiSearch ? aiSearchModule!.outputs.name : ''
+
+// API Management Outputs
+@description('API Management service resource ID.')
+output apimServiceResourceId string = varApimServiceResourceId
+
+@description('API Management service name.')
+output apimServiceName string = varDeployApim ? apiManagement!.outputs.name : ''
+
+// AI Foundry Outputs
+@description('AI Foundry resource group name.')
+output aiFoundryResourceGroupName string = aiFoundry.outputs.resourceGroupName
+
+@description('AI Foundry project name.')
+output aiFoundryProjectName string = aiFoundry.outputs.aiProjectName
+
+@description('AI Foundry AI Search service name.')
+output aiFoundrySearchServiceName string = aiFoundry.outputs.aiSearchName
+
+@description('AI Foundry AI Services name.')
+output aiFoundryAiServicesName string = aiFoundry.outputs.aiServicesName
+
+@description('AI Foundry Cosmos DB account name.')
+output aiFoundryCosmosAccountName string = aiFoundry.outputs.cosmosAccountName
+
+@description('AI Foundry Key Vault name.')
+output aiFoundryKeyVaultName string = aiFoundry.outputs.keyVaultName
+
+@description('AI Foundry Storage Account name.')
+output aiFoundryStorageAccountName string = aiFoundry.outputs.storageAccountName
+
+// Bing Grounding Outputs
+@description('Bing Search service resource ID (if deployed).')
+output bingSearchResourceId string = varInvokeBingModule ? bingSearch!.outputs.resourceId : ''
+
+@description('Bing Search connection ID (if deployed).')
+output bingConnectionId string = varInvokeBingModule ? bingSearch!.outputs.bingConnectionId : ''
+
+@description('Bing Search resource group name (if deployed).')
+output bingResourceGroupName string = varInvokeBingModule ? bingSearch!.outputs.resourceGroupName : ''
+
+// Gateways and Firewall Outputs
+@description('WAF Policy resource ID (if deployed).')
+output wafPolicyResourceId string = varDeployWafPolicy ? wafPolicy!.outputs.resourceId : ''
+
+@description('WAF Policy name (if deployed).')
+output wafPolicyName string = varDeployWafPolicy ? wafPolicy!.outputs.name : ''
+
+@description('Application Gateway resource ID (newly created or existing).')
+output applicationGatewayResourceId string = varAppGatewayResourceId
+
+@description('Application Gateway name.')
+output applicationGatewayName string = varAgwName
+
+@description('Azure Firewall Policy resource ID (if deployed).')
+output firewallPolicyResourceId string = firewallPolicyResourceId
+
+@description('Azure Firewall Policy name (if deployed).')
+output firewallPolicyName string = varDeployAfwPolicy ? fwPolicy!.outputs.name : ''
+
+@description('Azure Firewall resource ID (newly created or existing).')
+output firewallResourceId string = varFirewallResourceId
+
+@description('Azure Firewall name.')
+output firewallName string = varAfwName
+
+@description('Azure Firewall private IP address (if deployed).')
+output firewallPrivateIp string = (varDeployFirewall && varDeployAfwPolicy) ? azureFirewall!.outputs.privateIp : ''
+
+// Virtual Machines Outputs
+@description('Build VM resource ID (if deployed).')
+output buildVmResourceId string = varDeployBuildVm ? buildVm!.outputs.resourceId : ''
+
+@description('Build VM name (if deployed).')
+output buildVmName string = varDeployBuildVm ? buildVm!.outputs.name : ''
+
+@description('Jump VM resource ID (if deployed).')
+output jumpVmResourceId string = varDeployJumpVm ? jumpVm!.outputs.resourceId : ''
+
+@description('Jump VM name (if deployed).')
+output jumpVmName string = varDeployJumpVm ? jumpVm!.outputs.name : ''
+
+// Container Apps Outputs
+@description('Container Apps deployment count.')
+output containerAppsCount int = length(containerAppsList)

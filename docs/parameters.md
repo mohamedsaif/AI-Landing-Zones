@@ -1,8737 +1,8563 @@
-#  `[AiMl/LandingZone]`
+# AI Landing Zone
 
+## Overview
 
-## Navigation
+This template deploys Azure resources for AI/ML workloads.
 
-- [Resource Types](#Resource-Types)
-- [Usage examples](#Usage-examples)
-- [Parameters](#Parameters)
-- [Outputs](#Outputs)
-- [Cross-referenced modules](#Cross-referenced-modules)
-- [Data Collection](#Data-Collection)
+## Table of Contents
+
+- [AVM Modules](#avm-modules)
+- [Resource Types](#resource-types)
+- [Parameters](#parameters)
+  - [Required Parameters](#required-parameters)
+    - [deployToggles](#deploytoggles)
+  - [Conditional Parameters](#conditional-parameters)
+    - [appConfigurationDefinition](#appconfigurationdefinition)
+    - [appGatewayDefinition](#appgatewaydefinition)
+    - [appGatewayPublicIp](#appgatewaypublicip)
+    - [appInsightsDefinition](#appinsightsdefinition)
+    - [buildVmDefinition](#buildvmdefinition)
+    - [containerAppEnvDefinition](#containerappenvdefinition)
+    - [containerRegistryDefinition](#containerregistrydefinition)
+    - [firewallDefinition](#firewalldefinition)
+    - [firewallPolicyDefinition](#firewallpolicydefinition)
+    - [firewallPublicIp](#firewallpublicip)
+    - [groundingWithBingDefinition](#groundingwithbingdefinition)
+    - [jumpVmDefinition](#jumpvmdefinition)
+    - [logAnalyticsDefinition](#loganalyticsdefinition)
+    - [storageAccountDefinition](#storageaccountdefinition)
+    - [vNetDefinition](#vnetdefinition)
+    - [wafPolicyDefinition](#wafpolicydefinition)
+  - [Optional Parameters](#optional-parameters)
+    - [acrPrivateDnsZoneDefinition](#acrprivatednszonedefinition)
+    - [acrPrivateEndpointDefinition](#acrprivateendpointdefinition)
+    - [aiFoundryDefinition](#aifoundrydefinition)
+    - [aiSearchDefinition](#aisearchdefinition)
+    - [aiServicesPrivateDnsZoneDefinition](#aiservicesprivatednszonedefinition)
+    - [apimDefinition](#apimdefinition)
+    - [apimPrivateDnsZoneDefinition](#apimprivatednszonedefinition)
+    - [apimPrivateEndpointDefinition](#apimprivateendpointdefinition)
+    - [appConfigPrivateDnsZoneDefinition](#appconfigprivatednszonedefinition)
+    - [appConfigPrivateEndpointDefinition](#appconfigprivateendpointdefinition)
+    - [appInsightsPrivateDnsZoneDefinition](#appinsightsprivatednszonedefinition)
+    - [baseName](#basename)
+    - [blobPrivateDnsZoneDefinition](#blobprivatednszonedefinition)
+    - [buildVmMaintenanceDefinition](#buildvmmaintenancedefinition)
+    - [cognitiveServicesPrivateDnsZoneDefinition](#cognitiveservicesprivatednszonedefinition)
+    - [containerAppEnvPrivateEndpointDefinition](#containerappenvprivateendpointdefinition)
+    - [containerAppsList](#containerappslist)
+    - [containerAppsPrivateDnsZoneDefinition](#containerappsprivatednszonedefinition)
+    - [cosmosDbDefinition](#cosmosdbdefinition)
+    - [cosmosPrivateDnsZoneDefinition](#cosmosprivatednszonedefinition)
+    - [cosmosPrivateEndpointDefinition](#cosmosprivateendpointdefinition)
+    - [enableTelemetry](#enabletelemetry)
+    - [existingVNetSubnetsDefinition](#existingvnetsubnetsdefinition)
+    - [flagPlatformLandingZone](#flagplatformlandingzone)
+    - [hubVnetPeeringDefinition](#hubvnetpeeringdefinition)
+    - [jumpVmMaintenanceDefinition](#jumpvmmaintenancedefinition)
+    - [keyVaultDefinition](#keyvaultdefinition)
+    - [keyVaultPrivateDnsZoneDefinition](#keyvaultprivatednszonedefinition)
+    - [keyVaultPrivateEndpointDefinition](#keyvaultprivateendpointdefinition)
+    - [location](#location)
+    - [nsgDefinitions](#nsgdefinitions)
+    - [openAiPrivateDnsZoneDefinition](#openaiprivatednszonedefinition)
+    - [privateDnsZonesDefinition](#privatednszonesdefinition)
+    - [resourceIds](#resourceids)
+    - [resourceToken](#resourcetoken)
+    - [searchPrivateDnsZoneDefinition](#searchprivatednszonedefinition)
+    - [searchPrivateEndpointDefinition](#searchprivateendpointdefinition)
+    - [storageBlobPrivateEndpointDefinition](#storageblobprivateendpointdefinition)
+    - [tags](#tags)
+- [Outputs](#outputs)
+
+## AVM Modules
+
+| Module | Version |
+| :-- | :-- |
+| `avm/ptn/ai-ml/ai-foundry` | 0.4.0 |
+| `avm/res/api-management/service` | 0.11.1 |
+| `avm/res/app-configuration/configuration-store` | 0.9.2 |
+| `avm/res/app/container-app` | 0.18.1 |
+| `avm/res/app/managed-environment` | 0.11.3 |
+| `avm/res/compute/virtual-machine` | 0.20.0 |
+| `avm/res/container-registry/registry` | 0.9.3 |
+| `avm/res/document-db/database-account` | 0.16.0 |
+| `avm/res/insights/component` | 0.6.0 |
+| `avm/res/key-vault/vault` | 0.13.3 |
+| `avm/res/maintenance/maintenance-configuration` | 0.3.1 |
+| `avm/res/network/application-gateway` | 0.7.2 |
+| `avm/res/network/azure-firewall` | 0.8.0 |
+| `avm/res/network/firewall-policy` | 0.3.1 |
+| `avm/res/network/network-security-group` | 0.5.1 |
+| `avm/res/network/private-dns-zone` | 0.8.0 |
+| `avm/res/network/private-endpoint` | 0.11.0 |
+| `avm/res/network/public-ip-address` | 0.9.0 |
+| `avm/res/network/virtual-network` | 0.7.0 |
+| `avm/res/operational-insights/workspace` | 0.12.0 |
+| `avm/res/search/search-service` | 0.11.1 |
+| `avm/res/storage/storage-account` | 0.27.0 |
 
 ## Resource Types
 
 | Resource Type | API Version |
 | :-- | :-- |
-| `Microsoft.ApiManagement/service` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2024-05-01/service) |
-| `Microsoft.ApiManagement/service/apis` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/apis) |
-| `Microsoft.ApiManagement/service/apis/diagnostics` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/apis/diagnostics) |
-| `Microsoft.ApiManagement/service/apis/policies` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/apis/policies) |
-| `Microsoft.ApiManagement/service/apiVersionSets` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/apiVersionSets) |
-| `Microsoft.ApiManagement/service/authorizationServers` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/authorizationServers) |
-| `Microsoft.ApiManagement/service/backends` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/backends) |
-| `Microsoft.ApiManagement/service/caches` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/caches) |
-| `Microsoft.ApiManagement/service/identityProviders` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/identityProviders) |
-| `Microsoft.ApiManagement/service/loggers` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/loggers) |
-| `Microsoft.ApiManagement/service/namedValues` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/namedValues) |
-| `Microsoft.ApiManagement/service/policies` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/policies) |
-| `Microsoft.ApiManagement/service/portalsettings` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/portalsettings) |
-| `Microsoft.ApiManagement/service/products` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/products) |
-| `Microsoft.ApiManagement/service/products/apis` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/products/apis) |
-| `Microsoft.ApiManagement/service/products/groups` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/products/groups) |
-| `Microsoft.ApiManagement/service/subscriptions` | [2022-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ApiManagement/2022-08-01/service/subscriptions) |
-| `Microsoft.App/containerApps` | [2025-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.App/2025-01-01/containerApps) |
-| `Microsoft.App/containerApps/authConfigs` | [2025-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.App/2025-01-01/containerApps/authConfigs) |
-| `Microsoft.App/managedEnvironments` | [2024-10-02-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.App/2024-10-02-preview/managedEnvironments) |
-| `Microsoft.App/managedEnvironments/certificates` | [2024-10-02-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.App/2024-10-02-preview/managedEnvironments/certificates) |
-| `Microsoft.App/managedEnvironments/storages` | [2024-10-02-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.App/2024-10-02-preview/managedEnvironments/storages) |
-| `Microsoft.AppConfiguration/configurationStores` | [2025-02-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.AppConfiguration/2025-02-01-preview/configurationStores) |
-| `Microsoft.AppConfiguration/configurationStores/keyValues` | [2025-02-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.AppConfiguration/2025-02-01-preview/configurationStores/keyValues) |
-| `Microsoft.AppConfiguration/configurationStores/replicas` | [2025-02-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.AppConfiguration/2025-02-01-preview/configurationStores/replicas) |
-| `Microsoft.Authorization/locks` | [2020-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Authorization/2020-05-01/locks) |
-| `Microsoft.Authorization/roleAssignments` | [2022-04-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Authorization/2022-04-01/roleAssignments) |
-| `Microsoft.Automanage/configurationProfileAssignments` | [2022-05-04](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Automanage/2022-05-04/configurationProfileAssignments) |
-| `Microsoft.CognitiveServices/accounts` | [2025-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-06-01/accounts) |
-| `Microsoft.CognitiveServices/accounts/capabilityHosts` | [2025-04-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-04-01-preview/accounts/capabilityHosts) |
-| `Microsoft.CognitiveServices/accounts/commitmentPlans` | [2025-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-06-01/accounts/commitmentPlans) |
-| `Microsoft.CognitiveServices/accounts/deployments` | [2025-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-06-01/accounts/deployments) |
-| `Microsoft.CognitiveServices/accounts/projects` | [2025-04-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-04-01-preview/accounts/projects) |
-| `Microsoft.CognitiveServices/accounts/projects/capabilityHosts` | [2025-04-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-04-01-preview/accounts/projects/capabilityHosts) |
-| `Microsoft.CognitiveServices/accounts/projects/connections` | [2025-04-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.CognitiveServices/2025-04-01-preview/accounts/projects/connections) |
-| `Microsoft.Compute/disks` | [2024-03-02](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Compute/2024-03-02/disks) |
-| `Microsoft.Compute/virtualMachines` | [2024-07-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Compute/2024-07-01/virtualMachines) |
-| `Microsoft.Compute/virtualMachines/extensions` | [2022-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Compute/2022-11-01/virtualMachines/extensions) |
-| `Microsoft.ContainerRegistry/registries` | [2023-06-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-06-01-preview/registries) |
-| `Microsoft.ContainerRegistry/registries/cacheRules` | [2023-06-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-06-01-preview/registries/cacheRules) |
-| `Microsoft.ContainerRegistry/registries/credentialSets` | [2023-11-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-11-01-preview/registries/credentialSets) |
-| `Microsoft.ContainerRegistry/registries/replications` | [2023-06-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-06-01-preview/registries/replications) |
-| `Microsoft.ContainerRegistry/registries/scopeMaps` | [2023-06-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-06-01-preview/registries/scopeMaps) |
-| `Microsoft.ContainerRegistry/registries/webhooks` | [2023-06-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.ContainerRegistry/2023-06-01-preview/registries/webhooks) |
-| `Microsoft.DevTestLab/schedules` | [2018-09-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DevTestLab/2018-09-15/schedules) |
-| `Microsoft.DocumentDB/databaseAccounts` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts) |
-| `Microsoft.DocumentDB/databaseAccounts/gremlinDatabases` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/gremlinDatabases) |
-| `Microsoft.DocumentDB/databaseAccounts/gremlinDatabases/graphs` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/gremlinDatabases/graphs) |
-| `Microsoft.DocumentDB/databaseAccounts/mongodbDatabases` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/mongodbDatabases) |
-| `Microsoft.DocumentDB/databaseAccounts/mongodbDatabases/collections` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/mongodbDatabases/collections) |
-| `Microsoft.DocumentDB/databaseAccounts/sqlDatabases` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/sqlDatabases) |
-| `Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/sqlDatabases/containers) |
-| `Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/sqlRoleAssignments) |
-| `Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments` | [2025-04-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2025-04-15/databaseAccounts/sqlRoleAssignments) |
-| `Microsoft.DocumentDB/databaseAccounts/sqlRoleDefinitions` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/sqlRoleDefinitions) |
-| `Microsoft.DocumentDB/databaseAccounts/tables` | [2024-11-15](https://learn.microsoft.com/en-us/azure/templates/Microsoft.DocumentDB/2024-11-15/databaseAccounts/tables) |
-| `Microsoft.GuestConfiguration/guestConfigurationAssignments` | [2020-06-25](https://learn.microsoft.com/en-us/azure/templates/Microsoft.GuestConfiguration/2020-06-25/guestConfigurationAssignments) |
-| `Microsoft.Insights/components` | [2020-02-02](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Insights/2020-02-02/components) |
-| `microsoft.insights/components/linkedStorageAccounts` | [2020-03-01-preview](https://learn.microsoft.com/en-us/azure/templates/microsoft.insights/2020-03-01-preview/components/linkedStorageAccounts) |
-| `Microsoft.Insights/dataCollectionRuleAssociations` | [2023-03-11](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Insights/2023-03-11/dataCollectionRuleAssociations) |
-| `Microsoft.Insights/diagnosticSettings` | [2021-05-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Insights/2021-05-01-preview/diagnosticSettings) |
-| `Microsoft.KeyVault/vaults` | [2024-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.KeyVault/2024-11-01/vaults) |
-| `Microsoft.KeyVault/vaults/accessPolicies` | [2024-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.KeyVault/2024-11-01/vaults/accessPolicies) |
-| `Microsoft.KeyVault/vaults/keys` | [2024-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.KeyVault/2024-11-01/vaults/keys) |
-| `Microsoft.KeyVault/vaults/secrets` | [2024-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.KeyVault/2024-11-01/vaults/secrets) |
-| `Microsoft.Maintenance/configurationAssignments` | [2023-04-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Maintenance/2023-04-01/configurationAssignments) |
-| `Microsoft.Network/applicationGateways` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/applicationGateways) |
-| `Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies` | [2024-03-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-03-01/ApplicationGatewayWebApplicationFirewallPolicies) |
-| `Microsoft.Network/azureFirewalls` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/azureFirewalls) |
-| `Microsoft.Network/firewallPolicies` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/firewallPolicies) |
-| `Microsoft.Network/firewallPolicies/ruleCollectionGroups` | [2023-04-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2023-04-01/firewallPolicies/ruleCollectionGroups) |
-| `Microsoft.Network/networkInterfaces` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/networkInterfaces) |
-| `Microsoft.Network/privateDnsZones` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones) |
-| `Microsoft.Network/privateDnsZones/A` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/A) |
-| `Microsoft.Network/privateDnsZones/AAAA` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/AAAA) |
-| `Microsoft.Network/privateDnsZones/CNAME` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/CNAME) |
-| `Microsoft.Network/privateDnsZones/MX` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/MX) |
-| `Microsoft.Network/privateDnsZones/PTR` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/PTR) |
-| `Microsoft.Network/privateDnsZones/SOA` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/SOA) |
-| `Microsoft.Network/privateDnsZones/SRV` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/SRV) |
-| `Microsoft.Network/privateDnsZones/TXT` | [2020-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2020-06-01/privateDnsZones/TXT) |
-| `Microsoft.Network/privateDnsZones/virtualNetworkLinks` | [2024-06-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-06-01/privateDnsZones/virtualNetworkLinks) |
-| `Microsoft.Network/privateEndpoints` | [2023-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2023-11-01/privateEndpoints) |
-| `Microsoft.Network/privateEndpoints` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/privateEndpoints) |
-| `Microsoft.Network/privateEndpoints/privateDnsZoneGroups` | [2023-11-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2023-11-01/privateEndpoints/privateDnsZoneGroups) |
-| `Microsoft.Network/privateEndpoints/privateDnsZoneGroups` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/privateEndpoints/privateDnsZoneGroups) |
-| `Microsoft.Network/publicIPAddresses` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/publicIPAddresses) |
-| `Microsoft.Network/virtualNetworks` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/virtualNetworks) |
-| `Microsoft.Network/virtualNetworks/subnets` | [2024-05-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-05-01/virtualNetworks/subnets) |
-| `Microsoft.Network/virtualNetworks/virtualNetworkPeerings` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Network/2024-01-01/virtualNetworks/virtualNetworkPeerings) |
-| `Microsoft.OperationalInsights/workspaces` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces) |
-| `Microsoft.OperationalInsights/workspaces/dataExports` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/dataExports) |
-| `Microsoft.OperationalInsights/workspaces/dataSources` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/dataSources) |
-| `Microsoft.OperationalInsights/workspaces/linkedServices` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/linkedServices) |
-| `Microsoft.OperationalInsights/workspaces/linkedStorageAccounts` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/linkedStorageAccounts) |
-| `Microsoft.OperationalInsights/workspaces/savedSearches` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/savedSearches) |
-| `Microsoft.OperationalInsights/workspaces/storageInsightConfigs` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/storageInsightConfigs) |
-| `Microsoft.OperationalInsights/workspaces/tables` | [2025-02-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationalInsights/2025-02-01/workspaces/tables) |
-| `Microsoft.OperationsManagement/solutions` | [2015-11-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.OperationsManagement/2015-11-01-preview/solutions) |
-| `Microsoft.RecoveryServices/vaults/backupFabrics/protectionContainers/protectedItems` | [2023-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.RecoveryServices/2023-01-01/vaults/backupFabrics/protectionContainers/protectedItems) |
-| `Microsoft.Resources/deploymentScripts` | [2023-08-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Resources/2023-08-01/deploymentScripts) |
-| `Microsoft.Search/searchServices` | [2025-02-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Search/2025-02-01-preview/searchServices) |
-| `Microsoft.Search/searchServices/sharedPrivateLinkResources` | [2025-02-01-preview](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Search/2025-02-01-preview/searchServices/sharedPrivateLinkResources) |
-| `Microsoft.SecurityInsights/onboardingStates` | [2024-03-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.SecurityInsights/2024-03-01/onboardingStates) |
-| `Microsoft.Storage/storageAccounts` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts) |
-| `Microsoft.Storage/storageAccounts/blobServices` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/blobServices) |
-| `Microsoft.Storage/storageAccounts/blobServices/containers` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/blobServices/containers) |
-| `Microsoft.Storage/storageAccounts/blobServices/containers/immutabilityPolicies` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/blobServices/containers/immutabilityPolicies) |
-| `Microsoft.Storage/storageAccounts/fileServices` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/fileServices) |
-| `Microsoft.Storage/storageAccounts/fileServices/shares` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/fileServices/shares) |
-| `Microsoft.Storage/storageAccounts/localUsers` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/localUsers) |
-| `Microsoft.Storage/storageAccounts/managementPolicies` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/managementPolicies) |
-| `Microsoft.Storage/storageAccounts/queueServices` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/queueServices) |
-| `Microsoft.Storage/storageAccounts/queueServices/queues` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/queueServices/queues) |
-| `Microsoft.Storage/storageAccounts/tableServices` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/tableServices) |
-| `Microsoft.Storage/storageAccounts/tableServices/tables` | [2024-01-01](https://learn.microsoft.com/en-us/azure/templates/Microsoft.Storage/2024-01-01/storageAccounts/tableServices/tables) |
-
-## Usage examples
-
-The following section provides usage examples for the module, which were used to validate and deploy the module successfully. For a full reference, please review the module's test folder in its repository.
-
->**Note**: Each example lists all the required parameters first, followed by the rest - each in alphabetical order.
-
->**Note**: To reference the module, please use the following syntax `br/public:avm/ptn/ai-ml/landing-zone:<version>`.
-
-- [Landing Zone - Share GenAI Backing Services](#example-1-landing-zone---share-genai-backing-services)
-- [Landing Zone - BYO Associated Resources](#example-2-landing-zone---byo-associated-resources)
-- [Landing Zone - Defaults](#example-3-landing-zone---defaults)
-
-### Example 1: _Landing Zone - Share GenAI Backing Services_
-
-Deploys GenAI backing services in the landing zone and shares all of them with AI Foundry.
-
-
-<details>
-
-<summary>via Bicep module</summary>
-
-```bicep
-module landingZone 'br/public:avm/ptn/ai-ml/landing-zone:<version>' = {
-  name: 'landingZoneDeployment'
-  params: {
-    aiFoundryDefinition: {
-      aiModelDeployments: [
-        {
-          model: {
-            format: 'OpenAI'
-            name: 'gpt-4o'
-            version: '2024-11-20'
-          }
-          name: 'gpt-4o'
-          scale: {
-            capacity: 1
-            family: ''
-            size: ''
-            tier: ''
-            type: 'Standard'
-          }
-        }
-      ]
-      aiProjects: []
-      aiSearchConfiguration: {}
-      cosmosDbConfiguration: {}
-      includeAssociatedResources: true
-      keyVaultConfiguration: {}
-      lock: {
-        kind: 'None'
-        name: ''
-      }
-      storageAccountConfiguration: {}
-    }
-    baseName: '<baseName>'
-    jumpVmAdminPassword: '<StrongP@ssw0rd!>'
-    shareResources: {
-      cosmosDb: true
-      keyVault: true
-      searchService: true
-      storageAccount: true
-    }
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via JSON parameters file</summary>
-
-```json
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "aiFoundryDefinition": {
-      "value": {
-        "aiModelDeployments": [
-          {
-            "model": {
-              "format": "OpenAI",
-              "name": "gpt-4o",
-              "version": "2024-11-20"
-            },
-            "name": "gpt-4o",
-            "scale": {
-              "capacity": 1,
-              "family": "",
-              "size": "",
-              "tier": "",
-              "type": "Standard"
-            }
-          }
-        ],
-        "aiProjects": [],
-        "aiSearchConfiguration": {},
-        "cosmosDbConfiguration": {},
-        "includeAssociatedResources": true,
-        "keyVaultConfiguration": {},
-        "lock": {
-          "kind": "None",
-          "name": ""
-        },
-        "storageAccountConfiguration": {}
-      }
-    },
-    "baseName": {
-      "value": "<baseName>"
-    },
-    "jumpVmAdminPassword": {
-      "value": "<StrongP@ssw0rd!>"
-    },
-    "shareResources": {
-      "value": {
-        "cosmosDb": true,
-        "keyVault": true,
-        "searchService": true,
-        "storageAccount": true
-      }
-    }
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via Bicep parameters file</summary>
-
-```bicep-params
-using 'br/public:avm/ptn/ai-ml/landing-zone:<version>'
-
-param aiFoundryDefinition = {
-  aiModelDeployments: [
-    {
-      model: {
-        format: 'OpenAI'
-        name: 'gpt-4o'
-        version: '2024-11-20'
-      }
-      name: 'gpt-4o'
-      scale: {
-        capacity: 1
-        family: ''
-        size: ''
-        tier: ''
-        type: 'Standard'
-      }
-    }
-  ]
-  aiProjects: []
-  aiSearchConfiguration: {}
-  cosmosDbConfiguration: {}
-  includeAssociatedResources: true
-  keyVaultConfiguration: {}
-  lock: {
-    kind: 'None'
-    name: ''
-  }
-  storageAccountConfiguration: {}
-}
-param baseName = '<baseName>'
-param jumpVmAdminPassword = '<StrongP@ssw0rd!>'
-param shareResources = {
-  cosmosDb: true
-  keyVault: true
-  searchService: true
-  storageAccount: true
-}
-```
-
-</details>
-<p>
-
-### Example 2: _Landing Zone - BYO Associated Resources_
-
-Deploys landing zone; AI Foundry uses existing Search/Storage/Cosmos. Runs twice (init + idem).
-
-
-<details>
-
-<summary>via Bicep module</summary>
-
-```bicep
-module landingZone 'br/public:avm/ptn/ai-ml/landing-zone:<version>' = {
-  name: 'landingZoneDeployment'
-  params: {
-    aiFoundryDefinition: {
-      aiModelDeployments: [
-        {
-          model: {
-            format: 'OpenAI'
-            name: 'gpt-4o'
-            version: '2024-11-20'
-          }
-          name: 'gpt-4o'
-          scale: {
-            capacity: 1
-            family: ''
-            size: ''
-            tier: ''
-            type: 'Standard'
-          }
-        }
-      ]
-      aiProjects: []
-      aiSearchConfiguration: {
-        existingResourceId: '<existingResourceId>'
-      }
-      cosmosDbConfiguration: {
-        existingResourceId: '<existingResourceId>'
-      }
-      includeAssociatedResources: true
-      keyVaultConfiguration: {}
-      lock: {
-        kind: 'None'
-        name: ''
-      }
-      storageAccountConfiguration: {
-        existingResourceId: '<existingResourceId>'
-      }
-    }
-    baseName: '<baseName>'
-    jumpVmAdminPassword: '<StrongP@ssw0rd!>'
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via JSON parameters file</summary>
-
-```json
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "aiFoundryDefinition": {
-      "value": {
-        "aiModelDeployments": [
-          {
-            "model": {
-              "format": "OpenAI",
-              "name": "gpt-4o",
-              "version": "2024-11-20"
-            },
-            "name": "gpt-4o",
-            "scale": {
-              "capacity": 1,
-              "family": "",
-              "size": "",
-              "tier": "",
-              "type": "Standard"
-            }
-          }
-        ],
-        "aiProjects": [],
-        "aiSearchConfiguration": {
-          "existingResourceId": "<existingResourceId>"
-        },
-        "cosmosDbConfiguration": {
-          "existingResourceId": "<existingResourceId>"
-        },
-        "includeAssociatedResources": true,
-        "keyVaultConfiguration": {},
-        "lock": {
-          "kind": "None",
-          "name": ""
-        },
-        "storageAccountConfiguration": {
-          "existingResourceId": "<existingResourceId>"
-        }
-      }
-    },
-    "baseName": {
-      "value": "<baseName>"
-    },
-    "jumpVmAdminPassword": {
-      "value": "<StrongP@ssw0rd!>"
-    }
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via Bicep parameters file</summary>
-
-```bicep-params
-using 'br/public:avm/ptn/ai-ml/landing-zone:<version>'
-
-param aiFoundryDefinition = {
-  aiModelDeployments: [
-    {
-      model: {
-        format: 'OpenAI'
-        name: 'gpt-4o'
-        version: '2024-11-20'
-      }
-      name: 'gpt-4o'
-      scale: {
-        capacity: 1
-        family: ''
-        size: ''
-        tier: ''
-        type: 'Standard'
-      }
-    }
-  ]
-  aiProjects: []
-  aiSearchConfiguration: {
-    existingResourceId: '<existingResourceId>'
-  }
-  cosmosDbConfiguration: {
-    existingResourceId: '<existingResourceId>'
-  }
-  includeAssociatedResources: true
-  keyVaultConfiguration: {}
-  lock: {
-    kind: 'None'
-    name: ''
-  }
-  storageAccountConfiguration: {
-    existingResourceId: '<existingResourceId>'
-  }
-}
-param baseName = '<baseName>'
-param jumpVmAdminPassword = '<StrongP@ssw0rd!>'
-```
-
-</details>
-<p>
-
-### Example 3: _Landing Zone - Defaults_
-
-Deploys the landing zone with defaults.
-
-
-<details>
-
-<summary>via Bicep module</summary>
-
-```bicep
-module landingZone 'br/public:avm/ptn/ai-ml/landing-zone:<version>' = {
-  name: 'landingZoneDeployment'
-  params: {
-    aiFoundryDefinition: {
-      aiModelDeployments: [
-        {
-          model: {
-            format: 'OpenAI'
-            name: 'gpt-4o'
-            version: '2024-11-20'
-          }
-          name: 'gpt-4o'
-          scale: {
-            capacity: 1
-            family: ''
-            size: ''
-            tier: ''
-            type: 'Standard'
-          }
-        }
-      ]
-      aiProjects: []
-      aiSearchConfiguration: {}
-      cosmosDbConfiguration: {}
-      includeAssociatedResources: true
-      keyVaultConfiguration: {}
-      lock: {
-        kind: 'None'
-        name: ''
-      }
-      storageAccountConfiguration: {}
-    }
-    baseName: '<baseName>'
-    jumpVmAdminPassword: '<StrongP@ssw0rd!>'
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via JSON parameters file</summary>
-
-```json
-{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "aiFoundryDefinition": {
-      "value": {
-        "aiModelDeployments": [
-          {
-            "model": {
-              "format": "OpenAI",
-              "name": "gpt-4o",
-              "version": "2024-11-20"
-            },
-            "name": "gpt-4o",
-            "scale": {
-              "capacity": 1,
-              "family": "",
-              "size": "",
-              "tier": "",
-              "type": "Standard"
-            }
-          }
-        ],
-        "aiProjects": [],
-        "aiSearchConfiguration": {},
-        "cosmosDbConfiguration": {},
-        "includeAssociatedResources": true,
-        "keyVaultConfiguration": {},
-        "lock": {
-          "kind": "None",
-          "name": ""
-        },
-        "storageAccountConfiguration": {}
-      }
-    },
-    "baseName": {
-      "value": "<baseName>"
-    },
-    "jumpVmAdminPassword": {
-      "value": "<StrongP@ssw0rd!>"
-    }
-  }
-}
-```
-
-</details>
-<p>
-
-<details>
-
-<summary>via Bicep parameters file</summary>
-
-```bicep-params
-using 'br/public:avm/ptn/ai-ml/landing-zone:<version>'
-
-param aiFoundryDefinition = {
-  aiModelDeployments: [
-    {
-      model: {
-        format: 'OpenAI'
-        name: 'gpt-4o'
-        version: '2024-11-20'
-      }
-      name: 'gpt-4o'
-      scale: {
-        capacity: 1
-        family: ''
-        size: ''
-        tier: ''
-        type: 'Standard'
-      }
-    }
-  ]
-  aiProjects: []
-  aiSearchConfiguration: {}
-  cosmosDbConfiguration: {}
-  includeAssociatedResources: true
-  keyVaultConfiguration: {}
-  lock: {
-    kind: 'None'
-    name: ''
-  }
-  storageAccountConfiguration: {}
-}
-param baseName = '<baseName>'
-param jumpVmAdminPassword = '<StrongP@ssw0rd!>'
-```
-
-</details>
-<p>
+| `Microsoft.ApiManagement/service` | 2024-05-01 |
+| `Microsoft.App/containerApps` | 2025-01-01 |
+| `Microsoft.App/managedEnvironments` | 2024-10-02-preview |
+| `Microsoft.App/managedEnvironments/storages` | 2024-10-02-preview |
+| `Microsoft.AppConfiguration/configurationStores` | 2024-06-01 |
+| `Microsoft.Authorization/locks` | 2020-05-01 |
+| `Microsoft.Authorization/roleAssignments` | 2022-04-01 |
+| `Microsoft.Automanage/configurationProfileAssignments` | 2022-05-04 |
+| `Microsoft.Bing/accounts` | 2025-05-01-preview |
+| `Microsoft.CognitiveServices/accounts/connections` | 2025-06-01 |
+| `Microsoft.Compute/disks` | 2024-03-02 |
+| `Microsoft.Compute/virtualMachines` | 2024-07-01 |
+| `Microsoft.ContainerRegistry/registries` | 2023-06-01-preview |
+| `Microsoft.DevTestLab/schedules` | 2018-09-15 |
+| `Microsoft.DocumentDB/databaseAccounts` | 2024-11-15 |
+| `Microsoft.GuestConfiguration/guestConfigurationAssignments` | 2024-04-05 |
+| `Microsoft.Insights/components` | 2020-02-02 |
+| `Microsoft.Insights/dataCollectionRuleAssociations` | 2023-03-11 |
+| `Microsoft.Insights/diagnosticSettings` | 2021-05-01-preview |
+| `Microsoft.KeyVault/vaults` | 2024-11-01 |
+| `Microsoft.KeyVault/vaults/keys` | 2024-11-01 |
+| `Microsoft.Maintenance/configurationAssignments` | 2023-04-01 |
+| `Microsoft.Maintenance/maintenanceConfigurations` | 2023-04-01 |
+| `Microsoft.ManagedIdentity/userAssignedIdentities` | 2024-11-30 |
+| `Microsoft.Network/applicationGateways` | 2024-07-01 |
+| `Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies` | 2024-01-01 |
+| `Microsoft.Network/azureFirewalls` | 2024-05-01 |
+| `Microsoft.Network/firewallPolicies` | 2024-05-01 |
+| `Microsoft.Network/networkSecurityGroups` | 2023-11-01 |
+| `Microsoft.Network/privateDnsZones` | 2020-06-01 |
+| `Microsoft.Network/privateEndpoints` | 2024-05-01 |
+| `Microsoft.Network/publicIPAddresses` | 2024-05-01 |
+| `Microsoft.Network/virtualNetworks` | 2024-05-01 |
+| `Microsoft.Network/virtualNetworks/subnets` | 2023-11-01 |
+| `Microsoft.Network/virtualNetworks/virtualNetworkPeerings` | 2024-03-01 |
+| `Microsoft.OperationalInsights/workspaces` | 2025-02-01 |
+| `Microsoft.Resources/deployments` | 2022-09-01 |
+| `Microsoft.Search/searchServices` | 2025-02-01-preview |
+| `Microsoft.SecurityInsights/onboardingStates` | 2024-03-01 |
+| `Microsoft.Storage/storageAccounts` | 2024-01-01 |
 
 ## Parameters
 
-**Required parameters**
-
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`location`](#parameter-location) | string |  Azure region for AI Foundry resources. Defaults to the resource group location. |
-| [`vnetDefinition`](#parameter-vnetdefinition) | object |  Virtual Network configuration (created when not reusing an existing VNet). |
-
-**Conditional parameters**
-
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`apimDefinition`](#parameter-apimdefinition) | object |  API Management configuration (used when APIM is deployed). |
-| [`appConfigurationDefinition`](#parameter-appconfigurationdefinition) | object |  App Configuration store settings (used when App Configuration is deployed). |
-| [`appGatewayDefinition`](#parameter-appgatewaydefinition) | object |  Application Gateway configuration (used when AGW is deployed). |
-| [`appInsightsDefinition`](#parameter-appinsightsdefinition) | object |  Application Insights configuration (used when App Insights is deployed). |
-| [`bastionKeyVaultDefinition`](#parameter-bastionkeyvaultdefinition) | object |  Dedicated Key Vault for JumpVM secrets (public network). |
-| [`containerAppEnvDefinition`](#parameter-containerappenvdefinition) | object |  Container App Environment configuration (used when Container Apps are deployed). |
-| [`containerRegistryDefinition`](#parameter-containerregistrydefinition) | object |  Container Registry configuration (used when ACR is deployed). |
-| [`cosmosDbDefinition`](#parameter-cosmosdbdefinition) | object |  Cosmos DB account configuration for the GenAI app (used when Cosmos DB is deployed). |
-| [`firewallDefinition`](#parameter-firewalldefinition) | object |  Azure Firewall configuration (used when Firewall is deployed). |
-| [`hubVnetPeeringDefinition`](#parameter-hubvnetpeeringdefinition) | object |  Hub VNet peering configuration (required only when establishing hub-spoke peering). |
-| [`jumpVmAdminPassword`](#parameter-jumpvmadminpassword) | securestring | Required when deploying Jump VM. Local admin password to set on the Windows JumpVM. |
-| [`keyVaultDefinition`](#parameter-keyvaultdefinition) | object |  Key Vault configuration for the GenAI app (used when KV is deployed). |
-| [`logAnalyticsDefinition`](#parameter-loganalyticsdefinition) | object |  Log Analytics Workspace configuration (required if you deploy App Insights and are not reusing an existing workspace). |
-| [`privateDnsZoneIds`](#parameter-privatednszoneids) | object |  Existing Private DNS Zone resource IDs per service; provide to reuse, or leave empty to create. |
-| [`privateDnsZones`](#parameter-privatednszones) | object |  Private DNS Zones and VNet links configuration (used when creating zones). |
-| [`searchDefinition`](#parameter-searchdefinition) | object |  Azure AI Search configuration for the GenAI app (used when Search is deployed). |
-| [`storageAccountDefinition`](#parameter-storageaccountdefinition) | object |  Storage Account configuration for the GenAI app (used when Storage is deployed). |
-| [`wafPolicyDefinition`](#parameter-wafpolicydefinition) | object |  Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed). |
-
-**Optional parameters**
-
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`aiFoundryDefinition`](#parameter-aifoundrydefinition) | object |  AI Foundry project configuration (account/project, networking, associated resources, and deployments). |
-| [`azdoPat`](#parameter-azdopat) | securestring | PAT used to register the Azure DevOps agent (when runner = azdo). |
-| [`baseName`](#parameter-basename) | string |  Base name to seed resource names; defaults to a 12-char token. |
-| [`buildVmDefinition`](#parameter-buildvmdefinition) | object |  Build VM configuration to support CI/CD workers (Linux). |
-| [`containerAppsList`](#parameter-containerappslist) | array | List of Container Apps to create. |
-| [`deployGenAiAppBackingServices`](#parameter-deploygenaiappbackingservices) | bool |  Deploy GenAI app services; defaults to true. |
-| [`deployToggles`](#parameter-deploytoggles) | object |  Per-service deployment toggles; set false to skip creating a service. Reuse still works via resourceIds. |
-| [`enableTelemetry`](#parameter-enabletelemetry) | bool |  Enable module telemetry. See https://aka.ms/avm/telemetryinfo. |
-| [`firewallPolicyDefinition`](#parameter-firewallpolicydefinition) | object |  Azure Firewall Policy configuration (only used if your deployment wires a policy). |
-| [`flagPlatformLandingZone`](#parameter-flagplatformlandingzone) | bool |  Enable platform landing zone integration. |
-| [`githubPat`](#parameter-githubpat) | securestring | PAT used to request a GitHub runner registration token (when runner = github). |
-| [`jumpVmDefinition`](#parameter-jumpvmdefinition) | object |  Jump (bastion) VM configuration (Windows). |
-| [`networkIsolation`](#parameter-networkisolation) | bool | Enable network isolation posture (Private Endpoints + Private DNS). |
-| [`resourceIds`](#parameter-resourceids) | object |  Existing resource IDs to reuse; leave empty to create new resources. |
-| [`resourceToken`](#parameter-resourcetoken) | string |  Deterministic token for resource names; auto-generated if not provided. |
-| [`shareResources`](#parameter-shareresources) | object | Share services between the GenAI app and AI Foundry (Search, KV, Cosmos DB, Storage). |
-| [`tags`](#parameter-tags) | object |  Tags applied to all deployed resources. |
-
-### Parameter: `location`
-
- Azure region for AI Foundry resources. Defaults to the resource group location.
-
-- Required: No
-- Type: string
-- Default: `[resourceGroup().location]`
-
-### Parameter: `vnetDefinition`
-
- Virtual Network configuration (created when not reusing an existing VNet).
-
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      addressSpace: '192.168.0.0/16'
-      dnsServers: []
-      name: ''
-      subnets: [
-        {
-          addressPrefix: '192.168.0.0/24'
-          delegation: 'Microsoft.app/environments'
-          enabled: true
-          name: 'agent-subnet'
-          serviceEndpoints: [
-            'Microsoft.CognitiveServices'
-          ]
-        }
-        {
-          addressPrefix: '192.168.1.0/24'
-          enabled: true
-          name: 'pe-subnet'
-          serviceEndpoints: [
-            'Microsoft.AzureCosmosDB'
-          ]
-        }
-        {
-          addressPrefix: '192.168.2.0/26'
-          enabled: true
-          name: 'gateway-subnet'
-        }
-        {
-          addressPrefix: '192.168.2.64/26'
-          enabled: true
-          name: 'AzureBastionSubnet'
-        }
-        {
-          addressPrefix: '192.168.2.128/26'
-          enabled: true
-          name: 'AzureFirewallSubnet'
-        }
-        {
-          addressPrefix: '192.168.3.0/24'
-          enabled: true
-          name: 'AppGatewaySubnet'
-        }
-        {
-          addressPrefix: '192.168.4.0/27'
-          enabled: true
-          name: 'jumpbox-subnet'
-        }
-        {
-          addressPrefix: '192.168.4.64/27'
-          delegation: 'Microsoft.app/environments'
-          enabled: true
-          name: 'aca-environment-subnet'
-          serviceEndpoints: [
-            'Microsoft.AzureCosmosDB'
-          ]
-        }
-        {
-          addressPrefix: '192.168.4.96/27'
-          enabled: true
-          name: 'devops-build-agents-subnet'
-        }
-      ]
-      tags: {}
-  }
-  ```
-
-**Required parameters**
+### Required Parameters
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`addressSpace`](#parameter-vnetdefinitionaddressspace) | string | VNet CIDR address space (e.g., 192.168.0.0/16). |
-| [`subnets`](#parameter-vnetdefinitionsubnets) | array | Subnet definitions for the VNet. |
+### `deployToggles`
 
-**Optional parameters**
-
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`ddosProtectionPlanResourceId`](#parameter-vnetdefinitionddosprotectionplanresourceid) | string | Resource ID of an existing DDoS Protection Plan to associate. |
-| [`dnsServers`](#parameter-vnetdefinitiondnsservers) | array | Custom DNS server IP addresses for the VNet. |
-| [`name`](#parameter-vnetdefinitionname) | string | VNet name. If empty, a deterministic name is generated. |
-| [`tags`](#parameter-vnetdefinitiontags) | object | Tags to apply to the VNet. |
-| [`vnetPeeringConfiguration`](#parameter-vnetdefinitionvnetpeeringconfiguration) | object | Peering configuration to another VNet (hub/spoke). |
-| [`vwanHubPeeringConfiguration`](#parameter-vnetdefinitionvwanhubpeeringconfiguration) | object | Peering configuration to a Virtual WAN hub. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `deployToggles` | `object` | Required | Per-service deployment toggles. |
 
-### Parameter: `vnetDefinition.addressSpace`
-
-VNet CIDR address space (e.g., 192.168.0.0/16).
+**Properties:**
 
-- Required: Yes
-- Type: string
+- **`acaEnvironmentNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for Azure Container Apps environment subnet (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets`
+- **`agentNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for agent (workload) subnet (true) or not (false).
 
-Subnet definitions for the VNet.
+- **`apiManagement`** (`bool`) - Required
+  - **Description:** Toggle to deploy API Management (true) or not (false).
 
-- Required: Yes
-- Type: array
+- **`apiManagementNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for API Management subnet (true) or not (false).
 
-**Required parameters**
+- **`appConfig`** (`bool`) - Required
+  - **Description:** Toggle to deploy App Configuration (true) or not (false).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`addressPrefix`](#parameter-vnetdefinitionsubnetsaddressprefix) | string | Subnet address prefix in CIDR notation (e.g., 10.0.1.0/24). |
-| [`enabled`](#parameter-vnetdefinitionsubnetsenabled) | bool | Enables (true) or disables (false) creation/use of this subnet. |
-| [`name`](#parameter-vnetdefinitionsubnetsname) | string | Subnet name. |
+- **`appInsights`** (`bool`) - Required
+  - **Description:** Toggle to deploy Application Insights (true) or not (false).
 
-**Optional parameters**
+- **`applicationGateway`** (`bool`) - Required
+  - **Description:** Toggle to deploy Application Gateway (true) or not (false).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`delegation`](#parameter-vnetdefinitionsubnetsdelegation) | string | Service delegation for the subnet (resource provider/type). |
-| [`natGatewayResourceId`](#parameter-vnetdefinitionsubnetsnatgatewayresourceid) | string | Resource ID of an associated NAT Gateway. |
-| [`privateEndpointNetworkPolicies`](#parameter-vnetdefinitionsubnetsprivateendpointnetworkpolicies) | string | Whether private endpoint network policies are Enabled or Disabled. |
-| [`privateLinkServiceNetworkPolicies`](#parameter-vnetdefinitionsubnetsprivatelinkservicenetworkpolicies) | string | Whether private link service network policies are Enabled or Disabled. |
-| [`serviceEndpoints`](#parameter-vnetdefinitionsubnetsserviceendpoints) | array | Service endpoints to enable for this subnet. |
+- **`applicationGatewayNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for Application Gateway subnet (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.addressPrefix`
+- **`applicationGatewayPublicIp`** (`bool`) - Required
+  - **Description:** Toggle to deploy a Public IP address for the Application Gateway (true) or not (false).
 
-Subnet address prefix in CIDR notation (e.g., 10.0.1.0/24).
+- **`bastionHost`** (`bool`) - Required
+  - **Description:** Toggle to deploy an Azure Bastion host (true) or not (false).
 
-- Required: Yes
-- Type: string
+- **`buildVm`** (`bool`) - Required
+  - **Description:** Toggle to deploy Build VM (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.enabled`
+- **`containerApps`** (`bool`) - Required
+  - **Description:** Toggle to deploy Container Apps (true) or not (false).
 
-Enables (true) or disables (false) creation/use of this subnet.
+- **`containerEnv`** (`bool`) - Required
+  - **Description:** Toggle to deploy Container Apps Environment (true) or not (false).
 
-- Required: Yes
-- Type: bool
+- **`containerRegistry`** (`bool`) - Required
+  - **Description:** Toggle to deploy Azure Container Registry (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.name`
+- **`cosmosDb`** (`bool`) - Required
+  - **Description:** Toggle to deploy Cosmos DB (true) or not (false).
 
-Subnet name.
+- **`devopsBuildAgentsNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for DevOps build agents subnet (true) or not (false).
 
-- Required: Yes
-- Type: string
+- **`firewall`** (`bool`) - Required
+  - **Description:** Toggle to deploy Azure Firewall (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.delegation`
+- **`groundingWithBingSearch`** (`bool`) - Required
+  - **Description:** Toggle to deploy Bing Grounding with Search (true) or not (false).
 
-Service delegation for the subnet (resource provider/type).
+- **`jumpboxNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for jumpbox (bastion-accessed) subnet (true) or not (false).
 
-- Required: No
-- Type: string
+- **`jumpVm`** (`bool`) - Required
+  - **Description:** Toggle to deploy Jump VM (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.natGatewayResourceId`
+- **`keyVault`** (`bool`) - Required
+  - **Description:** Toggle to deploy Key Vault (true) or not (false).
 
-Resource ID of an associated NAT Gateway.
+- **`logAnalytics`** (`bool`) - Required
+  - **Description:** Toggle to deploy Log Analytics (true) or not (false).
 
-- Required: No
-- Type: string
+- **`peNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for private endpoints (PE) subnet (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.privateEndpointNetworkPolicies`
+- **`searchService`** (`bool`) - Required
+  - **Description:** Toggle to deploy Azure AI Search (true) or not (false).
 
-Whether private endpoint network policies are Enabled or Disabled.
+- **`storageAccount`** (`bool`) - Required
+  - **Description:** Toggle to deploy Storage Account (true) or not (false).
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Disabled'
-    'Enabled'
-  ]
-  ```
+- **`virtualNetwork`** (`bool`) - Required
+  - **Description:** Toggle to deploy a new Virtual Network (true) or not (false).
 
-### Parameter: `vnetDefinition.subnets.privateLinkServiceNetworkPolicies`
+- **`wafPolicy`** (`bool`) - Required
+  - **Description:** Toggle to deploy an Application Gateway WAF policy (true) or not (false).
 
-Whether private link service network policies are Enabled or Disabled.
+### Conditional Parameters
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Disabled'
-    'Enabled'
-  ]
-  ```
+### `appConfigurationDefinition`
 
-### Parameter: `vnetDefinition.subnets.serviceEndpoints`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appConfigurationDefinition` | `object` | Conditional | App Configuration store settings. Required if deploy.appConfig is true and resourceIds.appConfigResourceId is empty. |
 
-Service endpoints to enable for this subnet.
+**Properties:**
 
-- Required: No
-- Type: array
+- **`createMode`** (`string`) - Optional
+  - **Description:** Indicates whether the configuration store needs to be recovered.
 
-### Parameter: `vnetDefinition.ddosProtectionPlanResourceId`
+- **`customerManagedKey`** (`object`) - Optional
+  - **Description:** Customer Managed Key definition.
+  - **`autoRotationEnabled`** (`bool`) - Optional
+    - **Description:** Enable or disable auto-rotation (default true).
 
-Resource ID of an existing DDoS Protection Plan to associate.
+  - **`keyName`** (`string`) - Required
+    - **Description:** Key name used for encryption.
 
-- Required: No
-- Type: string
+  - **`keyVaultResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the Key Vault containing the key.
 
-### Parameter: `vnetDefinition.dnsServers`
+  - **`keyVersion`** (`string`) - Optional
+    - **Description:** Specific key version to use.
 
-Custom DNS server IP addresses for the VNet.
+  - **`userAssignedIdentityResourceId`** (`string`) - Optional
+    - **Description:** User-assigned identity resource ID if system identity is not available.
 
-- Required: No
-- Type: array
 
-### Parameter: `vnetDefinition.name`
+- **`dataPlaneProxy`** (`object`) - Optional
+  - **Description:** Data plane proxy configuration for ARM.
+  - **`authenticationMode`** (`string`) - Optional
+    - **Description:** Authentication mode for data plane proxy.
 
-VNet name. If empty, a deterministic name is generated.
+  - **`privateLinkDelegation`** (`string`) - Required
+    - **Description:** Whether private link delegation is enabled.
 
-- Required: No
-- Type: string
 
-### Parameter: `vnetDefinition.tags`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the service.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic event hub authorization rule.
 
-Tags to apply to the VNet.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Name of the diagnostic Event Hub.
 
-- Required: No
-- Type: object
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Destination type for Log Analytics. Allowed values: AzureDiagnostics, Dedicated.
 
-**Required parameters**
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups to stream.
+    - **`category`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-vnetdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category group.
 
-### Parameter: `vnetDefinition.tags.>Any_other_property<`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the category. Default true.
 
-Arbitrary key for each tag.
 
-- Required: Yes
-- Type: string
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for appConfigurationDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration`
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID.
 
-Peering configuration to another VNet (hub/spoke).
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories to stream.
+    - **`category`** (`string`) - Required
+      - **Description:** Diagnostic metric category name.
 
-- Required: No
-- Type: object
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the metric category. Default true.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`allowForwardedTraffic`](#parameter-vnetdefinitionvnetpeeringconfigurationallowforwardedtraffic) | bool | Allow forwarded traffic across the peering. |
-| [`allowGatewayTransit`](#parameter-vnetdefinitionvnetpeeringconfigurationallowgatewaytransit) | bool | Allow gateway transit across the peering. |
-| [`allowVirtualNetworkAccess`](#parameter-vnetdefinitionvnetpeeringconfigurationallowvirtualnetworkaccess) | bool | Allow virtual network access across the peering. |
-| [`createReversePeering`](#parameter-vnetdefinitionvnetpeeringconfigurationcreatereversepeering) | bool | Create the reverse peering from hub back to this VNet. |
-| [`peerVnetResourceId`](#parameter-vnetdefinitionvnetpeeringconfigurationpeervnetresourceid) | string | Resource ID of the peer virtual network. |
-| [`reverseAllowForwardedTraffic`](#parameter-vnetdefinitionvnetpeeringconfigurationreverseallowforwardedtraffic) | bool | Reverse peering: allow forwarded traffic. |
-| [`reverseAllowGatewayTransit`](#parameter-vnetdefinitionvnetpeeringconfigurationreverseallowgatewaytransit) | bool | Reverse peering: allow gateway transit. |
-| [`reverseAllowVirtualNetworkAccess`](#parameter-vnetdefinitionvnetpeeringconfigurationreverseallowvirtualnetworkaccess) | bool | Reverse peering: allow virtual network access. |
-| [`reverseUseRemoteGateways`](#parameter-vnetdefinitionvnetpeeringconfigurationreverseuseremotegateways) | bool | Reverse peering: use remote gateways. |
-| [`useRemoteGateways`](#parameter-vnetdefinitionvnetpeeringconfigurationuseremotegateways) | bool | Use remote gateways on the spoke peering. |
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for appConfigurationDefinition.diagnosticSettings[*].metricCategories
 
-**Optional parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Diagnostic setting name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`firewallIpAddress`](#parameter-vnetdefinitionvnetpeeringconfigurationfirewallipaddress) | string | Hub firewall private IP address used for routing (if applicable). |
-| [`name`](#parameter-vnetdefinitionvnetpeeringconfigurationname) | string | Name of the spoke-to-hub peering. |
-| [`reverseName`](#parameter-vnetdefinitionvnetpeeringconfigurationreversename) | string | Name of the reverse peering (hub->spoke). |
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Storage account resource ID for diagnostic logs.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.allowForwardedTraffic`
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Log Analytics workspace resource ID for diagnostic logs.
 
-Allow forwarded traffic across the peering.
 
-- Required: Yes
-- Type: bool
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigurationDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.allowGatewayTransit`
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category group.
 
-Allow gateway transit across the peering.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the category. Default true.
 
-- Required: Yes
-- Type: bool
+  - **`category`** (`string`) - Required
+    - **Description:** Diagnostic metric category name.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.allowVirtualNetworkAccess`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the metric category. Default true.
 
-Allow virtual network access across the peering.
 
-- Required: Yes
-- Type: bool
+- **`disableLocalAuth`** (`bool`) - Optional
+  - **Description:** Disable all non-AAD authentication methods.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.createReversePeering`
+- **`enablePurgeProtection`** (`bool`) - Optional
+  - **Description:** Enable purge protection (default true, except Free SKU).
 
-Create the reverse peering from hub back to this VNet.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for module.
 
-- Required: Yes
-- Type: bool
+- **`keyValues`** (`array`) - Optional
+  - **Description:** List of key/values to create (requires local auth).
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.peerVnetResourceId`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource (default resourceGroup().location).
 
-Resource ID of the peer virtual network.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.reverseAllowForwardedTraffic`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-Reverse peering: allow forwarded traffic.
 
-- Required: Yes
-- Type: bool
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity configuration.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enable system-assigned managed identity.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.reverseAllowGatewayTransit`
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs.
 
-Reverse peering: allow gateway transit.
 
-- Required: Yes
-- Type: bool
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Azure App Configuration.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.reverseAllowVirtualNetworkAccess`
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Private endpoint configuration.
+  - **`applicationSecurityGroupResourceIds`** (`array`) - Optional
+    - **Description:** Application Security Group resource IDs.
 
-Reverse peering: allow virtual network access.
+  - **`customDnsConfigs`** (`array`) - Optional
+    - **Description:** Custom DNS configs.
+    - **`fqdn`** (`string`) - Optional
+      - **Description:** FQDN that maps to the private IPs.
 
-- Required: Yes
-- Type: bool
+    - **`ipAddresses`** (`array`) - Required
+      - **Description:** Private IP addresses for the endpoint.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.reverseUseRemoteGateways`
 
-Reverse peering: use remote gateways.
+  - **`customDnsConfigs[*]`** (`object`) - Optional
+    - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].customDnsConfigs
 
-- Required: Yes
-- Type: bool
+  - **`customNetworkInterfaceName`** (`string`) - Optional
+    - **Description:** Custom network interface name.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.useRemoteGateways`
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for the module.
 
-Use remote gateways on the spoke peering.
+  - **`ipConfigurations`** (`array`) - Optional
+    - **Description:** Explicit IP configurations for the Private Endpoint.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of this IP configuration.
 
-- Required: Yes
-- Type: bool
+    - **`properties`** (`object`) - Required
+      - **Description:** Object defining groupId, memberName, and privateIPAddress for the private endpoint IP configuration.
+      - **`groupId`** (`string`) - Required
+        - **Description:** Group ID from the remote resource.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.firewallIpAddress`
+      - **`memberName`** (`string`) - Required
+        - **Description:** Member name from the remote resource.
 
-Hub firewall private IP address used for routing (if applicable).
+      - **`privateIPAddress`** (`string`) - Required
+        - **Description:** Private IP address from the PE subnet.
 
-- Required: No
-- Type: string
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.name`
 
-Name of the spoke-to-hub peering.
+  - **`ipConfigurations[*]`** (`object`) - Optional
+    - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].ipConfigurations
+    - **`groupId`** (`string`) - Required
+      - **Description:** Group ID from the remote resource.
 
-- Required: No
-- Type: string
+    - **`memberName`** (`string`) - Required
+      - **Description:** Member name from the remote resource.
 
-### Parameter: `vnetDefinition.vnetPeeringConfiguration.reverseName`
+    - **`privateIPAddress`** (`string`) - Required
+      - **Description:** Private IP address from the PE subnet.
 
-Name of the reverse peering (hub->spoke).
 
-- Required: No
-- Type: string
+  - **`isManualConnection`** (`bool`) - Optional
+    - **Description:** Use manual Private Link approval flow.
 
-### Parameter: `vnetDefinition.vwanHubPeeringConfiguration`
+  - **`location`** (`string`) - Optional
+    - **Description:** Location to deploy the Private Endpoint to.
 
-Peering configuration to a Virtual WAN hub.
+  - **`lock`** (`object`) - Optional
+    - **Description:** Lock settings for the Private Endpoint.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type.
 
-- Required: No
-- Type: object
+    - **`name`** (`string`) - Optional
+      - **Description:** Lock name.
 
-**Required parameters**
+    - **`notes`** (`string`) - Optional
+      - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`peerVwanHubResourceId`](#parameter-vnetdefinitionvwanhubpeeringconfigurationpeervwanhubresourceid) | string | Resource ID of the target Virtual WAN hub. |
 
-### Parameter: `vnetDefinition.vwanHubPeeringConfiguration.peerVwanHubResourceId`
+  - **`manualConnectionRequestMessage`** (`string`) - Optional
+    - **Description:** Manual connection request message.
 
-Resource ID of the target Virtual WAN hub.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Private Endpoint resource.
 
-- Required: Yes
-- Type: string
+  - **`privateDnsZoneGroup`** (`object`) - Optional
+    - **Description:** Private DNS Zone group configuration.
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the Private DNS Zone group.
 
-### Parameter: `apimDefinition`
+    - **`privateDnsZoneGroupConfigs`** (`array`) - Required
+      - **Description:** Configs for linking PDNS zones.
+      - **`name`** (`string`) - Optional
+        - **Description:** Name of this DNS zone config.
 
- API Management configuration (used when APIM is deployed).
+      - **`privateDnsZoneResourceId`** (`string`) - Required
+        - **Description:** Private DNS Zone resource ID.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      additionalLocations: {}
-      certificate: {}
-      clientCertificateEnabled: false
-      hostnameConfiguration: {
-        developerPortal: {}
-        management: {}
-        portal: {}
-        proxy: {}
-        scm: {}
-      }
-      minApiVersion: '2019-12-01'
-      name: ''
-      notificationSenderEmail: 'apimgmt-noreply@azure.com'
-      protocols: {
-        enableHttp2: true
-      }
-      publisherEmail: 'admin@example.com'
-      publisherName: 'Contoso'
-      roleAssignments: []
-      signIn: {
-        enabled: true
-      }
-      signUp: {
-        enabled: false
-        termsOfService: {
-          consentRequired: false
-          enabled: false
-          text: ''
-        }
-      }
-      skuCapacity: 1
-      skuRoot: 'Developer'
-      tags: {}
-      tenantAccess: {
-        enabled: true
-      }
-  }
-  ```
 
-**Required parameters**
+    - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
+      - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`clientCertificateEnabled`](#parameter-apimdefinitionclientcertificateenabled) | bool | Enable client certificate authentication for gateway. |
-| [`publisherEmail`](#parameter-apimdefinitionpublisheremail) | string | Publisher email address. |
-| [`publisherName`](#parameter-apimdefinitionpublishername) | string | Publisher display name. |
-| [`signIn`](#parameter-apimdefinitionsignin) | object | Sign-in configuration for the developer portal. |
-| [`signUp`](#parameter-apimdefinitionsignup) | object | Sign-up configuration for the developer portal. |
-| [`skuCapacity`](#parameter-apimdefinitionskucapacity) | int | Capacity for the chosen SKU. |
-| [`tenantAccess`](#parameter-apimdefinitiontenantaccess) | object | Tenant access configuration for the management plane. |
 
-**Optional parameters**
+  - **`privateLinkServiceConnectionName`** (`string`) - Optional
+    - **Description:** Private Link service connection name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`additionalLocations`](#parameter-apimdefinitionadditionallocations) | object | Additional regions for API Management. |
-| [`certificate`](#parameter-apimdefinitioncertificate) | object | Certificates for API Management endpoints. |
-| [`hostnameConfiguration`](#parameter-apimdefinitionhostnameconfiguration) | object | Hostname configuration for all endpoints. |
-| [`minApiVersion`](#parameter-apimdefinitionminapiversion) | string | Minimum ARM API version to use for APIM operations. |
-| [`name`](#parameter-apimdefinitionname) | string | API Management service name. |
-| [`notificationSenderEmail`](#parameter-apimdefinitionnotificationsenderemail) | string | Sender email address used by APIM system notifications. |
-| [`protocols`](#parameter-apimdefinitionprotocols) | object | Protocol options. |
-| [`roleAssignments`](#parameter-apimdefinitionroleassignments) | array | Role assignments to create on the API Management service. |
-| [`skuRoot`](#parameter-apimdefinitionskuroot) | string | SKU for API Management (Developer/Basic/Standard/Premium/Consumption/V2 variants). |
-| [`tags`](#parameter-apimdefinitiontags) | object | Tags to apply to the API Management service. |
+  - **`resourceGroupResourceId`** (`string`) - Optional
+    - **Description:** Resource group resource ID to place the PE in.
 
-### Parameter: `apimDefinition.clientCertificateEnabled`
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the Private Endpoint.
 
-Enable client certificate authentication for gateway.
+  - **`service`** (`string`) - Optional
+    - **Description:** Target service group ID (as string).
 
-- Required: Yes
-- Type: bool
+  - **`subnetResourceId`** (`string`) - Required
+    - **Description:** Subnet resource ID for the private endpoint.
 
-### Parameter: `apimDefinition.publisherEmail`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the Private Endpoint.
 
-Publisher email address.
 
-- Required: Yes
-- Type: string
+- **`privateEndpoints[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigurationDefinition.privateEndpoints
+  - **`fqdn`** (`string`) - Optional
+    - **Description:** FQDN that maps to the private IPs.
 
-### Parameter: `apimDefinition.publisherName`
+  - **`ipAddresses`** (`array`) - Required
+    - **Description:** Private IP addresses for the endpoint.
 
-Publisher display name.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of this IP configuration.
 
-- Required: Yes
-- Type: string
+  - **`properties`** (`object`) - Required
+    - **Description:** Object defining groupId, memberName, and privateIPAddress for the private endpoint IP configuration.
+    - **`groupId`** (`string`) - Required
+      - **Description:** Group ID from the remote resource.
 
-### Parameter: `apimDefinition.signIn`
+    - **`memberName`** (`string`) - Required
+      - **Description:** Member name from the remote resource.
 
-Sign-in configuration for the developer portal.
+    - **`privateIPAddress`** (`string`) - Required
+      - **Description:** Private IP address from the PE subnet.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+  - **`groupId`** (`string`) - Required
+    - **Description:** Group ID from the remote resource.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enabled`](#parameter-apimdefinitionsigninenabled) | bool | Enable sign-in on developer portal. |
+  - **`memberName`** (`string`) - Required
+    - **Description:** Member name from the remote resource.
 
-### Parameter: `apimDefinition.signIn.enabled`
+  - **`privateIPAddress`** (`string`) - Required
+    - **Description:** Private IP address from the PE subnet.
 
-Enable sign-in on developer portal.
+  - **`groupId`** (`string`) - Required
+    - **Description:** Group ID from the remote resource.
 
-- Required: Yes
-- Type: bool
+  - **`memberName`** (`string`) - Required
+    - **Description:** Member name from the remote resource.
 
-### Parameter: `apimDefinition.signUp`
+  - **`privateIPAddress`** (`string`) - Required
+    - **Description:** Private IP address from the PE subnet.
 
-Sign-up configuration for the developer portal.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Required parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enabled`](#parameter-apimdefinitionsignupenabled) | bool | Enable sign-up on developer portal. |
-| [`termsOfService`](#parameter-apimdefinitionsignuptermsofservice) | object | Terms of Service configuration for sign-up. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Private DNS Zone group.
 
-### Parameter: `apimDefinition.signUp.enabled`
+  - **`privateDnsZoneGroupConfigs`** (`array`) - Required
+    - **Description:** Configs for linking PDNS zones.
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of this DNS zone config.
 
-Enable sign-up on developer portal.
+    - **`privateDnsZoneResourceId`** (`string`) - Required
+      - **Description:** Private DNS Zone resource ID.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.signUp.termsOfService`
+  - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
+    - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
-Terms of Service configuration for sign-up.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of this DNS zone config.
 
-- Required: Yes
-- Type: object
+  - **`privateDnsZoneResourceId`** (`string`) - Required
+    - **Description:** Private DNS Zone resource ID.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`consentRequired`](#parameter-apimdefinitionsignuptermsofserviceconsentrequired) | bool | User must consent to ToS. |
-| [`enabled`](#parameter-apimdefinitionsignuptermsofserviceenabled) | bool | Terms of Service enabled. |
-| [`text`](#parameter-apimdefinitionsignuptermsofservicetext) | string | Text shown for Terms of Service. |
+- **`publicNetworkAccess`** (`string`) - Optional
+  - **Description:** Whether public network access is allowed.
 
-### Parameter: `apimDefinition.signUp.termsOfService.consentRequired`
+- **`replicaLocations`** (`array`) - Optional
+  - **Description:** Replica locations.
+  - **`name`** (`string`) - Optional
+    - **Description:** Replica name.
 
-User must consent to ToS.
+  - **`replicaLocation`** (`string`) - Required
+    - **Description:** Azure region name for the replica.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.signUp.termsOfService.enabled`
+- **`replicaLocations[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigurationDefinition.replicaLocations
 
-Terms of Service enabled.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for App Configuration.
 
-- Required: Yes
-- Type: bool
+- **`sku`** (`string`) - Optional
+  - **Description:** Pricing tier of App Configuration.
 
-### Parameter: `apimDefinition.signUp.termsOfService.text`
+- **`softDeleteRetentionInDays`** (`int`) - Optional
+  - **Description:** Retention period in days for soft delete (1–7). Default 1.
 
-Text shown for Terms of Service.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the resource.
 
-- Required: Yes
-- Type: string
+### `appGatewayDefinition`
 
-### Parameter: `apimDefinition.skuCapacity`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appGatewayDefinition` | `object` | Conditional | Application Gateway configuration. Required if deploy.applicationGateway is true and resourceIds.applicationGatewayResourceId is empty. |
 
-Capacity for the chosen SKU.
+**Properties:**
 
-- Required: Yes
-- Type: int
+- **`authenticationCertificates`** (`array`) - Optional
+  - **Description:** Authentication certificates of the Application Gateway.
 
-### Parameter: `apimDefinition.tenantAccess`
+- **`autoscaleMaxCapacity`** (`int`) - Optional
+  - **Description:** Maximum autoscale capacity.
 
-Tenant access configuration for the management plane.
+- **`autoscaleMinCapacity`** (`int`) - Optional
+  - **Description:** Minimum autoscale capacity.
 
-- Required: Yes
-- Type: object
+- **`availabilityZones`** (`array`) - Optional
+  - **Description:** Availability zones used by the gateway.
 
-**Required parameters**
+- **`backendAddressPools`** (`array`) - Optional
+  - **Description:** Backend address pools of the Application Gateway.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enabled`](#parameter-apimdefinitiontenantaccessenabled) | bool | Enable tenant access for the management plane. |
+- **`backendHttpSettingsCollection`** (`array`) - Optional
+  - **Description:** Backend HTTP settings.
 
-### Parameter: `apimDefinition.tenantAccess.enabled`
+- **`backendSettingsCollection`** (`array`) - Optional
+  - **Description:** Backend settings collection (see limits).
 
-Enable tenant access for the management plane.
+- **`capacity`** (`int`) - Optional
+  - **Description:** Static instance capacity. Default is 2.
 
-- Required: Yes
-- Type: bool
+- **`customErrorConfigurations`** (`array`) - Optional
+  - **Description:** Custom error configurations.
 
-### Parameter: `apimDefinition.additionalLocations`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the Application Gateway.
 
-Additional regions for API Management.
+- **`enableFips`** (`bool`) - Optional
+  - **Description:** Whether FIPS is enabled.
 
-- Required: Yes
-- Type: object
+- **`enableHttp2`** (`bool`) - Optional
+  - **Description:** Whether HTTP/2 is enabled.
 
-**Required parameters**
+- **`enableRequestBuffering`** (`bool`) - Optional
+  - **Description:** Enable request buffering.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionadditionallocations>any_other_property<) | object | Arbitrary key for each additional location entry. |
+- **`enableResponseBuffering`** (`bool`) - Optional
+  - **Description:** Enable response buffering.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable telemetry (default true).
 
-Arbitrary key for each additional location entry.
+- **`firewallPolicyResourceId`** (`string`) - Conditional
+  - **Description:** Resource ID of the associated firewall policy. Required if SKU is WAF_v2.
 
-- Required: Yes
-- Type: object
+- **`frontendIPConfigurations`** (`array`) - Optional
+  - **Description:** Frontend IP configurations.
 
-**Required parameters**
+- **`frontendPorts`** (`array`) - Optional
+  - **Description:** Frontend ports.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`capacity`](#parameter-apimdefinitionadditionallocations>any_other_property<capacity) | int | Capacity for the region. |
-| [`location`](#parameter-apimdefinitionadditionallocations>any_other_property<location) | string | Location for the additional APIM instance. |
+- **`gatewayIPConfigurations`** (`array`) - Optional
+  - **Description:** Gateway IP configurations (subnets).
 
-**Optional parameters**
+- **`httpListeners`** (`array`) - Optional
+  - **Description:** HTTP listeners.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`gatewayDisabled`](#parameter-apimdefinitionadditionallocations>any_other_property<gatewaydisabled) | bool | Disable gateway in this region. |
-| [`publicIpAddressId`](#parameter-apimdefinitionadditionallocations>any_other_property<publicipaddressid) | string | Public IP address resource ID to bind. |
-| [`virtualNetworkConfiguration`](#parameter-apimdefinitionadditionallocations>any_other_property<virtualnetworkconfiguration) | object | VNet configuration for the region. |
-| [`zones`](#parameter-apimdefinitionadditionallocations>any_other_property<zones) | array | Availability zones for the region. |
+- **`listeners`** (`array`) - Optional
+  - **Description:** Listeners (see limits).
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.capacity`
+- **`loadDistributionPolicies`** (`array`) - Optional
+  - **Description:** Load distribution policies.
 
-Capacity for the region.
+- **`location`** (`string`) - Optional
+  - **Description:** Location of the Application Gateway.
 
-- Required: Yes
-- Type: int
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.location`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Location for the additional APIM instance.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.gatewayDisabled`
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identities for the Application Gateway.
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned managed identity resource IDs.
 
-Disable gateway in this region.
 
-- Required: Yes
-- Type: bool
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Application Gateway.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.publicIpAddressId`
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Private endpoints configuration.
 
-Public IP address resource ID to bind.
+- **`privateLinkConfigurations`** (`array`) - Optional
+  - **Description:** Private link configurations.
 
-- Required: Yes
-- Type: string
+- **`probes`** (`array`) - Optional
+  - **Description:** Probes for backend health monitoring.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.virtualNetworkConfiguration`
+- **`redirectConfigurations`** (`array`) - Optional
+  - **Description:** Redirect configurations.
 
-VNet configuration for the region.
+- **`requestRoutingRules`** (`array`) - Optional
+  - **Description:** Request routing rules.
 
-- Required: Yes
-- Type: object
+- **`rewriteRuleSets`** (`array`) - Optional
+  - **Description:** Rewrite rule sets.
 
-**Required parameters**
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Application Gateway.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`subnetId`](#parameter-apimdefinitionadditionallocations>any_other_property<virtualnetworkconfigurationsubnetid) | string | Subnet resource ID used by APIM in this region. |
+- **`routingRules`** (`array`) - Optional
+  - **Description:** Routing rules.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.virtualNetworkConfiguration.subnetId`
+- **`sku`** (`string`) - Optional
+  - **Description:** SKU of the Application Gateway. Default is WAF_v2.
 
-Subnet resource ID used by APIM in this region.
+- **`sslCertificates`** (`array`) - Optional
+  - **Description:** SSL certificates.
 
-- Required: Yes
-- Type: string
+- **`sslPolicyCipherSuites`** (`array`) - Optional
+  - **Description:** SSL policy cipher suites.
 
-### Parameter: `apimDefinition.additionalLocations.>Any_other_property<.zones`
+- **`sslPolicyMinProtocolVersion`** (`string`) - Optional
+  - **Description:** Minimum SSL protocol version.
 
-Availability zones for the region.
+- **`sslPolicyName`** (`string`) - Optional
+  - **Description:** Predefined SSL policy name.
 
-- Required: Yes
-- Type: array
+- **`sslPolicyType`** (`string`) - Optional
+  - **Description:** SSL policy type.
 
-### Parameter: `apimDefinition.certificate`
+- **`sslProfiles`** (`array`) - Optional
+  - **Description:** SSL profiles.
 
-Certificates for API Management endpoints.
+- **`tags`** (`object`) - Optional
+  - **Description:** Resource tags.
 
-- Required: Yes
-- Type: object
+- **`trustedClientCertificates`** (`array`) - Optional
+  - **Description:** Trusted client certificates.
 
-**Required parameters**
+- **`trustedRootCertificates`** (`array`) - Optional
+  - **Description:** Trusted root certificates.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitioncertificate>any_other_property<) | object | Arbitrary key for each certificate entry. |
+- **`urlPathMaps`** (`array`) - Optional
+  - **Description:** URL path maps.
 
-### Parameter: `apimDefinition.certificate.>Any_other_property<`
+### `appGatewayPublicIp`
 
-Arbitrary key for each certificate entry.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appGatewayPublicIp` | `object` | Conditional | Conditional Public IP for Application Gateway. Requred when deploy applicationGatewayPublicIp is true and no existing ID is provided. |
 
-- Required: Yes
-- Type: object
+**Properties:**
 
-**Required parameters**
+- **`ddosSettings`** (`object`) - Optional
+  - **Description:** DDoS protection settings for the Public IP Address.
+  - **`ddosProtectionPlan`** (`object`) - Optional
+    - **Description:** Associated DDoS protection plan.
+    - **`id`** (`string`) - Required
+      - **Description:** Resource ID of the DDoS protection plan.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`encodedCertificate`](#parameter-apimdefinitioncertificate>any_other_property<encodedcertificate) | string | Base64-encoded PFX certificate. |
-| [`storeName`](#parameter-apimdefinitioncertificate>any_other_property<storename) | string | Store name to import to (e.g., CertificateAuthority). |
 
-**Optional parameters**
+  - **`protectionMode`** (`string`) - Required
+    - **Description:** DDoS protection mode. Allowed value: Enabled.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificatePassword`](#parameter-apimdefinitioncertificate>any_other_property<certificatepassword) | string | Certificate password. |
 
-### Parameter: `apimDefinition.certificate.>Any_other_property<.encodedCertificate`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the Public IP Address.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Event Hub authorization rule.
 
-Base64-encoded PFX certificate.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Name of the diagnostic Event Hub.
 
-- Required: Yes
-- Type: string
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Log Analytics destination type. Allowed values: AzureDiagnostics, Dedicated.
 
-### Parameter: `apimDefinition.certificate.>Any_other_property<.storeName`
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups to collect. Set to [] to disable log collection.
+    - **`category`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category.
 
-Store name to import to (e.g., CertificateAuthority).
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category group. Use allLogs to collect all logs.
 
-- Required: Yes
-- Type: string
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the log category. Default is true.
 
-### Parameter: `apimDefinition.certificate.>Any_other_property<.certificatePassword`
 
-Certificate password.
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for appGatewayPublicIp.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: string
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID.
 
-### Parameter: `apimDefinition.hostnameConfiguration`
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories to collect. Set to [] to disable metric collection.
+    - **`category`** (`string`) - Required
+      - **Description:** Name of a diagnostic metric category. Use AllMetrics to collect all metrics.
 
-Hostname configuration for all endpoints.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the metric category. Default is true.
 
-- Required: Yes
-- Type: object
 
-**Optional parameters**
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for appGatewayPublicIp.diagnosticSettings[*].metricCategories
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`developerPortal`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal) | object | Hostname configuration map for the Legacy Developer Portal (deprecated in some SKUs). |
-| [`management`](#parameter-apimdefinitionhostnameconfigurationmanagement) | object | Hostname configuration map for the Management endpoint. |
-| [`portal`](#parameter-apimdefinitionhostnameconfigurationportal) | object | Hostname configuration map for the Developer Portal. |
-| [`proxy`](#parameter-apimdefinitionhostnameconfigurationproxy) | object | Hostname configuration map for the Gateway/Proxy endpoint. |
-| [`scm`](#parameter-apimdefinitionhostnameconfigurationscm) | object | Hostname configuration map for the SCM endpoint. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the diagnostic setting.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal`
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic storage account.
 
-Hostname configuration map for the Legacy Developer Portal (deprecated in some SKUs).
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for appGatewayPublicIp.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<) | object | Arbitrary key for each hostname binding. |
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category group. Use allLogs to collect all logs.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the log category. Default is true.
 
-Arbitrary key for each hostname binding.
+  - **`category`** (`string`) - Required
+    - **Description:** Name of a diagnostic metric category. Use AllMetrics to collect all metrics.
 
-- Required: Yes
-- Type: object
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the metric category. Default is true.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`hostName`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<hostname) | string | Host name to bind. |
+- **`dnsSettings`** (`object`) - Optional
+  - **Description:** DNS settings for the Public IP Address.
+  - **`domainNameLabel`** (`string`) - Required
+    - **Description:** Domain name label used to create an A DNS record in Azure DNS.
 
-**Optional parameters**
+  - **`domainNameLabelScope`** (`string`) - Optional
+    - **Description:** Domain name label scope. Allowed values: NoReuse, ResourceGroupReuse, SubscriptionReuse, TenantReuse.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificate`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<certificate) | string | Inline certificate as base64. |
-| [`certificatePassword`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<certificatepassword) | string | Password for the inline certificate (if provided). |
-| [`defaultSslBinding`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<defaultsslbinding) | bool | Set this binding as default for the endpoint. |
-| [`keyVaultId`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<keyvaultid) | string | Key Vault secret ID for the certificate. |
-| [`negotiateClientCertificate`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<negotiateclientcertificate) | bool | Negotiate client certificate on TLS. |
-| [`sslKeyvaultIdentityClientId`](#parameter-apimdefinitionhostnameconfigurationdeveloperportal>any_other_property<sslkeyvaultidentityclientid) | string | Client ID of the Key Vault identity used for SSL. |
+  - **`fqdn`** (`string`) - Optional
+    - **Description:** Fully qualified domain name (FQDN) associated with the Public IP.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.hostName`
+  - **`reverseFqdn`** (`string`) - Optional
+    - **Description:** Reverse FQDN used for PTR records.
 
-Host name to bind.
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.certificate`
+- **`idleTimeoutInMinutes`** (`int`) - Optional
+  - **Description:** Idle timeout in minutes for the Public IP Address. Default is 4.
 
-Inline certificate as base64.
+- **`ipTags`** (`array`) - Optional
+  - **Description:** IP tags associated with the Public IP Address.
+  - **`ipTagType`** (`string`) - Required
+    - **Description:** IP tag type.
 
-- Required: Yes
-- Type: string
+  - **`tag`** (`string`) - Required
+    - **Description:** IP tag value.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.certificatePassword`
 
-Password for the inline certificate (if provided).
+- **`ipTags[*]`** (`object`) - Optional
+  - **Description:** Array item for appGatewayPublicIp.ipTags
 
-- Required: Yes
-- Type: string
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Default is resourceGroup().location.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.defaultSslBinding`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Public IP Address.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-Set this binding as default for the endpoint.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: Yes
-- Type: bool
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.keyVaultId`
 
-Key Vault secret ID for the certificate.
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Public IP Address.
 
-- Required: Yes
-- Type: string
+- **`publicIPAddressVersion`** (`string`) - Optional
+  - **Description:** IP address version. Default is IPv4. Allowed values: IPv4, IPv6.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.negotiateClientCertificate`
+- **`publicIPAllocationMethod`** (`string`) - Optional
+  - **Description:** Public IP allocation method. Default is Static. Allowed values: Dynamic, Static.
 
-Negotiate client certificate on TLS.
+- **`publicIpPrefixResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the Public IP Prefix to allocate from.
 
-- Required: Yes
-- Type: bool
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to apply to the Public IP Address.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition for the role assignment.
 
-### Parameter: `apimDefinition.hostnameConfiguration.developerPortal.>Any_other_property<.sslKeyvaultIdentityClientId`
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version. Allowed value: 2.0.
 
-Client ID of the Key Vault identity used for SSL.
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Delegated managed identity resource ID.
 
-- Required: Yes
-- Type: string
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `apimDefinition.hostnameConfiguration.management`
+  - **`name`** (`string`) - Optional
+    - **Description:** Role assignment name (GUID). If omitted, a GUID is generated.
 
-Hostname configuration map for the Management endpoint.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the identity being assigned.
 
-- Required: Yes
-- Type: object
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type of the assigned identity. Allowed values: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-**Required parameters**
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign (display name, GUID, or full resource ID).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<) | object | Arbitrary key for each hostname binding. |
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appGatewayPublicIp.roleAssignments
 
-Arbitrary key for each hostname binding.
+- **`skuName`** (`string`) - Optional
+  - **Description:** SKU name for the Public IP Address. Default is Standard. Allowed values: Basic, Standard.
 
-- Required: Yes
-- Type: object
+- **`skuTier`** (`string`) - Optional
+  - **Description:** SKU tier for the Public IP Address. Default is Regional. Allowed values: Global, Regional.
 
-**Required parameters**
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Public IP Address resource.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`hostName`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<hostname) | string | Host name to bind. |
+- **`zones`** (`array`) - Optional
+  - **Description:** Availability zones for the Public IP Address allocation. Allowed values: 1, 2, 3.
 
-**Optional parameters**
+### `appInsightsDefinition`
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificate`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<certificate) | string | Inline certificate as base64. |
-| [`certificatePassword`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<certificatepassword) | string | Password for the inline certificate (if provided). |
-| [`defaultSslBinding`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<defaultsslbinding) | bool | Set this binding as default for the endpoint. |
-| [`keyVaultId`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<keyvaultid) | string | Key Vault secret ID for the certificate. |
-| [`negotiateClientCertificate`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<negotiateclientcertificate) | bool | Negotiate client certificate on TLS. |
-| [`sslKeyvaultIdentityClientId`](#parameter-apimdefinitionhostnameconfigurationmanagement>any_other_property<sslkeyvaultidentityclientid) | string | Client ID of the Key Vault identity used for SSL. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appInsightsDefinition` | `object` | Conditional | Application Insights configuration. Required if deploy.appInsights is true and resourceIds.appInsightsResourceId is empty; a Log Analytics workspace must exist or be deployed. |
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.hostName`
+### `buildVmDefinition`
 
-Host name to bind.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `buildVmDefinition` | `object` | Conditional | Build VM configuration to support CI/CD workers (Linux). Required if deploy.buildVm is true. |
 
-- Required: Yes
-- Type: string
+**Properties:**
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.certificate`
+- **`adminPassword`** (`securestring`) - Optional
+  - **Description:** Admin password for the VM.
 
-Inline certificate as base64.
+- **`adminUsername`** (`string`) - Optional
+  - **Description:** Admin username to create (e.g., azureuser).
 
-- Required: Yes
-- Type: string
+- **`availabilityZone`** (`int`) - Optional
+  - **Description:** Availability zone.
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.certificatePassword`
+- **`azdo`** (`object`) - Optional
+  - **Description:** Azure DevOps settings (required when runner = azdo, Build VM only).
+  - **`agentName`** (`string`) - Optional
+    - **Description:** Agent name.
 
-Password for the inline certificate (if provided).
+  - **`orgUrl`** (`string`) - Required
+    - **Description:** Azure DevOps organization URL (e.g., https://dev.azure.com/contoso).
 
-- Required: Yes
-- Type: string
+  - **`pool`** (`string`) - Required
+    - **Description:** Agent pool name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.defaultSslBinding`
+  - **`workFolder`** (`string`) - Optional
+    - **Description:** Working folder.
 
-Set this binding as default for the endpoint.
 
-- Required: Yes
-- Type: bool
+- **`disablePasswordAuthentication`** (`bool`) - Optional
+  - **Description:** Disable password authentication (Build VM only).
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.keyVaultId`
+- **`enableAutomaticUpdates`** (`bool`) - Optional
+  - **Description:** Enable automatic updates (Jump VM only).
 
-Key Vault secret ID for the certificate.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable telemetry via a Globally Unique Identifier (GUID).
 
-- Required: Yes
-- Type: string
+- **`github`** (`object`) - Optional
+  - **Description:** GitHub settings (required when runner = github, Build VM only).
+  - **`agentName`** (`string`) - Optional
+    - **Description:** Runner name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.negotiateClientCertificate`
+  - **`labels`** (`string`) - Optional
+    - **Description:** Runner labels (comma-separated).
 
-Negotiate client certificate on TLS.
+  - **`owner`** (`string`) - Required
+    - **Description:** GitHub owner (org or user).
 
-- Required: Yes
-- Type: bool
+  - **`repo`** (`string`) - Required
+    - **Description:** Repository name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.management.>Any_other_property<.sslKeyvaultIdentityClientId`
+  - **`workFolder`** (`string`) - Optional
+    - **Description:** Working folder.
 
-Client ID of the Key Vault identity used for SSL.
 
-- Required: Yes
-- Type: string
+- **`imageReference`** (`object`) - Optional
+  - **Description:** Marketplace image reference for the VM.
+  - **`communityGalleryImageId`** (`string`) - Optional
+    - **Description:** Community gallery image ID.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal`
+  - **`id`** (`string`) - Optional
+    - **Description:** Resource ID.
 
-Hostname configuration map for the Developer Portal.
+  - **`offer`** (`string`) - Optional
+    - **Description:** Offer name.
 
-- Required: Yes
-- Type: object
+  - **`publisher`** (`string`) - Optional
+    - **Description:** Publisher name.
 
-**Required parameters**
+  - **`sharedGalleryImageId`** (`string`) - Optional
+    - **Description:** Shared gallery image ID.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<) | object | Arbitrary key for each hostname binding. |
+  - **`sku`** (`string`) - Optional
+    - **Description:** SKU name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<`
+  - **`version`** (`string`) - Optional
+    - **Description:** Image version (e.g., latest).
 
-Arbitrary key for each hostname binding.
 
-- Required: Yes
-- Type: object
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources.
 
-**Required parameters**
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`hostName`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<hostname) | string | Host name to bind. |
+- **`maintenanceConfigurationResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the maintenance configuration (Jump VM only).
 
-**Optional parameters**
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identities.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificate`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<certificate) | string | Inline certificate as base64. |
-| [`certificatePassword`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<certificatepassword) | string | Password for the inline certificate (if provided). |
-| [`defaultSslBinding`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<defaultsslbinding) | bool | Set this binding as default for the endpoint. |
-| [`keyVaultId`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<keyvaultid) | string | Key Vault secret ID for the certificate. |
-| [`negotiateClientCertificate`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<negotiateclientcertificate) | bool | Negotiate client certificate on TLS. |
-| [`sslKeyvaultIdentityClientId`](#parameter-apimdefinitionhostnameconfigurationportal>any_other_property<sslkeyvaultidentityclientid) | string | Client ID of the Key Vault identity used for SSL. |
+- **`name`** (`string`) - Optional
+  - **Description:** VM name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.hostName`
+- **`nicConfigurations`** (`array`) - Optional
+  - **Description:** Network interface configurations.
 
-Host name to bind.
+- **`osDisk`** (`object`) - Optional
+  - **Description:** OS disk configuration.
 
-- Required: Yes
-- Type: string
+- **`osType`** (`string`) - Optional
+  - **Description:** OS type for the VM.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.certificate`
+- **`patchMode`** (`string`) - Optional
+  - **Description:** Patch mode for the VM (Jump VM only).
 
-Inline certificate as base64.
+- **`publicKeys`** (`array`) - Optional
+  - **Description:** SSH public keys (Build VM only).
 
-- Required: Yes
-- Type: string
+- **`requireGuestProvisionSignal`** (`bool`) - Optional
+  - **Description:** Force password reset on first login.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.certificatePassword`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments.
 
-Password for the inline certificate (if provided).
+- **`runner`** (`string`) - Optional
+  - **Description:** Which agent to install (Build VM only).
 
-- Required: Yes
-- Type: string
+- **`sku`** (`string`) - Optional
+  - **Description:** VM size SKU (e.g., Standard_B2s, Standard_D2s_v5).
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.defaultSslBinding`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the VM resource.
 
-Set this binding as default for the endpoint.
+### `containerAppEnvDefinition`
 
-- Required: Yes
-- Type: bool
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `containerAppEnvDefinition` | `object` | Conditional | Container Apps Environment configuration. Required if deploy.containerEnv is true and resourceIds.containerEnvResourceId is empty. |
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.keyVaultId`
+**Properties:**
 
-Key Vault secret ID for the certificate.
+- **`appInsightsConnectionString`** (`securestring`) - Optional
+  - **Description:** Application Insights connection string.
 
-- Required: Yes
-- Type: string
+- **`appLogsConfiguration`** (`object`) - Optional
+  - **Description:** App Logs configuration for the Managed Environment.
+  - **`destination`** (`string`) - Optional
+    - **Description:** Destination of the logs. Allowed values: azure-monitor, log-analytics, none.
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.negotiateClientCertificate`
+  - **`logAnalyticsConfiguration`** (`object`) - Conditional
+    - **Description:** Log Analytics configuration. Required if destination is log-analytics.
+    - **`customerId`** (`string`) - Required
+      - **Description:** Log Analytics Workspace ID.
 
-Negotiate client certificate on TLS.
+    - **`sharedKey`** (`securestring`) - Required
+      - **Description:** Shared key of the Log Analytics workspace.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.hostnameConfiguration.portal.>Any_other_property<.sslKeyvaultIdentityClientId`
 
-Client ID of the Key Vault identity used for SSL.
+- **`certificate`** (`object`) - Optional
+  - **Description:** Managed Environment Certificate configuration.
+  - **`certificateKeyVaultProperties`** (`object`) - Optional
+    - **Description:** Key Vault reference for certificate.
+    - **`identityResourceId`** (`string`) - Required
+      - **Description:** Identity resource ID used to access Key Vault.
 
-- Required: Yes
-- Type: string
+    - **`keyVaultUrl`** (`string`) - Required
+      - **Description:** Key Vault URL referencing the certificate.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy`
 
-Hostname configuration map for the Gateway/Proxy endpoint.
+  - **`certificatePassword`** (`string`) - Optional
+    - **Description:** Certificate password.
 
-- Required: Yes
-- Type: object
+  - **`certificateType`** (`string`) - Optional
+    - **Description:** Certificate type. Allowed values: ImagePullTrustedCA, ServerSSLCertificate.
 
-**Required parameters**
+  - **`certificateValue`** (`string`) - Optional
+    - **Description:** Certificate value (PFX or PEM).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<) | object | Arbitrary key for each hostname binding. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Certificate name.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<`
 
-Arbitrary key for each hostname binding.
+- **`certificatePassword`** (`securestring`) - Optional
+  - **Description:** Password of the certificate used by the custom domain.
 
-- Required: Yes
-- Type: object
+- **`certificateValue`** (`securestring`) - Optional
+  - **Description:** Certificate to use for the custom domain (PFX or PEM).
 
-**Required parameters**
+- **`daprAIConnectionString`** (`securestring`) - Optional
+  - **Description:** Application Insights connection string for Dapr telemetry.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`hostName`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<hostname) | string | Host name to bind. |
+- **`daprAIInstrumentationKey`** (`securestring`) - Optional
+  - **Description:** Azure Monitor instrumentation key for Dapr telemetry.
 
-**Optional parameters**
+- **`dnsSuffix`** (`string`) - Optional
+  - **Description:** DNS suffix for the environment domain.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificate`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<certificate) | string | Inline certificate as base64. |
-| [`certificatePassword`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<certificatepassword) | string | Password for the inline certificate (if provided). |
-| [`defaultSslBinding`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<defaultsslbinding) | bool | Set this binding as default for the endpoint. |
-| [`keyVaultId`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<keyvaultid) | string | Key Vault secret ID for the certificate. |
-| [`negotiateClientCertificate`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<negotiateclientcertificate) | bool | Negotiate client certificate on TLS. |
-| [`sslKeyvaultIdentityClientId`](#parameter-apimdefinitionhostnameconfigurationproxy>any_other_property<sslkeyvaultidentityclientid) | string | Client ID of the Key Vault identity used for SSL. |
+- **`dockerBridgeCidr`** (`string`) - Conditional
+  - **Description:** Docker bridge CIDR range for the environment. Must not overlap with other IP ranges. Required if zoneRedundant is set to true to be WAF compliant.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.hostName`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable telemetry for the module. Default is true.
 
-Host name to bind.
+- **`infrastructureResourceGroupName`** (`string`) - Conditional
+  - **Description:** Infrastructure resource group name. Required if zoneRedundant is set to true to be WAF compliant.
 
-- Required: Yes
-- Type: string
+- **`infrastructureSubnetResourceId`** (`string`) - Conditional
+  - **Description:** Resource ID of the subnet for infrastructure components. Required if "internal" is true. Required if zoneRedundant is set to true to be WAF compliant.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.certificate`
+- **`internal`** (`bool`) - Conditional
+  - **Description:** Boolean indicating if only internal load balancer is used. Required if zoneRedundant is set to true to be WAF compliant.
 
-Inline certificate as base64.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-- Required: Yes
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the Managed Environment.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.certificatePassword`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Password for the inline certificate (if provided).
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.defaultSslBinding`
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity configuration for the Managed Environment.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enable system-assigned managed identity.
 
-Set this binding as default for the endpoint.
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs. Required if user-assigned identity is used for encryption.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.keyVaultId`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Container Apps Managed Environment.
 
-Key Vault secret ID for the certificate.
+- **`openTelemetryConfiguration`** (`object`) - Optional
+  - **Description:** Open Telemetry configuration.
 
-- Required: Yes
-- Type: string
+- **`peerTrafficEncryption`** (`bool`) - Optional
+  - **Description:** Whether peer traffic encryption is enabled. Default is true.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.negotiateClientCertificate`
+- **`platformReservedCidr`** (`string`) - Conditional
+  - **Description:** Reserved IP range in CIDR notation for infrastructure. Required if zoneRedundant is set to true to be WAF compliant.
 
-Negotiate client certificate on TLS.
+- **`platformReservedDnsIP`** (`string`) - Conditional
+  - **Description:** Reserved DNS IP within platformReservedCidr for internal DNS. Required if zoneRedundant is set to true to be WAF compliant.
 
-- Required: Yes
-- Type: bool
+- **`publicNetworkAccess`** (`string`) - Optional
+  - **Description:** Whether to allow or block public network traffic. Allowed values: Disabled, Enabled.
 
-### Parameter: `apimDefinition.hostnameConfiguration.proxy.>Any_other_property<.sslKeyvaultIdentityClientId`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to create for the Managed Environment.
 
-Client ID of the Key Vault identity used for SSL.
+- **`storages`** (`array`) - Optional
+  - **Description:** List of storages to mount on the environment.
+  - **`accessMode`** (`string`) - Required
+    - **Description:** Access mode for storage. Allowed values: ReadOnly, ReadWrite.
 
-- Required: Yes
-- Type: string
+  - **`kind`** (`string`) - Required
+    - **Description:** Type of storage. Allowed values: NFS, SMB.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm`
+  - **`shareName`** (`string`) - Required
+    - **Description:** File share name.
 
-Hostname configuration map for the SCM endpoint.
+  - **`storageAccountName`** (`string`) - Required
+    - **Description:** Storage account name.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`storages[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvDefinition.storages
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<) | object | Arbitrary key for each hostname binding. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Managed Environment.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<`
+- **`workloadProfiles`** (`array`) - Conditional
+  - **Description:** Workload profiles for the Managed Environment. Required if zoneRedundant is set to true to be WAF compliant.
 
-Arbitrary key for each hostname binding.
+- **`zoneRedundant`** (`bool`) - Optional
+  - **Description:** Whether the Managed Environment is zone redundant. Default is true.
 
-- Required: Yes
-- Type: object
+### `containerRegistryDefinition`
 
-**Required parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `containerRegistryDefinition` | `object` | Conditional | Container Registry configuration. Required if deploy.containerRegistry is true and resourceIds.containerRegistryResourceId is empty. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`hostName`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<hostname) | string | Host name to bind. |
+**Properties:**
 
-**Optional parameters**
+- **`acrAdminUserEnabled`** (`bool`) - Optional
+  - **Description:** Enable admin user that has push/pull permission to the registry. Default is false.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`certificate`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<certificate) | string | Inline certificate as base64. |
-| [`certificatePassword`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<certificatepassword) | string | Password for the inline certificate (if provided). |
-| [`defaultSslBinding`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<defaultsslbinding) | bool | Set this binding as default for the endpoint. |
-| [`keyVaultId`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<keyvaultid) | string | Key Vault secret ID for the certificate. |
-| [`negotiateClientCertificate`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<negotiateclientcertificate) | bool | Negotiate client certificate on TLS. |
-| [`sslKeyvaultIdentityClientId`](#parameter-apimdefinitionhostnameconfigurationscm>any_other_property<sslkeyvaultidentityclientid) | string | Client ID of the Key Vault identity used for SSL. |
+- **`acrSku`** (`string`) - Optional
+  - **Description:** Tier of your Azure Container Registry. Default is Premium.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.hostName`
+- **`anonymousPullEnabled`** (`bool`) - Optional
+  - **Description:** Enables registry-wide pull from unauthenticated clients (preview, Standard/Premium only). Default is false.
 
-Host name to bind.
+- **`azureADAuthenticationAsArmPolicyStatus`** (`string`) - Optional
+  - **Description:** Indicates whether the policy for using ARM audience token is enabled. Default is enabled.
 
-- Required: Yes
-- Type: string
+- **`cacheRules`** (`array`) - Optional
+  - **Description:** Array of Cache Rules.
+  - **`credentialSetResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the credential store associated with the cache rule.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.certificate`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the cache rule. Defaults to the source repository name if not set.
 
-Inline certificate as base64.
+  - **`sourceRepository`** (`string`) - Required
+    - **Description:** Source repository pulled from upstream.
 
-- Required: Yes
-- Type: string
+  - **`targetRepository`** (`string`) - Optional
+    - **Description:** Target repository specified in docker pull command.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.certificatePassword`
 
-Password for the inline certificate (if provided).
+- **`cacheRules[*]`** (`object`) - Optional
+  - **Description:** Array item for containerRegistryDefinition.cacheRules
 
-- Required: Yes
-- Type: string
+- **`credentialSets`** (`array`) - Optional
+  - **Description:** Array of Credential Sets.
+  - **`authCredentials`** (`array`) - Required
+    - **Description:** List of authentication credentials (primary and optional secondary).
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the credential.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.defaultSslBinding`
+    - **`passwordSecretIdentifier`** (`string`) - Required
+      - **Description:** KeyVault Secret URI for the password.
 
-Set this binding as default for the endpoint.
+    - **`usernameSecretIdentifier`** (`string`) - Required
+      - **Description:** KeyVault Secret URI for the username.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.keyVaultId`
+  - **`authCredentials[*]`** (`object`) - Optional
+    - **Description:** Array item for containerRegistryDefinition.credentialSets[*].authCredentials
 
-Key Vault secret ID for the certificate.
+  - **`loginServer`** (`string`) - Required
+    - **Description:** Login server for which the credentials are stored.
 
-- Required: Yes
-- Type: string
+  - **`managedIdentities`** (`object`) - Optional
+    - **Description:** Managed identity definition for this credential set.
+    - **`systemAssigned`** (`bool`) - Optional
+      - **Description:** Enables system-assigned managed identity.
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.negotiateClientCertificate`
 
-Negotiate client certificate on TLS.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the credential set.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `apimDefinition.hostnameConfiguration.scm.>Any_other_property<.sslKeyvaultIdentityClientId`
+- **`credentialSets[*]`** (`object`) - Optional
+  - **Description:** Array item for containerRegistryDefinition.credentialSets
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the credential.
 
-Client ID of the Key Vault identity used for SSL.
+  - **`passwordSecretIdentifier`** (`string`) - Required
+    - **Description:** KeyVault Secret URI for the password.
 
-- Required: Yes
-- Type: string
+  - **`usernameSecretIdentifier`** (`string`) - Required
+    - **Description:** KeyVault Secret URI for the username.
 
-### Parameter: `apimDefinition.minApiVersion`
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enables system-assigned managed identity.
 
-Minimum ARM API version to use for APIM operations.
 
-- Required: No
-- Type: string
+- **`customerManagedKey`** (`object`) - Optional
+  - **Description:** Customer managed key definition.
+  - **`autoRotationEnabled`** (`bool`) - Optional
+    - **Description:** Enable or disable auto-rotation to the latest version. Default is true.
 
-### Parameter: `apimDefinition.name`
+  - **`keyName`** (`string`) - Required
+    - **Description:** Name of the key.
 
-API Management service name.
+  - **`keyVaultResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the Key Vault.
 
-- Required: No
-- Type: string
+  - **`keyVersion`** (`string`) - Optional
+    - **Description:** Key version. Used if autoRotationEnabled=false.
 
-### Parameter: `apimDefinition.notificationSenderEmail`
+  - **`userAssignedIdentityResourceId`** (`string`) - Optional
+    - **Description:** User-assigned identity for fetching the key. Required if no system-assigned identity.
 
-Sender email address used by APIM system notifications.
 
-- Required: No
-- Type: string
+- **`dataEndpointEnabled`** (`bool`) - Conditional
+  - **Description:** Enable a single data endpoint per region (Premium only). Default is false. Required if acrSku is Premium.
 
-### Parameter: `apimDefinition.protocols`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the service.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Event Hub authorization rule resource ID.
 
-Protocol options.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Event Hub name for logs.
 
-- Required: Yes
-- Type: object
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-**Optional parameters**
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups.
+    - **`category`** (`string`) - Optional
+      - **Description:** Diagnostic log category.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enableHttp2`](#parameter-apimdefinitionprotocolsenablehttp2) | bool | Enable HTTP/2 for API traffic. |
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Diagnostic log category group.
 
-### Parameter: `apimDefinition.protocols.enableHttp2`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable this category. Default is true.
 
-Enable HTTP/2 for API traffic.
 
-- Required: Yes
-- Type: bool
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for containerRegistryDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-### Parameter: `apimDefinition.roleAssignments`
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID.
 
-Role assignments to create on the API Management service.
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories.
+    - **`category`** (`string`) - Required
+      - **Description:** Diagnostic metric category.
 
-- Required: Yes
-- Type: array
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable this metric. Default is true.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-apimdefinitionroleassignmentsprincipalid) | string | Principal ID to assign. |
-| [`principalType`](#parameter-apimdefinitionroleassignmentsprincipaltype) | string | Principal type of the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-apimdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or name. |
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for containerRegistryDefinition.diagnosticSettings[*].metricCategories
 
-**Optional parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the diagnostic setting.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-apimdefinitionroleassignmentscondition) | string | Condition for the assignment. |
-| [`conditionVersion`](#parameter-apimdefinitionroleassignmentsconditionversion) | string | Condition version (2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-apimdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-apimdefinitionroleassignmentsdescription) | string | Description of the assignment. |
-| [`name`](#parameter-apimdefinitionroleassignmentsname) | string | Name of the role assignment. |
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Storage account resource ID.
 
-### Parameter: `apimDefinition.roleAssignments.principalId`
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Log Analytics workspace resource ID.
 
-Principal ID to assign.
 
-- Required: Yes
-- Type: string
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for containerRegistryDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Diagnostic log category.
 
-### Parameter: `apimDefinition.roleAssignments.principalType`
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Diagnostic log category group.
 
-Principal type of the assignment.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable this category. Default is true.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+  - **`category`** (`string`) - Required
+    - **Description:** Diagnostic metric category.
 
-### Parameter: `apimDefinition.roleAssignments.roleDefinitionIdOrName`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable this metric. Default is true.
 
-Role definition ID or name.
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable telemetry for the module. Default is true.
 
-### Parameter: `apimDefinition.roleAssignments.condition`
+- **`exportPolicyStatus`** (`string`) - Optional
+  - **Description:** Export policy status. Default is disabled.
 
-Condition for the assignment.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-- Required: No
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Type of lock (CanNotDelete, None, ReadOnly).
 
-### Parameter: `apimDefinition.roleAssignments.conditionVersion`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the lock.
 
-Condition version (2.0).
+  - **`notes`** (`string`) - Optional
+    - **Description:** Notes for the lock.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
 
-### Parameter: `apimDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity definition for the registry.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enable system-assigned managed identity.
 
-Delegated managed identity resource ID.
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs. Required if user-assigned identity is used for encryption.
 
-- Required: No
-- Type: string
 
-### Parameter: `apimDefinition.roleAssignments.description`
+- **`name`** (`string`) - Required
+  - **Description:** Name of your Azure Container Registry.
 
-Description of the assignment.
+- **`networkRuleBypassOptions`** (`string`) - Optional
+  - **Description:** Network rule bypass options. Default is AzureServices.
 
-- Required: No
-- Type: string
+- **`networkRuleSetDefaultAction`** (`string`) - Optional
+  - **Description:** Default action when no network rule matches. Default is Deny.
 
-### Parameter: `apimDefinition.roleAssignments.name`
+- **`networkRuleSetIpRules`** (`array`) - Conditional
+  - **Description:** IP ACL rules (Premium only). Required if acrSku is Premium.
 
-Name of the role assignment.
+- **`privateEndpoints`** (`array`) - Conditional
+  - **Description:** Private endpoint configuration (Premium only). Required if acrSku is Premium.
 
-- Required: No
-- Type: string
+- **`publicNetworkAccess`** (`string`) - Conditional
+  - **Description:** Public network access (Premium only). Disabled by default if private endpoints are set and no IP rules). Required if acrSku is Premium.
 
-### Parameter: `apimDefinition.skuRoot`
+- **`quarantinePolicyStatus`** (`string`) - Conditional
+  - **Description:** Quarantine policy status (Premium only). Default is disabled. Required if acrSku is Premium.
 
-SKU for API Management (Developer/Basic/Standard/Premium/Consumption/V2 variants).
+- **`replications`** (`array`) - Optional
+  - **Description:** Replications to create.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Basic'
-    'BasicV2'
-    'Consumption'
-    'Developer'
-    'Premium'
-    'Standard'
-    'StandardV2'
-  ]
-  ```
+- **`retentionPolicyDays`** (`int`) - Optional
+  - **Description:** Number of days to retain untagged manifests. Default is 15.
 
-### Parameter: `apimDefinition.tags`
+- **`retentionPolicyStatus`** (`string`) - Optional
+  - **Description:** Retention policy status. Default is enabled.
 
-Tags to apply to the API Management service.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for this registry.
 
-- Required: Yes
-- Type: object
+- **`scopeMaps`** (`array`) - Optional
+  - **Description:** Scope maps configuration.
 
-**Required parameters**
+- **`softDeletePolicyDays`** (`int`) - Optional
+  - **Description:** Number of days after which soft-deleted items are permanently deleted. Default is 7.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-apimdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`softDeletePolicyStatus`** (`string`) - Optional
+  - **Description:** Soft delete policy status. Default is disabled.
 
-### Parameter: `apimDefinition.tags.>Any_other_property<`
+- **`tags`** (`object`) - Optional
+  - **Description:** Resource tags.
 
-Arbitrary key for each tag.
+- **`trustPolicyStatus`** (`string`) - Conditional
+  - **Description:** Trust policy status (Premium only). Default is disabled. Required if acrSku is Premium.
 
-- Required: Yes
-- Type: string
+- **`webhooks`** (`array`) - Optional
+  - **Description:** Webhooks to create.
 
-### Parameter: `appConfigurationDefinition`
+- **`zoneRedundancy`** (`string`) - Optional
+  - **Description:** Zone redundancy setting. Default is Enabled. Conditional: requires acrSku=Premium.
 
- App Configuration store settings (used when App Configuration is deployed).
+### `firewallDefinition`
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      localAuthEnabled: false
-      name: ''
-      purgeProtectionEnabled: true
-      roleAssignments: []
-      sku: 'standard'
-      softDeleteRetentionInDays: 7
-      tags: {}
-  }
-  ```
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `firewallDefinition` | `object` | Conditional | Azure Firewall configuration. Required if deploy.firewall is true and resourceIds.firewallResourceId is empty. |
 
-**Optional parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`dataPlaneProxy`](#parameter-appconfigurationdefinitiondataplaneproxy) | object | Data plane proxy configuration (auth and Private Link delegation). |
-| [`localAuthEnabled`](#parameter-appconfigurationdefinitionlocalauthenabled) | bool | Enable local (access keys) authentication. |
-| [`name`](#parameter-appconfigurationdefinitionname) | string | App Configuration store name. |
-| [`purgeProtectionEnabled`](#parameter-appconfigurationdefinitionpurgeprotectionenabled) | bool | Enable purge protection. |
-| [`roleAssignments`](#parameter-appconfigurationdefinitionroleassignments) | array | Role assignments to create on the store. |
-| [`sku`](#parameter-appconfigurationdefinitionsku) | string | SKU for App Configuration. |
-| [`softDeleteRetentionInDays`](#parameter-appconfigurationdefinitionsoftdeleteretentionindays) | int | Soft delete retention (days). |
-| [`tags`](#parameter-appconfigurationdefinitiontags) | object | Tags to apply to the App Configuration store. |
+- **`additionalPublicIpConfigurations`** (`array`) - Optional
+  - **Description:** Additional Public IP configurations.
 
-### Parameter: `appConfigurationDefinition.dataPlaneProxy`
+- **`applicationRuleCollections`** (`array`) - Optional
+  - **Description:** Application rule collections used by Azure Firewall.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the application rule collection.
 
-Data plane proxy configuration (auth and Private Link delegation).
+  - **`properties`** (`object`) - Required
+    - **Description:** Properties of the application rule collection.
+    - **`action`** (`object`) - Required
+      - **Description:** Action of the rule collection.
+      - **`type`** (`string`) - Required
+        - **Description:** Action type. Allowed values: Allow, Deny.
 
-- Required: No
-- Type: object
 
-**Optional parameters**
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the application rule collection (100-65000).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`authenticationMode`](#parameter-appconfigurationdefinitiondataplaneproxyauthenticationmode) | string | Authentication mode for data plane proxy. |
-| [`privateLinkDelegation`](#parameter-appconfigurationdefinitiondataplaneproxyprivatelinkdelegation) | string | Private Link delegation for data plane proxy. |
+    - **`rules`** (`array`) - Required
+      - **Description:** Application rules in the collection.
+      - **`description`** (`string`) - Optional
+        - **Description:** Description of the rule.
 
-### Parameter: `appConfigurationDefinition.dataPlaneProxy.authenticationMode`
+      - **`fqdnTags`** (`array`) - Optional
+        - **Description:** List of FQDN tags for this rule.
 
-Authentication mode for data plane proxy.
+      - **`name`** (`string`) - Required
+        - **Description:** Name of the application rule.
 
-- Required: Yes
-- Type: string
+      - **`protocols`** (`array`) - Required
+        - **Description:** Protocols for the application rule.
+        - **`port`** (`int`) - Optional
+          - **Description:** Port number for the protocol (≤64000).
 
-### Parameter: `appConfigurationDefinition.dataPlaneProxy.privateLinkDelegation`
+        - **`protocolType`** (`string`) - Required
+          - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-Private Link delegation for data plane proxy.
 
-- Required: Yes
-- Type: string
+      - **`protocols[*]`** (`object`) - Optional
+        - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
-### Parameter: `appConfigurationDefinition.localAuthEnabled`
+      - **`sourceAddresses`** (`array`) - Optional
+        - **Description:** List of source IP addresses for this rule.
 
-Enable local (access keys) authentication.
+      - **`sourceIpGroups`** (`array`) - Optional
+        - **Description:** List of source IP groups for this rule.
 
-- Required: No
-- Type: bool
+      - **`targetFqdns`** (`array`) - Optional
+        - **Description:** List of target FQDNs for this rule.
 
-### Parameter: `appConfigurationDefinition.name`
 
-App Configuration store name.
+    - **`rules[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules
+      - **`port`** (`int`) - Optional
+        - **Description:** Port number for the protocol (≤64000).
 
-- Required: No
-- Type: string
+      - **`protocolType`** (`string`) - Required
+        - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-### Parameter: `appConfigurationDefinition.purgeProtectionEnabled`
 
-Enable purge protection.
 
-- Required: No
-- Type: bool
 
-### Parameter: `appConfigurationDefinition.roleAssignments`
+- **`applicationRuleCollections[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallDefinition.applicationRuleCollections
+  - **`action`** (`object`) - Required
+    - **Description:** Action of the rule collection.
+    - **`type`** (`string`) - Required
+      - **Description:** Action type. Allowed values: Allow, Deny.
 
-Role assignments to create on the store.
 
-- Required: No
-- Type: array
+  - **`priority`** (`int`) - Required
+    - **Description:** Priority of the application rule collection (100-65000).
 
-**Required parameters**
+  - **`rules`** (`array`) - Required
+    - **Description:** Application rules in the collection.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description of the rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-appconfigurationdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-appconfigurationdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-appconfigurationdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+    - **`fqdnTags`** (`array`) - Optional
+      - **Description:** List of FQDN tags for this rule.
 
-**Optional parameters**
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the application rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-appconfigurationdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-appconfigurationdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-appconfigurationdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-appconfigurationdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-appconfigurationdefinitionroleassignmentsname) | string | Role assignment name. |
+    - **`protocols`** (`array`) - Required
+      - **Description:** Protocols for the application rule.
+      - **`port`** (`int`) - Optional
+        - **Description:** Port number for the protocol (≤64000).
 
-### Parameter: `appConfigurationDefinition.roleAssignments.principalId`
+      - **`protocolType`** (`string`) - Required
+        - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-Principal (objectId) to assign.
 
-- Required: Yes
-- Type: string
+    - **`protocols[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
-### Parameter: `appConfigurationDefinition.roleAssignments.principalType`
+    - **`sourceAddresses`** (`array`) - Optional
+      - **Description:** List of source IP addresses for this rule.
 
-Principal type for the assignment.
+    - **`sourceIpGroups`** (`array`) - Optional
+      - **Description:** List of source IP groups for this rule.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+    - **`targetFqdns`** (`array`) - Optional
+      - **Description:** List of target FQDNs for this rule.
 
-### Parameter: `appConfigurationDefinition.roleAssignments.roleDefinitionIdOrName`
 
-Role definition ID or built-in role name.
+  - **`rules[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules
+    - **`port`** (`int`) - Optional
+      - **Description:** Port number for the protocol (≤64000).
 
-- Required: Yes
-- Type: string
+    - **`protocolType`** (`string`) - Required
+      - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-### Parameter: `appConfigurationDefinition.roleAssignments.condition`
 
-Condition expression for the assignment.
+  - **`type`** (`string`) - Required
+    - **Description:** Action type. Allowed values: Allow, Deny.
 
-- Required: No
-- Type: string
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the rule.
 
-### Parameter: `appConfigurationDefinition.roleAssignments.conditionVersion`
+  - **`fqdnTags`** (`array`) - Optional
+    - **Description:** List of FQDN tags for this rule.
 
-Condition version (e.g., 2.0).
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the application rule.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+  - **`protocols`** (`array`) - Required
+    - **Description:** Protocols for the application rule.
+    - **`port`** (`int`) - Optional
+      - **Description:** Port number for the protocol (≤64000).
 
-### Parameter: `appConfigurationDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+    - **`protocolType`** (`string`) - Required
+      - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-Delegated managed identity resource ID.
 
-- Required: No
-- Type: string
+  - **`protocols[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
-### Parameter: `appConfigurationDefinition.roleAssignments.description`
+  - **`sourceAddresses`** (`array`) - Optional
+    - **Description:** List of source IP addresses for this rule.
 
-Description for the assignment.
+  - **`sourceIpGroups`** (`array`) - Optional
+    - **Description:** List of source IP groups for this rule.
 
-- Required: No
-- Type: string
+  - **`targetFqdns`** (`array`) - Optional
+    - **Description:** List of target FQDNs for this rule.
 
-### Parameter: `appConfigurationDefinition.roleAssignments.name`
+  - **`port`** (`int`) - Optional
+    - **Description:** Port number for the protocol (≤64000).
 
-Role assignment name.
+  - **`protocolType`** (`string`) - Required
+    - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-- Required: No
-- Type: string
+  - **`port`** (`int`) - Optional
+    - **Description:** Port number for the protocol (≤64000).
 
-### Parameter: `appConfigurationDefinition.sku`
+  - **`protocolType`** (`string`) - Required
+    - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
-SKU for App Configuration.
 
-- Required: No
-- Type: string
+- **`autoscaleMaxCapacity`** (`int`) - Optional
+  - **Description:** Maximum number of capacity units for the firewall.
 
-### Parameter: `appConfigurationDefinition.softDeleteRetentionInDays`
+- **`autoscaleMinCapacity`** (`int`) - Optional
+  - **Description:** Minimum number of capacity units for the firewall.
 
-Soft delete retention (days).
+- **`availabilityZones`** (`array`) - Optional
+  - **Description:** Availability Zones for zone-redundant deployment.
 
-- Required: No
-- Type: int
+- **`azureSkuTier`** (`string`) - Optional
+  - **Description:** Tier of Azure Firewall. Allowed values: Basic, Premium, Standard.
 
-### Parameter: `appConfigurationDefinition.tags`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the firewall.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Event Hub authorization rule resource ID.
 
-Tags to apply to the App Configuration store.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Event Hub name for diagnostic logs.
 
-- Required: No
-- Type: object
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Log Analytics destination type. Allowed values: AzureDiagnostics, Dedicated.
 
-**Required parameters**
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups.
+    - **`category`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appconfigurationdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category group.
 
-### Parameter: `appConfigurationDefinition.tags.>Any_other_property<`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable/disable category. Default is true.
 
-Arbitrary key for each tag.
 
-- Required: Yes
-- Type: string
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-### Parameter: `appGatewayDefinition`
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID for diagnostic logs.
 
- Application Gateway configuration (used when AGW is deployed).
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories for diagnostics.
+    - **`category`** (`string`) - Required
+      - **Description:** Name of a diagnostic metric category.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      authenticationCertificate: {}
-      autoscaleConfiguration: {
-        maxCapacity: 10
-        minCapacity: 2
-      }
-      backendAddressPools: {
-        defaultPool: {
-          fqdns: []
-          ipAddresses: []
-          name: 'defaultPool'
-        }
-      }
-      backendHttpSettings: {
-        defaultSetting: {
-          affinityCookieName: ''
-          authenticationCertificate: []
-          connectionDraining: {
-            drainTimeoutSec: 0
-            enabled: false
-          }
-          cookieBasedAffinity: 'Disabled'
-          hostName: ''
-          name: 'defaultSetting'
-          path: ''
-          pickHostNameFromBackendAddress: false
-          port: 80
-          probeName: ''
-          protocol: 'Http'
-          requestTimeout: 30
-          trustedRootCertificateNames: []
-        }
-      }
-      createPublicFrontend: true
-      frontendPorts: {
-        port80: {
-          name: 'port80'
-          port: 80
-        }
-      }
-      http2Enable: true
-      httpListeners: {
-        defaultListener: {
-          customErrorConfiguration: []
-          firewallPolicyId: ''
-          frontendIpConfigurationName: 'privateFrontend'
-          frontendPortName: 'port80'
-          hostName: ''
-          hostNames: []
-          name: 'defaultListener'
-          requireSni: false
-          sslCertificateName: ''
-          sslProfileName: ''
-        }
-      }
-      name: ''
-      probeConfigurations: {}
-      redirectConfiguration: {
-        defaultRedirect: {
-          includePath: true
-          includeQueryString: true
-          name: 'defaultRedirect'
-          redirectType: 'Permanent'
-          targetListenerName: ''
-          targetUrl: 'https://example.com'
-        }
-      }
-      requestRoutingRules: {
-        defaultRule: {
-          backendAddressPoolName: ''
-          backendHttpSettingsName: ''
-          httpListenerName: 'defaultListener'
-          name: 'defaultRule'
-          priority: 100
-          redirectConfigurationName: 'defaultRedirect'
-          rewriteRuleSetName: ''
-          ruleType: 'Basic'
-          urlPathMapName: ''
-        }
-      }
-      rewriteRuleSet: {}
-      roleAssignments: []
-      sku: {
-        capacity: 0
-        name: 'WAF_v2'
-        tier: 'WAF_v2'
-      }
-      sslCertificates: {}
-      sslPolicy: {
-        cipherSuites: []
-        disabledProtocols: []
-        minProtocolVersion: 'TLSv1_2'
-        policyName: ''
-        policyType: 'Custom'
-      }
-      sslProfile: {}
-      tags: {}
-      trustedClientCertificate: {}
-      trustedRootCertificate: {}
-      urlPathMapConfigurations: {}
-  }
-  ```
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable/disable metric category. Default is true.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`autoscaleConfiguration`](#parameter-appgatewaydefinitionautoscaleconfiguration) | object | Autoscale configuration (min/max capacity). |
-| [`backendAddressPools`](#parameter-appgatewaydefinitionbackendaddresspools) | object | Backend address pools (FQDNs/IPs). |
-| [`backendHttpSettings`](#parameter-appgatewaydefinitionbackendhttpsettings) | object | Backend HTTP settings collection. |
-| [`frontendPorts`](#parameter-appgatewaydefinitionfrontendports) | object | Frontend ports to expose. |
-| [`http2Enable`](#parameter-appgatewaydefinitionhttp2enable) | bool | Enable HTTP/2 on the gateway. |
-| [`httpListeners`](#parameter-appgatewaydefinitionhttplisteners) | object | HTTP listeners configuration. |
-| [`probeConfigurations`](#parameter-appgatewaydefinitionprobeconfigurations) | object | Health probe configurations. |
-| [`redirectConfiguration`](#parameter-appgatewaydefinitionredirectconfiguration) | object | Redirect configurations. |
-| [`requestRoutingRules`](#parameter-appgatewaydefinitionrequestroutingrules) | object | Request routing rules. |
-| [`sku`](#parameter-appgatewaydefinitionsku) | object | SKU definition (name/tier/capacity). |
-| [`sslPolicy`](#parameter-appgatewaydefinitionsslpolicy) | object | SSL policy (protocols/ciphers). |
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.diagnosticSettings[*].metricCategories
 
-**Optional parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Diagnostic setting name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`authenticationCertificate`](#parameter-appgatewaydefinitionauthenticationcertificate) | object | Authentication certificates to attach to the gateway. |
-| [`createPublicFrontend`](#parameter-appgatewaydefinitioncreatepublicfrontend) | bool | Create public frontend and public IP for the gateway. |
-| [`name`](#parameter-appgatewaydefinitionname) | string | Application Gateway name. |
-| [`rewriteRuleSet`](#parameter-appgatewaydefinitionrewriteruleset) | object | Rewrite rule sets. |
-| [`roleAssignments`](#parameter-appgatewaydefinitionroleassignments) | array | Role assignments to create on the gateway. |
-| [`sslCertificates`](#parameter-appgatewaydefinitionsslcertificates) | object | SSL certificates. |
-| [`sslProfile`](#parameter-appgatewaydefinitionsslprofile) | object | SSL profiles. |
-| [`tags`](#parameter-appgatewaydefinitiontags) | object | Tags to apply to the Application Gateway. |
-| [`trustedClientCertificate`](#parameter-appgatewaydefinitiontrustedclientcertificate) | object | Trusted client certificates. |
-| [`trustedRootCertificate`](#parameter-appgatewaydefinitiontrustedrootcertificate) | object | Trusted root certificates. |
-| [`urlPathMapConfigurations`](#parameter-appgatewaydefinitionurlpathmapconfigurations) | object | URL path map configurations. |
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Diagnostic storage account resource ID.
 
-### Parameter: `appGatewayDefinition.autoscaleConfiguration`
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Log Analytics workspace resource ID.
 
-Autoscale configuration (min/max capacity).
 
-- Required: Yes
-- Type: object
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category.
 
-**Required parameters**
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category group.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`maxCapacity`](#parameter-appgatewaydefinitionautoscaleconfigurationmaxcapacity) | int | Maximum autoscale capacity. |
-| [`minCapacity`](#parameter-appgatewaydefinitionautoscaleconfigurationmincapacity) | int | Minimum autoscale capacity. |
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable/disable category. Default is true.
 
-### Parameter: `appGatewayDefinition.autoscaleConfiguration.maxCapacity`
+  - **`category`** (`string`) - Required
+    - **Description:** Name of a diagnostic metric category.
 
-Maximum autoscale capacity.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable/disable metric category. Default is true.
 
-- Required: Yes
-- Type: int
 
-### Parameter: `appGatewayDefinition.autoscaleConfiguration.minCapacity`
+- **`enableForcedTunneling`** (`bool`) - Optional
+  - **Description:** Enable or disable forced tunneling.
 
-Minimum autoscale capacity.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry. Default is true.
 
-- Required: Yes
-- Type: int
+- **`firewallPolicyId`** (`string`) - Optional
+  - **Description:** Resource ID of the Firewall Policy to attach.
 
-### Parameter: `appGatewayDefinition.backendAddressPools`
+- **`hubIPAddresses`** (`object`) - Conditional
+  - **Description:** IP addresses associated with Azure Firewall. Required if virtualHubId is supplied.
+  - **`privateIPAddress`** (`string`) - Optional
+    - **Description:** Private IP Address associated with Azure Firewall.
 
-Backend address pools (FQDNs/IPs).
+  - **`publicIPs`** (`object`) - Optional
+    - **Description:** Public IPs associated with Azure Firewall.
+    - **`addresses`** (`array`) - Optional
+      - **Description:** List of public IP addresses or IPs to retain.
 
-- Required: Yes
-- Type: object
+    - **`count`** (`int`) - Optional
+      - **Description:** Public IP address count.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionbackendaddresspools>any_other_property<) | object | Arbitrary key for each backend pool. |
 
-### Parameter: `appGatewayDefinition.backendAddressPools.>Any_other_property<`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-Arbitrary key for each backend pool.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the firewall.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Required parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionbackendaddresspools>any_other_property<name) | string | Pool name. |
 
-**Optional parameters**
+- **`managementIPAddressObject`** (`object`) - Optional
+  - **Description:** Properties of the Management Public IP to create and use.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`fqdns`](#parameter-appgatewaydefinitionbackendaddresspools>any_other_property<fqdns) | array | Backend FQDNs. |
-| [`ipAddresses`](#parameter-appgatewaydefinitionbackendaddresspools>any_other_property<ipaddresses) | array | Backend IP addresses. |
+- **`managementIPResourceID`** (`string`) - Optional
+  - **Description:** Management Public IP resource ID for AzureFirewallManagementSubnet.
 
-### Parameter: `appGatewayDefinition.backendAddressPools.>Any_other_property<.name`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Azure Firewall.
 
-Pool name.
+- **`natRuleCollections`** (`array`) - Optional
+  - **Description:** NAT rule collections used by Azure Firewall.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the NAT rule collection.
 
-- Required: Yes
-- Type: string
+  - **`properties`** (`object`) - Required
+    - **Description:** Properties of the NAT rule collection.
+    - **`action`** (`object`) - Required
+      - **Description:** Action of the NAT rule collection.
+      - **`type`** (`string`) - Required
+        - **Description:** Action type. Allowed values: Dnat, Snat.
 
-### Parameter: `appGatewayDefinition.backendAddressPools.>Any_other_property<.fqdns`
 
-Backend FQDNs.
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the NAT rule collection (100–65000).
 
-- Required: Yes
-- Type: array
+    - **`rules`** (`array`) - Required
+      - **Description:** NAT rules in the collection.
+      - **`description`** (`string`) - Optional
+        - **Description:** Description of the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendAddressPools.>Any_other_property<.ipAddresses`
+      - **`destinationAddresses`** (`array`) - Optional
+        - **Description:** Destination addresses (IP ranges, prefixes, service tags).
 
-Backend IP addresses.
+      - **`destinationPorts`** (`array`) - Optional
+        - **Description:** Destination ports.
 
-- Required: Yes
-- Type: array
+      - **`name`** (`string`) - Required
+        - **Description:** Name of the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings`
+      - **`protocols`** (`array`) - Required
+        - **Description:** Protocols for the NAT rule. Allowed values: Any, ICMP, TCP, UDP.
 
-Backend HTTP settings collection.
+      - **`sourceAddresses`** (`array`) - Optional
+        - **Description:** Source addresses.
 
-- Required: Yes
-- Type: object
+      - **`sourceIpGroups`** (`array`) - Optional
+        - **Description:** Source IP groups.
 
-**Required parameters**
+      - **`translatedAddress`** (`string`) - Optional
+        - **Description:** Translated address for the NAT rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<) | object | Arbitrary key for each backend HTTP setting. |
+      - **`translatedFqdn`** (`string`) - Optional
+        - **Description:** Translated FQDN for the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<`
+      - **`translatedPort`** (`string`) - Optional
+        - **Description:** Translated port for the NAT rule.
 
-Arbitrary key for each backend HTTP setting.
 
-- Required: Yes
-- Type: object
+    - **`rules[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallDefinition.natRuleCollections[*].properties.rules
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`cookieBasedAffinity`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<cookiebasedaffinity) | string | Cookie-based affinity mode. |
-| [`name`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<name) | string | Setting name. |
-| [`port`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<port) | int | Backend port for the setting. |
-| [`protocol`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<protocol) | string | Protocol (Http/Https). |
-| [`requestTimeout`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<requesttimeout) | int | Request timeout in seconds. |
 
-**Optional parameters**
+- **`natRuleCollections[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallDefinition.natRuleCollections
+  - **`action`** (`object`) - Required
+    - **Description:** Action of the NAT rule collection.
+    - **`type`** (`string`) - Required
+      - **Description:** Action type. Allowed values: Dnat, Snat.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`affinityCookieName`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<affinitycookiename) | string | Custom affinity cookie name. |
-| [`authenticationCertificate`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<authenticationcertificate) | array | Authentication certificate names to present to backend. |
-| [`connectionDraining`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<connectiondraining) | object | Connection draining settings (enable and drain timeout in seconds). |
-| [`hostName`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<hostname) | string | Host header to use when forwarding. |
-| [`path`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<path) | string | Path to append when forwarding. |
-| [`pickHostNameFromBackendAddress`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<pickhostnamefrombackendaddress) | bool | Use backend address as host header (true/false). |
-| [`probeName`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<probename) | string | Probe name to associate. |
-| [`trustedRootCertificateNames`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<trustedrootcertificatenames) | array | Trusted root certificate names to use. |
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.cookieBasedAffinity`
+  - **`priority`** (`int`) - Required
+    - **Description:** Priority of the NAT rule collection (100–65000).
 
-Cookie-based affinity mode.
+  - **`rules`** (`array`) - Required
+    - **Description:** NAT rules in the collection.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description of the NAT rule.
 
-- Required: Yes
-- Type: string
+    - **`destinationAddresses`** (`array`) - Optional
+      - **Description:** Destination addresses (IP ranges, prefixes, service tags).
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.name`
+    - **`destinationPorts`** (`array`) - Optional
+      - **Description:** Destination ports.
 
-Setting name.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the NAT rule.
 
-- Required: Yes
-- Type: string
+    - **`protocols`** (`array`) - Required
+      - **Description:** Protocols for the NAT rule. Allowed values: Any, ICMP, TCP, UDP.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.port`
+    - **`sourceAddresses`** (`array`) - Optional
+      - **Description:** Source addresses.
 
-Backend port for the setting.
+    - **`sourceIpGroups`** (`array`) - Optional
+      - **Description:** Source IP groups.
 
-- Required: Yes
-- Type: int
+    - **`translatedAddress`** (`string`) - Optional
+      - **Description:** Translated address for the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.protocol`
+    - **`translatedFqdn`** (`string`) - Optional
+      - **Description:** Translated FQDN for the NAT rule.
 
-Protocol (Http/Https).
+    - **`translatedPort`** (`string`) - Optional
+      - **Description:** Translated port for the NAT rule.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.requestTimeout`
+  - **`rules[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.natRuleCollections[*].properties.rules
 
-Request timeout in seconds.
+  - **`type`** (`string`) - Required
+    - **Description:** Action type. Allowed values: Dnat, Snat.
 
-- Required: Yes
-- Type: int
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.affinityCookieName`
+  - **`destinationAddresses`** (`array`) - Optional
+    - **Description:** Destination addresses (IP ranges, prefixes, service tags).
 
-Custom affinity cookie name.
+  - **`destinationPorts`** (`array`) - Optional
+    - **Description:** Destination ports.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the NAT rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.authenticationCertificate`
+  - **`protocols`** (`array`) - Required
+    - **Description:** Protocols for the NAT rule. Allowed values: Any, ICMP, TCP, UDP.
 
-Authentication certificate names to present to backend.
+  - **`sourceAddresses`** (`array`) - Optional
+    - **Description:** Source addresses.
 
-- Required: Yes
-- Type: array
+  - **`sourceIpGroups`** (`array`) - Optional
+    - **Description:** Source IP groups.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.connectionDraining`
+  - **`translatedAddress`** (`string`) - Optional
+    - **Description:** Translated address for the NAT rule.
 
-Connection draining settings (enable and drain timeout in seconds).
+  - **`translatedFqdn`** (`string`) - Optional
+    - **Description:** Translated FQDN for the NAT rule.
 
-- Required: Yes
-- Type: object
+  - **`translatedPort`** (`string`) - Optional
+    - **Description:** Translated port for the NAT rule.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`drainTimeoutSec`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<connectiondrainingdraintimeoutsec) | int | Drain timeout in seconds before terminating connections. |
-| [`enabled`](#parameter-appgatewaydefinitionbackendhttpsettings>any_other_property<connectiondrainingenabled) | bool | Enable connection draining for backend HTTP settings. |
+- **`networkRuleCollections`** (`array`) - Optional
+  - **Description:** Network rule collections used by Azure Firewall.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the network rule collection.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.connectionDraining.drainTimeoutSec`
+  - **`properties`** (`object`) - Required
+    - **Description:** Properties of the network rule collection.
+    - **`action`** (`object`) - Required
+      - **Description:** Action of the network rule collection.
+      - **`type`** (`string`) - Required
+        - **Description:** Action type. Allowed values: Allow, Deny.
 
-Drain timeout in seconds before terminating connections.
 
-- Required: Yes
-- Type: int
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the network rule collection (100–65000).
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.connectionDraining.enabled`
+    - **`rules`** (`array`) - Required
+      - **Description:** Network rules in the collection.
+      - **`description`** (`string`) - Optional
+        - **Description:** Description of the network rule.
 
-Enable connection draining for backend HTTP settings.
+      - **`destinationAddresses`** (`array`) - Optional
+        - **Description:** Destination addresses.
 
-- Required: Yes
-- Type: bool
+      - **`destinationFqdns`** (`array`) - Optional
+        - **Description:** Destination FQDNs.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.hostName`
+      - **`destinationIpGroups`** (`array`) - Optional
+        - **Description:** Destination IP groups.
 
-Host header to use when forwarding.
+      - **`destinationPorts`** (`array`) - Optional
+        - **Description:** Destination ports.
 
-- Required: Yes
-- Type: string
+      - **`name`** (`string`) - Required
+        - **Description:** Name of the network rule.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.path`
+      - **`protocols`** (`array`) - Required
+        - **Description:** Protocols for the network rule. Allowed values: Any, ICMP, TCP, UDP.
 
-Path to append when forwarding.
+      - **`sourceAddresses`** (`array`) - Optional
+        - **Description:** Source addresses.
 
-- Required: Yes
-- Type: string
+      - **`sourceIpGroups`** (`array`) - Optional
+        - **Description:** Source IP groups.
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.pickHostNameFromBackendAddress`
 
-Use backend address as host header (true/false).
+    - **`rules[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallDefinition.networkRuleCollections[*].properties.rules
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.probeName`
 
-Probe name to associate.
+- **`networkRuleCollections[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallDefinition.networkRuleCollections
+  - **`action`** (`object`) - Required
+    - **Description:** Action of the network rule collection.
+    - **`type`** (`string`) - Required
+      - **Description:** Action type. Allowed values: Allow, Deny.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.backendHttpSettings.>Any_other_property<.trustedRootCertificateNames`
+  - **`priority`** (`int`) - Required
+    - **Description:** Priority of the network rule collection (100–65000).
 
-Trusted root certificate names to use.
+  - **`rules`** (`array`) - Required
+    - **Description:** Network rules in the collection.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description of the network rule.
 
-- Required: Yes
-- Type: array
+    - **`destinationAddresses`** (`array`) - Optional
+      - **Description:** Destination addresses.
 
-### Parameter: `appGatewayDefinition.frontendPorts`
+    - **`destinationFqdns`** (`array`) - Optional
+      - **Description:** Destination FQDNs.
 
-Frontend ports to expose.
+    - **`destinationIpGroups`** (`array`) - Optional
+      - **Description:** Destination IP groups.
 
-- Required: Yes
-- Type: object
+    - **`destinationPorts`** (`array`) - Optional
+      - **Description:** Destination ports.
 
-**Required parameters**
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the network rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionfrontendports>any_other_property<) | object | Arbitrary key for each frontend port. |
+    - **`protocols`** (`array`) - Required
+      - **Description:** Protocols for the network rule. Allowed values: Any, ICMP, TCP, UDP.
 
-### Parameter: `appGatewayDefinition.frontendPorts.>Any_other_property<`
+    - **`sourceAddresses`** (`array`) - Optional
+      - **Description:** Source addresses.
 
-Arbitrary key for each frontend port.
+    - **`sourceIpGroups`** (`array`) - Optional
+      - **Description:** Source IP groups.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+  - **`rules[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallDefinition.networkRuleCollections[*].properties.rules
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionfrontendports>any_other_property<name) | string | Port name. |
-| [`port`](#parameter-appgatewaydefinitionfrontendports>any_other_property<port) | int | Port number. |
+  - **`type`** (`string`) - Required
+    - **Description:** Action type. Allowed values: Allow, Deny.
 
-### Parameter: `appGatewayDefinition.frontendPorts.>Any_other_property<.name`
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the network rule.
 
-Port name.
+  - **`destinationAddresses`** (`array`) - Optional
+    - **Description:** Destination addresses.
 
-- Required: Yes
-- Type: string
+  - **`destinationFqdns`** (`array`) - Optional
+    - **Description:** Destination FQDNs.
 
-### Parameter: `appGatewayDefinition.frontendPorts.>Any_other_property<.port`
+  - **`destinationIpGroups`** (`array`) - Optional
+    - **Description:** Destination IP groups.
 
-Port number.
+  - **`destinationPorts`** (`array`) - Optional
+    - **Description:** Destination ports.
 
-- Required: Yes
-- Type: int
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the network rule.
 
-### Parameter: `appGatewayDefinition.http2Enable`
+  - **`protocols`** (`array`) - Required
+    - **Description:** Protocols for the network rule. Allowed values: Any, ICMP, TCP, UDP.
 
-Enable HTTP/2 on the gateway.
+  - **`sourceAddresses`** (`array`) - Optional
+    - **Description:** Source addresses.
 
-- Required: Yes
-- Type: bool
+  - **`sourceIpGroups`** (`array`) - Optional
+    - **Description:** Source IP groups.
 
-### Parameter: `appGatewayDefinition.httpListeners`
 
-HTTP listeners configuration.
+- **`publicIPAddressObject`** (`object`) - Optional
+  - **Description:** Properties of the Public IP to create and use if no existing Public IP is provided.
 
-- Required: Yes
-- Type: object
+- **`publicIPResourceID`** (`string`) - Optional
+  - **Description:** Public IP resource ID for the AzureFirewallSubnet.
 
-**Required parameters**
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the firewall.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<) | object | Arbitrary key for each HTTP listener. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Azure Firewall resource.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<`
+- **`threatIntelMode`** (`string`) - Optional
+  - **Description:** Operation mode for Threat Intel. Allowed values: Alert, Deny, Off.
 
-Arbitrary key for each HTTP listener.
+- **`virtualHubResourceId`** (`string`) - Conditional
+  - **Description:** The virtualHub resource ID to which the firewall belongs. Required if virtualNetworkId is empty.
 
-- Required: Yes
-- Type: object
+- **`virtualNetworkResourceId`** (`string`) - Conditional
+  - **Description:** Shared services Virtual Network resource ID containing AzureFirewallSubnet. Required if virtualHubId is empty.
 
-**Required parameters**
+### `firewallPolicyDefinition`
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`frontendPortName`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<frontendportname) | string | Name of the frontend port to use. |
-| [`name`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<name) | string | Listener name. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `firewallPolicyDefinition` | `object` | Conditional | Azure Firewall Policy configuration. Required if deploy.firewall is true and resourceIds.firewallPolicyResourceId is empty. |
 
-**Optional parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`customErrorConfiguration`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<customerrorconfiguration) | array | Custom error configuration entries. |
-| [`firewallPolicyId`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<firewallpolicyid) | string | Resource ID of the associated WAF policy. |
-| [`frontendIpConfigurationName`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<frontendipconfigurationname) | string | Name of the frontend IP configuration to use. |
-| [`hostName`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<hostname) | string | Host name for the listener. |
-| [`hostNames`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<hostnames) | array | Multiple host names for the listener. |
-| [`requireSni`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<requiresni) | bool | Require SNI for TLS. |
-| [`sslCertificateName`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<sslcertificatename) | string | SSL certificate name to bind to the listener. |
-| [`sslProfileName`](#parameter-appgatewaydefinitionhttplisteners>any_other_property<sslprofilename) | string | SSL profile name to use. |
+- **`allowSqlRedirect`** (`bool`) - Optional
+  - **Description:** A flag to indicate if SQL Redirect traffic filtering is enabled. Requires no rule using ports 11000–11999.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.frontendPortName`
+- **`basePolicyResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the base policy.
 
-Name of the frontend port to use.
+- **`certificateName`** (`string`) - Optional
+  - **Description:** Name of the CA certificate.
 
-- Required: Yes
-- Type: string
+- **`defaultWorkspaceResourceId`** (`string`) - Optional
+  - **Description:** Default Log Analytics Resource ID for Firewall Policy Insights.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.name`
+- **`enableProxy`** (`bool`) - Optional
+  - **Description:** Enable DNS Proxy on Firewalls attached to the Firewall Policy.
 
-Listener name.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-- Required: Yes
-- Type: string
+- **`fqdns`** (`array`) - Optional
+  - **Description:** List of FQDNs for the ThreatIntel Allowlist.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.customErrorConfiguration`
+- **`insightsIsEnabled`** (`bool`) - Optional
+  - **Description:** Flag to indicate if insights are enabled on the policy.
 
-Custom error configuration entries.
+- **`intrusionDetection`** (`object`) - Optional
+  - **Description:** Intrusion detection configuration.
+  - **`configuration`** (`object`) - Optional
+    - **Description:** Intrusion detection configuration properties.
+    - **`bypassTrafficSettings`** (`array`) - Optional
+      - **Description:** List of bypass traffic rules.
+      - **`description`** (`string`) - Optional
+        - **Description:** Description of the bypass traffic rule.
 
-- Required: Yes
-- Type: array
+      - **`destinationAddresses`** (`array`) - Optional
+        - **Description:** Destination IP addresses or ranges.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.firewallPolicyId`
+      - **`destinationIpGroups`** (`array`) - Optional
+        - **Description:** Destination IP groups.
 
-Resource ID of the associated WAF policy.
+      - **`destinationPorts`** (`array`) - Optional
+        - **Description:** Destination ports or ranges.
 
-- Required: Yes
-- Type: string
+      - **`name`** (`string`) - Required
+        - **Description:** Name of the bypass traffic rule.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.frontendIpConfigurationName`
+      - **`protocol`** (`string`) - Optional
+        - **Description:** Protocol for the rule. Allowed values: ANY, ICMP, TCP, UDP.
 
-Name of the frontend IP configuration to use.
+      - **`sourceAddresses`** (`array`) - Optional
+        - **Description:** Source IP addresses or ranges.
 
-- Required: Yes
-- Type: string
+      - **`sourceIpGroups`** (`array`) - Optional
+        - **Description:** Source IP groups.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.hostName`
 
-Host name for the listener.
+    - **`bypassTrafficSettings[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallPolicyDefinition.intrusionDetection.configuration.bypassTrafficSettings
 
-- Required: Yes
-- Type: string
+    - **`privateRanges`** (`array`) - Optional
+      - **Description:** List of private IP ranges to consider as internal.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.hostNames`
+    - **`signatureOverrides`** (`array`) - Optional
+      - **Description:** Signature override states.
+      - **`id`** (`string`) - Required
+        - **Description:** Signature ID.
 
-Multiple host names for the listener.
+      - **`mode`** (`string`) - Required
+        - **Description:** Signature state. Allowed values: Alert, Deny, Off.
 
-- Required: Yes
-- Type: array
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.requireSni`
+    - **`signatureOverrides[*]`** (`object`) - Optional
+      - **Description:** Array item for firewallPolicyDefinition.intrusionDetection.configuration.signatureOverrides
 
-Require SNI for TLS.
 
-- Required: Yes
-- Type: bool
+  - **`mode`** (`string`) - Optional
+    - **Description:** Intrusion detection mode. Allowed values: Alert, Deny, Off.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.sslCertificateName`
+  - **`profile`** (`string`) - Optional
+    - **Description:** IDPS profile name. Allowed values: Advanced, Basic, Extended, Standard.
 
-SSL certificate name to bind to the listener.
 
-- Required: Yes
-- Type: string
+- **`ipAddresses`** (`array`) - Optional
+  - **Description:** List of IP addresses for the ThreatIntel Allowlist.
 
-### Parameter: `appGatewayDefinition.httpListeners.>Any_other_property<.sslProfileName`
+- **`keyVaultSecretId`** (`string`) - Optional
+  - **Description:** Key Vault secret ID (base-64 encoded unencrypted PFX or Certificate object).
 
-SSL profile name to use.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-- Required: Yes
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the Firewall Policy.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-### Parameter: `appGatewayDefinition.probeConfigurations`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Health probe configurations.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity definition for this resource.
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs. Required if using a user-assigned identity for encryption.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<) | object | Arbitrary key for each probe configuration. |
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Firewall Policy.
 
-Arbitrary key for each probe configuration.
+- **`retentionDays`** (`int`) - Optional
+  - **Description:** Number of days to retain Firewall Policy insights. Default is 365.
 
-- Required: Yes
-- Type: object
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to create for the Firewall Policy.
 
-**Required parameters**
+- **`ruleCollectionGroups`** (`array`) - Optional
+  - **Description:** Rule collection groups.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`interval`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<interval) | int | Probe interval in seconds. |
-| [`name`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<name) | string | Probe name. |
-| [`protocol`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<protocol) | string | Protocol for the probe (Http/Https/Tcp). |
-| [`timeout`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<timeout) | int | Probe timeout in seconds. |
-| [`unhealthyThreshold`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<unhealthythreshold) | int | Consecutive failures before marking unhealthy. |
+- **`servers`** (`array`) - Optional
+  - **Description:** List of custom DNS servers.
 
-**Optional parameters**
+- **`snat`** (`object`) - Optional
+  - **Description:** SNAT private IP ranges configuration.
+  - **`autoLearnPrivateRanges`** (`string`) - Required
+    - **Description:** Mode for automatically learning private ranges. Allowed values: Disabled, Enabled.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`host`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<host) | string | Host header to send in probe requests. |
-| [`match`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<match) | object | Match conditions for HTTP probe response. |
-| [`minimumServers`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<minimumservers) | int | Minimum servers that must be healthy. |
-| [`path`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<path) | string | Path to probe (for HTTP/S). |
-| [`pickHostNameFromBackendHttpSettings`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<pickhostnamefrombackendhttpsettings) | bool | Use host name from backend HTTP settings. |
-| [`port`](#parameter-appgatewaydefinitionprobeconfigurations>any_other_property<port) | int | Backend port to probe. |
+  - **`privateRanges`** (`array`) - Optional
+    - **Description:** List of private IP ranges not to be SNATed.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.interval`
 
-Probe interval in seconds.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Firewall Policy.
 
-- Required: Yes
-- Type: int
+- **`threatIntelMode`** (`string`) - Optional
+  - **Description:** Threat Intelligence mode. Allowed values: Alert, Deny, Off.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.name`
+- **`tier`** (`string`) - Optional
+  - **Description:** Tier of the Firewall Policy. Allowed values: Basic, Premium, Standard.
 
-Probe name.
+- **`workspaces`** (`array`) - Optional
+  - **Description:** List of workspaces for Firewall Policy Insights.
 
-- Required: Yes
-- Type: string
+### `firewallPublicIp`
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.protocol`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `firewallPublicIp` | `object` | Conditional | Conditional Public IP for Azure Firewall. Required when deploy firewall is true and no existing ID is provided. |
 
-Protocol for the probe (Http/Https/Tcp).
+**Properties:**
 
-- Required: Yes
-- Type: string
+- **`ddosSettings`** (`object`) - Optional
+  - **Description:** DDoS protection settings for the Public IP Address.
+  - **`ddosProtectionPlan`** (`object`) - Optional
+    - **Description:** Associated DDoS protection plan.
+    - **`id`** (`string`) - Required
+      - **Description:** Resource ID of the DDoS protection plan.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.timeout`
 
-Probe timeout in seconds.
+  - **`protectionMode`** (`string`) - Required
+    - **Description:** DDoS protection mode. Allowed value: Enabled.
 
-- Required: Yes
-- Type: int
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.unhealthyThreshold`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the Public IP Address.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Event Hub authorization rule.
 
-Consecutive failures before marking unhealthy.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Name of the diagnostic Event Hub.
 
-- Required: Yes
-- Type: int
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Log Analytics destination type. Allowed values: AzureDiagnostics, Dedicated.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.host`
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups to collect. Set to [] to disable log collection.
+    - **`category`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category.
 
-Host header to send in probe requests.
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category group. Use allLogs to collect all logs.
 
-- Required: Yes
-- Type: string
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the log category. Default is true.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.match`
 
-Match conditions for HTTP probe response.
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallPublicIp.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: object
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.minimumServers`
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories to collect. Set to [] to disable metric collection.
+    - **`category`** (`string`) - Required
+      - **Description:** Name of a diagnostic metric category. Use AllMetrics to collect all metrics.
 
-Minimum servers that must be healthy.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the metric category. Default is true.
 
-- Required: Yes
-- Type: int
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.path`
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for firewallPublicIp.diagnosticSettings[*].metricCategories
 
-Path to probe (for HTTP/S).
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the diagnostic setting.
 
-- Required: Yes
-- Type: string
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic storage account.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.pickHostNameFromBackendHttpSettings`
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
-Use host name from backend HTTP settings.
 
-- Required: Yes
-- Type: bool
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallPublicIp.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category.
 
-### Parameter: `appGatewayDefinition.probeConfigurations.>Any_other_property<.port`
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category group. Use allLogs to collect all logs.
 
-Backend port to probe.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the log category. Default is true.
 
-- Required: Yes
-- Type: int
+  - **`category`** (`string`) - Required
+    - **Description:** Name of a diagnostic metric category. Use AllMetrics to collect all metrics.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the metric category. Default is true.
 
-Redirect configurations.
 
-- Required: Yes
-- Type: object
+- **`dnsSettings`** (`object`) - Optional
+  - **Description:** DNS settings for the Public IP Address.
+  - **`domainNameLabel`** (`string`) - Required
+    - **Description:** Domain name label used to create an A DNS record in Azure DNS.
 
-**Required parameters**
+  - **`domainNameLabelScope`** (`string`) - Optional
+    - **Description:** Domain name label scope. Allowed values: NoReuse, ResourceGroupReuse, SubscriptionReuse, TenantReuse.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<) | object | Arbitrary key for each redirect configuration. |
+  - **`fqdn`** (`string`) - Optional
+    - **Description:** Fully qualified domain name (FQDN) associated with the Public IP.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<`
+  - **`reverseFqdn`** (`string`) - Optional
+    - **Description:** Reverse FQDN used for PTR records.
 
-Arbitrary key for each redirect configuration.
 
-- Required: Yes
-- Type: object
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-**Required parameters**
+- **`idleTimeoutInMinutes`** (`int`) - Optional
+  - **Description:** Idle timeout in minutes for the Public IP Address. Default is 4.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<name) | string | Redirect configuration name. |
-| [`redirectType`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<redirecttype) | string | Redirect type (Permanent, Found, Temporary, SeeOther). |
+- **`ipTags`** (`array`) - Optional
+  - **Description:** IP tags associated with the Public IP Address.
+  - **`ipTagType`** (`string`) - Required
+    - **Description:** IP tag type.
 
-**Optional parameters**
+  - **`tag`** (`string`) - Required
+    - **Description:** IP tag value.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`includePath`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<includepath) | bool | Include the path in the redirect. |
-| [`includeQueryString`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<includequerystring) | bool | Include the query string in the redirect. |
-| [`targetListenerName`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<targetlistenername) | string | Target listener name for listener redirect. |
-| [`targetUrl`](#parameter-appgatewaydefinitionredirectconfiguration>any_other_property<targeturl) | string | Target URL for external redirect. |
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.name`
+- **`ipTags[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallPublicIp.ipTags
 
-Redirect configuration name.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Default is resourceGroup().location.
 
-- Required: Yes
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Public IP Address.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.redirectType`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Redirect type (Permanent, Found, Temporary, SeeOther).
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.includePath`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Public IP Address.
 
-Include the path in the redirect.
+- **`publicIPAddressVersion`** (`string`) - Optional
+  - **Description:** IP address version. Default is IPv4. Allowed values: IPv4, IPv6.
 
-- Required: Yes
-- Type: bool
+- **`publicIPAllocationMethod`** (`string`) - Optional
+  - **Description:** Public IP allocation method. Default is Static. Allowed values: Dynamic, Static.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.includeQueryString`
+- **`publicIpPrefixResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the Public IP Prefix to allocate from.
 
-Include the query string in the redirect.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to apply to the Public IP Address.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition for the role assignment.
 
-- Required: Yes
-- Type: bool
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version. Allowed value: 2.0.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.targetListenerName`
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Delegated managed identity resource ID.
 
-Target listener name for listener redirect.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Role assignment name (GUID). If omitted, a GUID is generated.
 
-### Parameter: `appGatewayDefinition.redirectConfiguration.>Any_other_property<.targetUrl`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the identity being assigned.
 
-Target URL for external redirect.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type of the assigned identity. Allowed values: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-- Required: Yes
-- Type: string
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign (display name, GUID, or full resource ID).
 
-### Parameter: `appGatewayDefinition.requestRoutingRules`
 
-Request routing rules.
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for firewallPublicIp.roleAssignments
 
-- Required: Yes
-- Type: object
+- **`skuName`** (`string`) - Optional
+  - **Description:** SKU name for the Public IP Address. Default is Standard. Allowed values: Basic, Standard.
 
-**Required parameters**
+- **`skuTier`** (`string`) - Optional
+  - **Description:** SKU tier for the Public IP Address. Default is Regional. Allowed values: Global, Regional.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<) | object | Arbitrary key for each routing rule. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Public IP Address resource.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<`
+- **`zones`** (`array`) - Optional
+  - **Description:** Availability zones for the Public IP Address allocation. Allowed values: 1, 2, 3.
 
-Arbitrary key for each routing rule.
+### `groundingWithBingDefinition`
 
-- Required: Yes
-- Type: object
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `groundingWithBingDefinition` | `object` | Conditional | Grounding with Bing configuration. Required if deploy.groundingWithBingSearch is true and resourceIds.groundingServiceResourceId is empty. |
 
-**Required parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`httpListenerName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<httplistenername) | string | HTTP listener name to attach to. |
-| [`name`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<name) | string | Rule name. |
-| [`ruleType`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<ruletype) | string | Rule type (Basic or PathBasedRouting). |
+- **`name`** (`string`) - Optional
+  - **Description:** Bing Grounding resource name.
 
-**Optional parameters**
+- **`sku`** (`string`) - Required
+  - **Description:** Bing Grounding resource SKU.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`backendAddressPoolName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<backendaddresspoolname) | string | Backend address pool name to route to. |
-| [`backendHttpSettingsName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<backendhttpsettingsname) | string | Backend HTTP settings name to use. |
-| [`priority`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<priority) | int | Rule priority (1-20000). |
-| [`redirectConfigurationName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<redirectconfigurationname) | string | Redirect configuration name to use. |
-| [`rewriteRuleSetName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<rewriterulesetname) | string | Rewrite rule set name to apply. |
-| [`urlPathMapName`](#parameter-appgatewaydefinitionrequestroutingrules>any_other_property<urlpathmapname) | string | URL path map name for path-based rules. |
+- **`tags`** (`object`) - Required
+  - **Description:** Tags to apply to the Bing Grounding resource.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.httpListenerName`
+### `jumpVmDefinition`
 
-HTTP listener name to attach to.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `jumpVmDefinition` | `object` | Conditional | Jump (bastion) VM configuration (Windows). Required if deploy.jumpVm is true. |
 
-- Required: Yes
-- Type: string
+**Properties:**
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.name`
+- **`adminPassword`** (`securestring`) - Optional
+  - **Description:** Admin password for the VM.
 
-Rule name.
+- **`adminUsername`** (`string`) - Optional
+  - **Description:** Admin username to create (e.g., azureuser).
 
-- Required: Yes
-- Type: string
+- **`availabilityZone`** (`int`) - Optional
+  - **Description:** Availability zone.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.ruleType`
+- **`azdo`** (`object`) - Optional
+  - **Description:** Azure DevOps settings (required when runner = azdo, Build VM only).
+  - **`agentName`** (`string`) - Optional
+    - **Description:** Agent name.
 
-Rule type (Basic or PathBasedRouting).
+  - **`orgUrl`** (`string`) - Required
+    - **Description:** Azure DevOps organization URL (e.g., https://dev.azure.com/contoso).
 
-- Required: Yes
-- Type: string
+  - **`pool`** (`string`) - Required
+    - **Description:** Agent pool name.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.backendAddressPoolName`
+  - **`workFolder`** (`string`) - Optional
+    - **Description:** Working folder.
 
-Backend address pool name to route to.
 
-- Required: Yes
-- Type: string
+- **`disablePasswordAuthentication`** (`bool`) - Optional
+  - **Description:** Disable password authentication (Build VM only).
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.backendHttpSettingsName`
+- **`enableAutomaticUpdates`** (`bool`) - Optional
+  - **Description:** Enable automatic updates (Jump VM only).
 
-Backend HTTP settings name to use.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable telemetry via a Globally Unique Identifier (GUID).
 
-- Required: Yes
-- Type: string
+- **`github`** (`object`) - Optional
+  - **Description:** GitHub settings (required when runner = github, Build VM only).
+  - **`agentName`** (`string`) - Optional
+    - **Description:** Runner name.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.priority`
+  - **`labels`** (`string`) - Optional
+    - **Description:** Runner labels (comma-separated).
 
-Rule priority (1-20000).
+  - **`owner`** (`string`) - Required
+    - **Description:** GitHub owner (org or user).
 
-- Required: Yes
-- Type: int
+  - **`repo`** (`string`) - Required
+    - **Description:** Repository name.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.redirectConfigurationName`
+  - **`workFolder`** (`string`) - Optional
+    - **Description:** Working folder.
 
-Redirect configuration name to use.
 
-- Required: Yes
-- Type: string
+- **`imageReference`** (`object`) - Optional
+  - **Description:** Marketplace image reference for the VM.
+  - **`communityGalleryImageId`** (`string`) - Optional
+    - **Description:** Community gallery image ID.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.rewriteRuleSetName`
+  - **`id`** (`string`) - Optional
+    - **Description:** Resource ID.
 
-Rewrite rule set name to apply.
+  - **`offer`** (`string`) - Optional
+    - **Description:** Offer name.
 
-- Required: Yes
-- Type: string
+  - **`publisher`** (`string`) - Optional
+    - **Description:** Publisher name.
 
-### Parameter: `appGatewayDefinition.requestRoutingRules.>Any_other_property<.urlPathMapName`
+  - **`sharedGalleryImageId`** (`string`) - Optional
+    - **Description:** Shared gallery image ID.
 
-URL path map name for path-based rules.
+  - **`sku`** (`string`) - Optional
+    - **Description:** SKU name.
 
-- Required: Yes
-- Type: string
+  - **`version`** (`string`) - Optional
+    - **Description:** Image version (e.g., latest).
 
-### Parameter: `appGatewayDefinition.sku`
 
-SKU definition (name/tier/capacity).
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources.
 
-- Required: Yes
-- Type: object
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration.
 
-**Required parameters**
+- **`maintenanceConfigurationResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the maintenance configuration (Jump VM only).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`capacity`](#parameter-appgatewaydefinitionskucapacity) | int | Instance capacity when autoscale is disabled. |
-| [`name`](#parameter-appgatewaydefinitionskuname) | string | SKU name (e.g., WAF_v2). |
-| [`tier`](#parameter-appgatewaydefinitionskutier) | string | SKU tier (e.g., WAF_v2). |
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identities.
 
-### Parameter: `appGatewayDefinition.sku.capacity`
+- **`name`** (`string`) - Optional
+  - **Description:** VM name.
 
-Instance capacity when autoscale is disabled.
+- **`nicConfigurations`** (`array`) - Optional
+  - **Description:** Network interface configurations.
 
-- Required: Yes
-- Type: int
+- **`osDisk`** (`object`) - Optional
+  - **Description:** OS disk configuration.
 
-### Parameter: `appGatewayDefinition.sku.name`
+- **`osType`** (`string`) - Optional
+  - **Description:** OS type for the VM.
 
-SKU name (e.g., WAF_v2).
+- **`patchMode`** (`string`) - Optional
+  - **Description:** Patch mode for the VM (Jump VM only).
 
-- Required: Yes
-- Type: string
+- **`publicKeys`** (`array`) - Optional
+  - **Description:** SSH public keys (Build VM only).
 
-### Parameter: `appGatewayDefinition.sku.tier`
+- **`requireGuestProvisionSignal`** (`bool`) - Optional
+  - **Description:** Force password reset on first login.
 
-SKU tier (e.g., WAF_v2).
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments.
 
-- Required: Yes
-- Type: string
+- **`runner`** (`string`) - Optional
+  - **Description:** Which agent to install (Build VM only).
 
-### Parameter: `appGatewayDefinition.sslPolicy`
+- **`sku`** (`string`) - Optional
+  - **Description:** VM size SKU (e.g., Standard_B2s, Standard_D2s_v5).
 
-SSL policy (protocols/ciphers).
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the VM resource.
 
-- Required: Yes
-- Type: object
+### `logAnalyticsDefinition`
 
-**Required parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `logAnalyticsDefinition` | `object` | Conditional | Log Analytics Workspace configuration. Required if deploy.logAnalytics is true and resourceIds.logAnalyticsWorkspaceResourceId is empty. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`cipherSuites`](#parameter-appgatewaydefinitionsslpolicyciphersuites) | array | Allowed cipher suites. |
-| [`disabledProtocols`](#parameter-appgatewaydefinitionsslpolicydisabledprotocols) | array | Disabled protocol versions. |
-| [`minProtocolVersion`](#parameter-appgatewaydefinitionsslpolicyminprotocolversion) | string | Minimum allowed TLS protocol version. |
-| [`policyName`](#parameter-appgatewaydefinitionsslpolicypolicyname) | string | Policy name if using a predefined policy. |
-| [`policyType`](#parameter-appgatewaydefinitionsslpolicypolicytype) | string | Policy type (Predefined/Custom). |
+**Properties:**
 
-### Parameter: `appGatewayDefinition.sslPolicy.cipherSuites`
+- **`dailyQuotaGb`** (`int`) - Optional
+  - **Description:** Daily ingestion quota in GB. Default is -1.
 
-Allowed cipher suites.
+- **`dataExports`** (`array`) - Optional
+  - **Description:** Data export instances for the workspace.
+  - **`destination`** (`object`) - Optional
+    - **Description:** Destination configuration for the export.
+    - **`metaData`** (`object`) - Optional
+      - **Description:** Destination metadata.
+      - **`eventHubName`** (`string`) - Optional
+        - **Description:** Event Hub name (not applicable when destination is Storage Account).
 
-- Required: Yes
-- Type: array
 
-### Parameter: `appGatewayDefinition.sslPolicy.disabledProtocols`
+    - **`resourceId`** (`string`) - Required
+      - **Description:** Destination resource ID.
 
-Disabled protocol versions.
 
-- Required: Yes
-- Type: array
+  - **`enable`** (`bool`) - Optional
+    - **Description:** Enable or disable the data export.
 
-### Parameter: `appGatewayDefinition.sslPolicy.minProtocolVersion`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the data export.
 
-Minimum allowed TLS protocol version.
+  - **`tableNames`** (`array`) - Required
+    - **Description:** Table names to export.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.sslPolicy.policyName`
+- **`dataExports[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.dataExports
+  - **`metaData`** (`object`) - Optional
+    - **Description:** Destination metadata.
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Event Hub name (not applicable when destination is Storage Account).
 
-Policy name if using a predefined policy.
 
-- Required: Yes
-- Type: string
+  - **`resourceId`** (`string`) - Required
+    - **Description:** Destination resource ID.
 
-### Parameter: `appGatewayDefinition.sslPolicy.policyType`
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Event Hub name (not applicable when destination is Storage Account).
 
-Policy type (Predefined/Custom).
 
-- Required: Yes
-- Type: string
+- **`dataRetention`** (`int`) - Optional
+  - **Description:** Number of days data will be retained. Default 365 (0–730).
 
-### Parameter: `appGatewayDefinition.authenticationCertificate`
+- **`dataSources`** (`array`) - Optional
+  - **Description:** Data sources for the workspace.
+  - **`counterName`** (`string`) - Optional
+    - **Description:** Counter name for WindowsPerformanceCounter.
 
-Authentication certificates to attach to the gateway.
+  - **`eventLogName`** (`string`) - Optional
+    - **Description:** Event log name for WindowsEvent.
 
-- Required: Yes
-- Type: object
+  - **`eventTypes`** (`array`) - Optional
+    - **Description:** Event types for WindowsEvent.
 
-**Required parameters**
+  - **`instanceName`** (`string`) - Optional
+    - **Description:** Instance name for WindowsPerformanceCounter or LinuxPerformanceObject.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionauthenticationcertificate>any_other_property<) | object | Arbitrary key for each authentication certificate. |
+  - **`intervalSeconds`** (`int`) - Optional
+    - **Description:** Interval in seconds for collection.
 
-### Parameter: `appGatewayDefinition.authenticationCertificate.>Any_other_property<`
+  - **`kind`** (`string`) - Required
+    - **Description:** Kind of data source.
 
-Arbitrary key for each authentication certificate.
+  - **`linkedResourceId`** (`string`) - Optional
+    - **Description:** Resource ID linked to the workspace.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the data source.
 
-**Required parameters**
+  - **`objectName`** (`string`) - Optional
+    - **Description:** Object name for WindowsPerformanceCounter or LinuxPerformanceObject.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`data`](#parameter-appgatewaydefinitionauthenticationcertificate>any_other_property<data) | string | Certificate data. |
-| [`name`](#parameter-appgatewaydefinitionauthenticationcertificate>any_other_property<name) | string | Certificate name. |
+  - **`performanceCounters`** (`array`) - Optional
+    - **Description:** Performance counters for LinuxPerformanceObject.
 
-### Parameter: `appGatewayDefinition.authenticationCertificate.>Any_other_property<.data`
+  - **`state`** (`string`) - Optional
+    - **Description:** State (for IISLogs, LinuxSyslogCollection, or LinuxPerformanceCollection).
 
-Certificate data.
+  - **`syslogName`** (`string`) - Optional
+    - **Description:** System log name for LinuxSyslog.
 
-- Required: Yes
-- Type: string
+  - **`syslogSeverities`** (`array`) - Optional
+    - **Description:** Severities for LinuxSyslog.
 
-### Parameter: `appGatewayDefinition.authenticationCertificate.>Any_other_property<.name`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the data source.
 
-Certificate name.
 
-- Required: Yes
-- Type: string
+- **`dataSources[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.dataSources
 
-### Parameter: `appGatewayDefinition.createPublicFrontend`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the workspace.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Event Hub authorization rule resource ID.
 
-Create public frontend and public IP for the gateway.
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Diagnostic Event Hub name.
 
-- Required: No
-- Type: bool
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Destination type for Log Analytics. Allowed: AzureDiagnostics, Dedicated.
 
-### Parameter: `appGatewayDefinition.name`
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups to stream.
+    - **`category`** (`string`) - Optional
+      - **Description:** Log category name.
 
-Application Gateway name.
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Log category group name.
 
-- Required: No
-- Type: string
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the category. Default true.
 
-### Parameter: `appGatewayDefinition.rewriteRuleSet`
 
-Rewrite rule sets.
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: object
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID.
 
-**Required parameters**
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories to stream.
+    - **`category`** (`string`) - Required
+      - **Description:** Diagnostic metric category name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionrewriteruleset>any_other_property<) | object | Arbitrary key for each rewrite rule set. |
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the metric category. Default true.
 
-### Parameter: `appGatewayDefinition.rewriteRuleSet.>Any_other_property<`
 
-Arbitrary key for each rewrite rule set.
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings[*].metricCategories
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Optional
+    - **Description:** Diagnostic setting name.
 
-**Required parameters**
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Storage account resource ID for diagnostic logs.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionrewriteruleset>any_other_property<name) | string | Rewrite rule set name. |
+  - **`useThisWorkspace`** (`bool`) - Optional
+    - **Description:** Use this workspace as diagnostic target (ignores workspaceResourceId).
 
-**Optional parameters**
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Log Analytics workspace resource ID for diagnostics.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`rewriteRules`](#parameter-appgatewaydefinitionrewriteruleset>any_other_property<rewriterules) | object | Rewrite rules contained in this set. |
 
-### Parameter: `appGatewayDefinition.rewriteRuleSet.>Any_other_property<.name`
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Log category name.
 
-Rewrite rule set name.
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Log category group name.
 
-- Required: Yes
-- Type: string
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the category. Default true.
 
-### Parameter: `appGatewayDefinition.rewriteRuleSet.>Any_other_property<.rewriteRules`
+  - **`category`** (`string`) - Required
+    - **Description:** Diagnostic metric category name.
 
-Rewrite rules contained in this set.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the metric category. Default true.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable telemetry. Default true.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionrewriteruleset>any_other_property<rewriterules>any_other_property<) | object | Arbitrary key for each rewrite rule entry. |
+- **`features`** (`object`) - Optional
+  - **Description:** Features for the workspace.
+  - **`disableLocalAuth`** (`bool`) - Optional
+    - **Description:** Disable non-EntraID auth. Default true.
 
-### Parameter: `appGatewayDefinition.rewriteRuleSet.>Any_other_property<.rewriteRules.>Any_other_property<`
+  - **`enableDataExport`** (`bool`) - Optional
+    - **Description:** Enable data export.
 
-Arbitrary key for each rewrite rule entry.
+  - **`enableLogAccessUsingOnlyResourcePermissions`** (`bool`) - Optional
+    - **Description:** Enable log access using only resource permissions. Default false.
 
-- Required: Yes
-- Type: object
+  - **`immediatePurgeDataOn30Days`** (`bool`) - Optional
+    - **Description:** Remove data after 30 days.
 
-### Parameter: `appGatewayDefinition.roleAssignments`
 
-Role assignments to create on the gateway.
+- **`forceCmkForQuery`** (`bool`) - Optional
+  - **Description:** Enforce customer-managed storage for queries.
 
-- Required: Yes
-- Type: array
+- **`gallerySolutions`** (`array`) - Optional
+  - **Description:** Gallery solutions for the workspace.
+  - **`name`** (`string`) - Required
+    - **Description:** Solution name. Must follow Microsoft or 3rd party naming convention.
 
-**Required parameters**
+  - **`plan`** (`object`) - Required
+    - **Description:** Plan for the gallery solution.
+    - **`name`** (`string`) - Optional
+      - **Description:** Solution name (defaults to gallerySolutions.name).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-appgatewaydefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-appgatewaydefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-appgatewaydefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+    - **`product`** (`string`) - Required
+      - **Description:** Product name (e.g., OMSGallery/AntiMalware).
 
-**Optional parameters**
+    - **`publisher`** (`string`) - Optional
+      - **Description:** Publisher name (default: Microsoft for Microsoft solutions).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-appgatewaydefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-appgatewaydefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-appgatewaydefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-appgatewaydefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-appgatewaydefinitionroleassignmentsname) | string | Role assignment name. |
 
-### Parameter: `appGatewayDefinition.roleAssignments.principalId`
 
-Principal (objectId) to assign.
+- **`gallerySolutions[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.gallerySolutions
+  - **`name`** (`string`) - Optional
+    - **Description:** Solution name (defaults to gallerySolutions.name).
 
-- Required: Yes
-- Type: string
+  - **`product`** (`string`) - Required
+    - **Description:** Product name (e.g., OMSGallery/AntiMalware).
 
-### Parameter: `appGatewayDefinition.roleAssignments.principalType`
+  - **`publisher`** (`string`) - Optional
+    - **Description:** Publisher name (default: Microsoft for Microsoft solutions).
 
-Principal type for the assignment.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+- **`linkedServices`** (`array`) - Optional
+  - **Description:** Linked services for the workspace.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the linked service.
 
-### Parameter: `appGatewayDefinition.roleAssignments.roleDefinitionIdOrName`
+  - **`resourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the linked service (read access).
 
-Role definition ID or built-in role name.
+  - **`writeAccessResourceId`** (`string`) - Optional
+    - **Description:** Resource ID for write access.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.roleAssignments.condition`
+- **`linkedServices[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.linkedServices
 
-Condition expression for the assignment.
+- **`linkedStorageAccounts`** (`array`) - Conditional
+  - **Description:** List of Storage Accounts to be linked. Required if forceCmkForQuery is true and savedSearches is not empty.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the storage link.
 
-- Required: No
-- Type: string
+  - **`storageAccountIds`** (`array`) - Required
+    - **Description:** Linked storage accounts resource IDs.
 
-### Parameter: `appGatewayDefinition.roleAssignments.conditionVersion`
 
-Condition version (e.g., 2.0).
+- **`linkedStorageAccounts[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.linkedStorageAccounts
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`location`** (`string`) - Optional
+  - **Description:** Location of the workspace. Default: resourceGroup().location.
 
-### Parameter: `appGatewayDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-Delegated managed identity resource ID.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: No
-- Type: string
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `appGatewayDefinition.roleAssignments.description`
 
-Description for the assignment.
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity definition (system-assigned or user-assigned).
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enable system-assigned identity.
 
-- Required: No
-- Type: string
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs.
 
-### Parameter: `appGatewayDefinition.roleAssignments.name`
 
-Role assignment name.
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Log Analytics workspace.
 
-- Required: No
-- Type: string
+- **`onboardWorkspaceToSentinel`** (`bool`) - Optional
+  - **Description:** Onboard workspace to Sentinel. Requires SecurityInsights solution.
 
-### Parameter: `appGatewayDefinition.sslCertificates`
+- **`publicNetworkAccessForIngestion`** (`string`) - Optional
+  - **Description:** Network access for ingestion. Allowed: Disabled, Enabled.
 
-SSL certificates.
+- **`publicNetworkAccessForQuery`** (`string`) - Optional
+  - **Description:** Network access for query. Allowed: Disabled, Enabled.
 
-- Required: Yes
-- Type: object
+- **`replication`** (`object`) - Optional
+  - **Description:** Replication settings.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable replication.
 
-**Required parameters**
+  - **`location`** (`string`) - Conditional
+    - **Description:** Replication location. Required if replication is enabled.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionsslcertificates>any_other_property<) | object | Arbitrary key for each SSL certificate. |
 
-### Parameter: `appGatewayDefinition.sslCertificates.>Any_other_property<`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the workspace.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition for the role assignment.
 
-Arbitrary key for each SSL certificate.
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version. Allowed: 2.0.
 
-- Required: Yes
-- Type: object
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Delegated managed identity resource ID.
 
-**Required parameters**
+  - **`description`** (`string`) - Optional
+    - **Description:** Role assignment description.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionsslcertificates>any_other_property<name) | string | Certificate name. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Role assignment GUID name.
 
-**Optional parameters**
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`data`](#parameter-appgatewaydefinitionsslcertificates>any_other_property<data) | string | Base64-encoded PFX certificate data. |
-| [`keyVaultSecretId`](#parameter-appgatewaydefinitionsslcertificates>any_other_property<keyvaultsecretid) | string | Key Vault secret ID for the certificate. |
-| [`password`](#parameter-appgatewaydefinitionsslcertificates>any_other_property<password) | string | PFX password (if data provided). |
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type. Allowed: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-### Parameter: `appGatewayDefinition.sslCertificates.>Any_other_property<.name`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID, name, or GUID.
 
-Certificate name.
 
-- Required: Yes
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.roleAssignments
 
-### Parameter: `appGatewayDefinition.sslCertificates.>Any_other_property<.data`
+- **`savedSearches`** (`array`) - Optional
+  - **Description:** Saved KQL searches.
+  - **`category`** (`string`) - Required
+    - **Description:** Saved search category.
 
-Base64-encoded PFX certificate data.
+  - **`displayName`** (`string`) - Required
+    - **Description:** Display name for the saved search.
 
-- Required: Yes
-- Type: string
+  - **`etag`** (`string`) - Optional
+    - **Description:** ETag for concurrency control.
 
-### Parameter: `appGatewayDefinition.sslCertificates.>Any_other_property<.keyVaultSecretId`
+  - **`functionAlias`** (`string`) - Optional
+    - **Description:** Function alias if used as a function.
 
-Key Vault secret ID for the certificate.
+  - **`functionParameters`** (`string`) - Optional
+    - **Description:** Function parameters if query is used as a function.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the saved search.
 
-### Parameter: `appGatewayDefinition.sslCertificates.>Any_other_property<.password`
+  - **`query`** (`string`) - Required
+    - **Description:** Query expression.
 
-PFX password (if data provided).
+  - **`tags`** (`array`) - Optional
+    - **Description:** Tags for the saved search.
 
-- Required: Yes
-- Type: string
+  - **`version`** (`int`) - Optional
+    - **Description:** Version of the query language. Default is 2.
 
-### Parameter: `appGatewayDefinition.sslProfile`
 
-SSL profiles.
+- **`savedSearches[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.savedSearches
 
-- Required: Yes
-- Type: object
+- **`skuCapacityReservationLevel`** (`int`) - Optional
+  - **Description:** Capacity reservation level in GB (100–5000 in increments of 100).
 
-**Required parameters**
+- **`skuName`** (`string`) - Optional
+  - **Description:** SKU name. Allowed: CapacityReservation, Free, LACluster, PerGB2018, PerNode, Premium, Standalone, Standard.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionsslprofile>any_other_property<) | object | Arbitrary key for each SSL profile. |
+- **`storageInsightsConfigs`** (`array`) - Optional
+  - **Description:** Storage insights configs for linked storage accounts.
+  - **`containers`** (`array`) - Optional
+    - **Description:** Blob container names to read.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<`
+  - **`storageAccountResourceId`** (`string`) - Required
+    - **Description:** Storage account resource ID.
 
-Arbitrary key for each SSL profile.
+  - **`tables`** (`array`) - Optional
+    - **Description:** Tables to read.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`storageInsightsConfigs[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.storageInsightsConfigs
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionsslprofile>any_other_property<name) | string | SSL profile name. |
+- **`tables`** (`array`) - Optional
+  - **Description:** Custom LAW tables to be deployed.
+  - **`name`** (`string`) - Required
+    - **Description:** Table name.
 
-**Optional parameters**
+  - **`plan`** (`string`) - Optional
+    - **Description:** Table plan.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`sslPolicy`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicy) | object | SSL policy for the profile. |
-| [`trustedClientCertificateNames`](#parameter-appgatewaydefinitionsslprofile>any_other_property<trustedclientcertificatenames) | array | Trusted client certificate names to require. |
-| [`verifyClientCertificateRevocation`](#parameter-appgatewaydefinitionsslprofile>any_other_property<verifyclientcertificaterevocation) | string | Client certificate revocation check setting. |
-| [`verifyClientCertIssuerDn`](#parameter-appgatewaydefinitionsslprofile>any_other_property<verifyclientcertissuerdn) | bool | Verify client certificate issuer DN. |
+  - **`restoredLogs`** (`object`) - Optional
+    - **Description:** Restored logs configuration.
+    - **`endRestoreTime`** (`string`) - Optional
+      - **Description:** End restore time (UTC).
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.name`
+    - **`sourceTable`** (`string`) - Optional
+      - **Description:** Source table for restored logs.
 
-SSL profile name.
+    - **`startRestoreTime`** (`string`) - Optional
+      - **Description:** Start restore time (UTC).
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy`
+  - **`retentionInDays`** (`int`) - Optional
+    - **Description:** Table retention in days.
 
-SSL policy for the profile.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the table.
 
-- Required: Yes
-- Type: object
+  - **`schema`** (`object`) - Optional
+    - **Description:** Table schema.
+    - **`columns`** (`array`) - Required
+      - **Description:** List of table columns.
+      - **`dataTypeHint`** (`string`) - Optional
+        - **Description:** Logical data type hint. Allowed: armPath, guid, ip, uri.
 
-**Optional parameters**
+      - **`description`** (`string`) - Optional
+        - **Description:** Column description.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`cipherSuites`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicyciphersuites) | array | Allowed cipher suites. |
-| [`disabledProtocols`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicydisabledprotocols) | array | Disabled protocol versions. |
-| [`minProtocolVersion`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicyminprotocolversion) | string | Minimum TLS version. |
-| [`policyName`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicypolicyname) | string | Predefined policy name. |
-| [`policyType`](#parameter-appgatewaydefinitionsslprofile>any_other_property<sslpolicypolicytype) | string | Policy type (Predefined/Custom). |
+      - **`displayName`** (`string`) - Optional
+        - **Description:** Column display name.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy.cipherSuites`
+      - **`name`** (`string`) - Required
+        - **Description:** Column name.
 
-Allowed cipher suites.
+      - **`type`** (`string`) - Required
+        - **Description:** Column type. Allowed: boolean, dateTime, dynamic, guid, int, long, real, string.
 
-- Required: Yes
-- Type: array
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy.disabledProtocols`
+    - **`columns[*]`** (`object`) - Optional
+      - **Description:** Array item for logAnalyticsDefinition.tables[*].schema.columns
 
-Disabled protocol versions.
+    - **`description`** (`string`) - Optional
+      - **Description:** Table description.
 
-- Required: Yes
-- Type: array
+    - **`displayName`** (`string`) - Optional
+      - **Description:** Table display name.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy.minProtocolVersion`
+    - **`name`** (`string`) - Required
+      - **Description:** Table name.
 
-Minimum TLS version.
 
-- Required: Yes
-- Type: string
+  - **`searchResults`** (`object`) - Optional
+    - **Description:** Search results for the table.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description of the search job.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy.policyName`
+    - **`endSearchTime`** (`string`) - Optional
+      - **Description:** End time for the search (UTC).
 
-Predefined policy name.
+    - **`limit`** (`int`) - Optional
+      - **Description:** Row limit for the search job.
 
-- Required: Yes
-- Type: string
+    - **`query`** (`string`) - Required
+      - **Description:** Query for the search job.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.sslPolicy.policyType`
+    - **`startSearchTime`** (`string`) - Optional
+      - **Description:** Start time for the search (UTC).
 
-Policy type (Predefined/Custom).
 
-- Required: Yes
-- Type: string
+  - **`totalRetentionInDays`** (`int`) - Optional
+    - **Description:** Total retention in days for the table.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.trustedClientCertificateNames`
 
-Trusted client certificate names to require.
+- **`tables[*]`** (`object`) - Optional
+  - **Description:** Array item for logAnalyticsDefinition.tables
+  - **`endRestoreTime`** (`string`) - Optional
+    - **Description:** End restore time (UTC).
 
-- Required: Yes
-- Type: array
+  - **`sourceTable`** (`string`) - Optional
+    - **Description:** Source table for restored logs.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.verifyClientCertificateRevocation`
+  - **`startRestoreTime`** (`string`) - Optional
+    - **Description:** Start restore time (UTC).
 
-Client certificate revocation check setting.
+  - **`columns`** (`array`) - Required
+    - **Description:** List of table columns.
+    - **`dataTypeHint`** (`string`) - Optional
+      - **Description:** Logical data type hint. Allowed: armPath, guid, ip, uri.
 
-- Required: Yes
-- Type: string
+    - **`description`** (`string`) - Optional
+      - **Description:** Column description.
 
-### Parameter: `appGatewayDefinition.sslProfile.>Any_other_property<.verifyClientCertIssuerDn`
+    - **`displayName`** (`string`) - Optional
+      - **Description:** Column display name.
 
-Verify client certificate issuer DN.
+    - **`name`** (`string`) - Required
+      - **Description:** Column name.
 
-- Required: Yes
-- Type: bool
+    - **`type`** (`string`) - Required
+      - **Description:** Column type. Allowed: boolean, dateTime, dynamic, guid, int, long, real, string.
 
-### Parameter: `appGatewayDefinition.tags`
 
-Tags to apply to the Application Gateway.
+  - **`columns[*]`** (`object`) - Optional
+    - **Description:** Array item for logAnalyticsDefinition.tables[*].schema.columns
 
-- Required: Yes
-- Type: object
+  - **`description`** (`string`) - Optional
+    - **Description:** Table description.
 
-**Required parameters**
+  - **`displayName`** (`string`) - Optional
+    - **Description:** Table display name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+  - **`name`** (`string`) - Required
+    - **Description:** Table name.
 
-### Parameter: `appGatewayDefinition.tags.>Any_other_property<`
+  - **`dataTypeHint`** (`string`) - Optional
+    - **Description:** Logical data type hint. Allowed: armPath, guid, ip, uri.
 
-Arbitrary key for each tag.
+  - **`description`** (`string`) - Optional
+    - **Description:** Column description.
 
-- Required: Yes
-- Type: string
+  - **`displayName`** (`string`) - Optional
+    - **Description:** Column display name.
 
-### Parameter: `appGatewayDefinition.trustedClientCertificate`
+  - **`name`** (`string`) - Required
+    - **Description:** Column name.
 
-Trusted client certificates.
+  - **`type`** (`string`) - Required
+    - **Description:** Column type. Allowed: boolean, dateTime, dynamic, guid, int, long, real, string.
 
-- Required: Yes
-- Type: object
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the search job.
 
-**Required parameters**
+  - **`endSearchTime`** (`string`) - Optional
+    - **Description:** End time for the search (UTC).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitiontrustedclientcertificate>any_other_property<) | object | Arbitrary key for each trusted client certificate. |
+  - **`limit`** (`int`) - Optional
+    - **Description:** Row limit for the search job.
 
-### Parameter: `appGatewayDefinition.trustedClientCertificate.>Any_other_property<`
+  - **`query`** (`string`) - Required
+    - **Description:** Query for the search job.
 
-Arbitrary key for each trusted client certificate.
+  - **`startSearchTime`** (`string`) - Optional
+    - **Description:** Start time for the search (UTC).
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the workspace.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`data`](#parameter-appgatewaydefinitiontrustedclientcertificate>any_other_property<data) | string | Base64-encoded certificate data. |
-| [`name`](#parameter-appgatewaydefinitiontrustedclientcertificate>any_other_property<name) | string | Certificate name. |
+### `storageAccountDefinition`
 
-### Parameter: `appGatewayDefinition.trustedClientCertificate.>Any_other_property<.data`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `storageAccountDefinition` | `object` | Conditional | Storage Account configuration. Required if deploy.storageAccount is true and resourceIds.storageAccountResourceId is empty. |
 
-Base64-encoded certificate data.
+**Properties:**
 
-- Required: Yes
-- Type: string
+- **`accessTier`** (`string`) - Conditional
+  - **Description:** The access tier for billing. Required if kind is set to BlobStorage. Allowed values: Cold, Cool, Hot, Premium.
 
-### Parameter: `appGatewayDefinition.trustedClientCertificate.>Any_other_property<.name`
+- **`allowBlobPublicAccess`** (`bool`) - Optional
+  - **Description:** Indicates whether public access is enabled for all blobs or containers. Recommended to be set to false.
 
-Certificate name.
+- **`allowCrossTenantReplication`** (`bool`) - Optional
+  - **Description:** Allow or disallow cross AAD tenant object replication.
 
-- Required: Yes
-- Type: string
+- **`allowedCopyScope`** (`string`) - Optional
+  - **Description:** Restrict copy scope. Allowed values: AAD, PrivateLink.
 
-### Parameter: `appGatewayDefinition.trustedRootCertificate`
+- **`allowSharedKeyAccess`** (`bool`) - Optional
+  - **Description:** Indicates whether Shared Key authorization is allowed. Default is true.
 
-Trusted root certificates.
+- **`azureFilesIdentityBasedAuthentication`** (`object`) - Optional
+  - **Description:** Provides the identity-based authentication settings for Azure Files.
 
-- Required: Yes
-- Type: object
+- **`blobServices`** (`object`) - Optional
+  - **Description:** Blob service and containers configuration.
 
-**Required parameters**
+- **`customDomainName`** (`string`) - Optional
+  - **Description:** Sets the custom domain name (CNAME source) for the storage account.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitiontrustedrootcertificate>any_other_property<) | object | Arbitrary key for each trusted root certificate. |
+- **`customDomainUseSubDomainName`** (`bool`) - Optional
+  - **Description:** Indicates whether indirect CName validation is enabled (updates only).
 
-### Parameter: `appGatewayDefinition.trustedRootCertificate.>Any_other_property<`
+- **`customerManagedKey`** (`object`) - Optional
+  - **Description:** Customer managed key definition.
+  - **`autoRotationEnabled`** (`bool`) - Optional
+    - **Description:** Enable or disable key auto-rotation. Default is true.
 
-Arbitrary key for each trusted root certificate.
+  - **`keyName`** (`string`) - Required
+    - **Description:** The name of the customer managed key.
 
-- Required: Yes
-- Type: object
+  - **`keyVaultResourceId`** (`string`) - Required
+    - **Description:** The Key Vault resource ID where the key is stored.
 
-**Required parameters**
+  - **`keyVersion`** (`string`) - Optional
+    - **Description:** The version of the customer managed key to reference.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitiontrustedrootcertificate>any_other_property<name) | string | Certificate name. |
+  - **`userAssignedIdentityResourceId`** (`string`) - Optional
+    - **Description:** User-assigned identity resource ID to fetch the key (if no system-assigned identity is available).
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`data`](#parameter-appgatewaydefinitiontrustedrootcertificate>any_other_property<data) | string | Base64-encoded certificate data. |
-| [`keyVaultSecretId`](#parameter-appgatewaydefinitiontrustedrootcertificate>any_other_property<keyvaultsecretid) | string | Key Vault secret ID for the certificate. |
+- **`defaultToOAuthAuthentication`** (`bool`) - Optional
+  - **Description:** When true, OAuth is the default authentication method.
 
-### Parameter: `appGatewayDefinition.trustedRootCertificate.>Any_other_property<.name`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the service.
 
-Certificate name.
+- **`dnsEndpointType`** (`string`) - Optional
+  - **Description:** Endpoint type. Allowed values: AzureDnsZone, Standard.
 
-- Required: Yes
-- Type: string
+- **`enableHierarchicalNamespace`** (`bool`) - Conditional
+  - **Description:** Enables Hierarchical Namespace for the storage account. Required if enableSftp or enableNfsV3 is true.
 
-### Parameter: `appGatewayDefinition.trustedRootCertificate.>Any_other_property<.data`
+- **`enableNfsV3`** (`bool`) - Optional
+  - **Description:** Enables NFS 3.0 support. Requires hierarchical namespace enabled.
 
-Base64-encoded certificate data.
+- **`enableSftp`** (`bool`) - Optional
+  - **Description:** Enables Secure File Transfer Protocol (SFTP). Requires hierarchical namespace enabled.
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/disable telemetry for the module.
 
-### Parameter: `appGatewayDefinition.trustedRootCertificate.>Any_other_property<.keyVaultSecretId`
+- **`fileServices`** (`object`) - Optional
+  - **Description:** File service and share configuration.
 
-Key Vault secret ID for the certificate.
+- **`isLocalUserEnabled`** (`bool`) - Optional
+  - **Description:** Enables local users feature for SFTP authentication.
 
-- Required: Yes
-- Type: string
+- **`keyType`** (`string`) - Optional
+  - **Description:** Key type for Queue & Table services. Allowed values: Account, Service.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations`
+- **`kind`** (`string`) - Optional
+  - **Description:** Storage account type. Allowed values: BlobStorage, BlockBlobStorage, FileStorage, Storage, StorageV2.
 
-URL path map configurations.
+- **`largeFileSharesState`** (`string`) - Optional
+  - **Description:** Large file shares state. Allowed values: Disabled, Enabled.
 
-- Required: Yes
-- Type: object
+- **`localUsers`** (`array`) - Optional
+  - **Description:** Local users for SFTP authentication.
 
-**Required parameters**
+- **`location`** (`string`) - Optional
+  - **Description:** Resource location.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<) | object | Arbitrary key for each URL path map configuration. |
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the resource.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Arbitrary key for each URL path map configuration.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity configuration.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enables system-assigned identity.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<name) | string | URL path map name. |
-| [`pathRules`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules) | object | Path rules for this map. |
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** List of user-assigned identity resource IDs.
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`defaultBackendAddressPoolName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<defaultbackendaddresspoolname) | string | Default backend address pool name. |
-| [`defaultBackendHttpSettingsName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<defaultbackendhttpsettingsname) | string | Default backend HTTP settings name. |
-| [`defaultRedirectConfigurationName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<defaultredirectconfigurationname) | string | Default redirect configuration name. |
-| [`defaultRewriteRuleSetName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<defaultrewriterulesetname) | string | Default rewrite rule set name. |
+- **`managementPolicyRules`** (`array`) - Optional
+  - **Description:** Storage account management policy rules.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.name`
+- **`minimumTlsVersion`** (`string`) - Optional
+  - **Description:** Minimum TLS version for requests. Allowed value: TLS1_2.
 
-URL path map name.
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Storage Account. Must be lower-case.
 
-- Required: Yes
-- Type: string
+- **`networkAcls`** (`object`) - Optional
+  - **Description:** Network ACL rules and settings.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules`
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Private endpoint configurations.
 
-Path rules for this map.
+- **`publicNetworkAccess`** (`string`) - Optional
+  - **Description:** Whether public network access is allowed. Allowed values: Disabled, Enabled.
 
-- Required: Yes
-- Type: object
+- **`queueServices`** (`object`) - Optional
+  - **Description:** Queue service configuration.
 
-**Required parameters**
+- **`requireInfrastructureEncryption`** (`bool`) - Optional
+  - **Description:** Indicates whether infrastructure encryption with PMK is applied.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<) | object | Arbitrary key for each path rule. |
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the storage account.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<`
+- **`sasExpirationAction`** (`string`) - Optional
+  - **Description:** SAS expiration action. Allowed values: Block, Log.
 
-Arbitrary key for each path rule.
+- **`sasExpirationPeriod`** (`string`) - Optional
+  - **Description:** SAS expiration period in DD.HH:MM:SS format.
 
-- Required: Yes
-- Type: object
+- **`secretsExportConfiguration`** (`object`) - Optional
+  - **Description:** Configuration for exporting secrets to Key Vault.
 
-**Required parameters**
+- **`skuName`** (`string`) - Optional
+  - **Description:** SKU name for the storage account. Allowed values: Premium_LRS, Premium_ZRS, PremiumV2_LRS, PremiumV2_ZRS, Standard_GRS, Standard_GZRS, Standard_LRS, Standard_RAGRS, Standard_RAGZRS, Standard_ZRS, StandardV2_GRS, StandardV2_GZRS, StandardV2_LRS, StandardV2_ZRS.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<name) | string | Path rule name. |
-| [`paths`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<paths) | array | Paths to match (e.g., /images/*). |
+- **`supportsHttpsTrafficOnly`** (`bool`) - Optional
+  - **Description:** When true, allows only HTTPS traffic to the storage service.
 
-**Optional parameters**
+- **`tableServices`** (`object`) - Optional
+  - **Description:** Table service and tables configuration.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`backendAddressPoolName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<backendaddresspoolname) | string | Backend address pool name for the rule. |
-| [`backendHttpSettingsName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<backendhttpsettingsname) | string | Backend HTTP settings name for the rule. |
-| [`redirectConfigurationName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<redirectconfigurationname) | string | Redirect configuration name for the rule. |
-| [`rewriteRuleSetName`](#parameter-appgatewaydefinitionurlpathmapconfigurations>any_other_property<pathrules>any_other_property<rewriterulesetname) | string | Rewrite rule set name for the rule. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the resource.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.name`
+### `vNetDefinition`
 
-Path rule name.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `vNetDefinition` | `object` | Conditional | Virtual Network configuration. Required if deploy.virtualNetwork is true and resourceIds.virtualNetworkResourceId is empty. |
 
-- Required: Yes
-- Type: string
+**Properties:**
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.paths`
+- **`addressPrefixes`** (`array`) - Required
+  - **Description:** An array of one or more IP address prefixes OR the resource ID of the IPAM pool to be used for the Virtual Network. Required if using IPAM pool resource ID, you must also set ipamPoolNumberOfIpAddresses.
 
-Paths to match (e.g., /images/*).
+- **`ddosProtectionPlanResourceId`** (`string`) - Optional
+  - **Description:** Resource ID of the DDoS protection plan to assign the VNet to. If blank, DDoS protection is not configured.
 
-- Required: Yes
-- Type: array
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** The diagnostic settings of the Virtual Network.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic event hub authorization rule for the Event Hubs namespace.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.backendAddressPoolName`
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Name of the diagnostic event hub within the namespace to which logs are streamed.
 
-Backend address pool name for the rule.
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Destination type for export to Log Analytics. Allowed values: AzureDiagnostics, Dedicated.
 
-- Required: Yes
-- Type: string
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Logs to be streamed. Set to [] to disable log collection.
+    - **`category`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category for the resource type.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.backendHttpSettingsName`
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Name of a diagnostic log category group for the resource type.
 
-Backend HTTP settings name for the rule.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the category explicitly. Default is true.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.redirectConfigurationName`
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for vNetDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-Redirect configuration name for the rule.
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace resource ID to which diagnostic logs should be sent.
 
-- Required: Yes
-- Type: string
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metrics to be streamed. Set to [] to disable metric collection.
+    - **`category`** (`string`) - Required
+      - **Description:** Name of a diagnostic metric category for the resource type.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.pathRules.>Any_other_property<.rewriteRuleSetName`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable the metric category explicitly. Default is true.
 
-Rewrite rule set name for the rule.
 
-- Required: Yes
-- Type: string
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for vNetDefinition.diagnosticSettings[*].metricCategories
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.defaultBackendAddressPoolName`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the diagnostic setting.
 
-Default backend address pool name.
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic storage account.
 
-- Required: Yes
-- Type: string
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.defaultBackendHttpSettingsName`
 
-Default backend HTTP settings name.
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for vNetDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category for the resource type.
 
-- Required: Yes
-- Type: string
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Name of a diagnostic log category group for the resource type.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.defaultRedirectConfigurationName`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the category explicitly. Default is true.
 
-Default redirect configuration name.
+  - **`category`** (`string`) - Required
+    - **Description:** Name of a diagnostic metric category for the resource type.
 
-- Required: Yes
-- Type: string
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable the metric category explicitly. Default is true.
 
-### Parameter: `appGatewayDefinition.urlPathMapConfigurations.>Any_other_property<.defaultRewriteRuleSetName`
 
-Default rewrite rule set name.
+- **`dnsServers`** (`array`) - Optional
+  - **Description:** DNS servers associated with the Virtual Network.
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-### Parameter: `appInsightsDefinition`
+- **`enableVmProtection`** (`bool`) - Optional
+  - **Description:** Indicates if VM protection is enabled for all subnets in the Virtual Network.
 
- Application Insights configuration (used when App Insights is deployed).
+- **`flowTimeoutInMinutes`** (`int`) - Optional
+  - **Description:** Flow timeout in minutes for intra-VM flows (range 4–30). Default 0 sets the property to null.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      applicationType: 'web'
-      disableIpMasking: false
-      kind: 'web'
-      name: ''
-      tags: {}
-  }
-  ```
+- **`ipamPoolNumberOfIpAddresses`** (`string`) - Optional
+  - **Description:** Number of IP addresses allocated from the IPAM pool. Required if addressPrefixes is defined with a resource ID of an IPAM pool.
 
-**Required parameters**
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`applicationType`](#parameter-appinsightsdefinitionapplicationtype) | string | Application type for Insights (e.g., web). |
-| [`kind`](#parameter-appinsightsdefinitionkind) | string | Resource kind. |
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the Virtual Network.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Type of lock. Allowed values: CanNotDelete, None, ReadOnly.
 
-**Optional parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the lock.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`disableIpMasking`](#parameter-appinsightsdefinitiondisableipmasking) | bool | Disable IP masking (true) or keep enabled (false). |
-| [`name`](#parameter-appinsightsdefinitionname) | string | Application Insights resource name. |
-| [`tags`](#parameter-appinsightsdefinitiontags) | object | Tags to apply to the component. |
+  - **`notes`** (`string`) - Optional
+    - **Description:** Notes for the lock.
 
-### Parameter: `appInsightsDefinition.applicationType`
 
-Application type for Insights (e.g., web).
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Virtual Network (vNet).
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'other'
-    'web'
-  ]
-  ```
+- **`peerings`** (`array`) - Optional
+  - **Description:** Virtual Network peering configurations.
+  - **`allowForwardedTraffic`** (`bool`) - Optional
+    - **Description:** Allow forwarded traffic from VMs in local VNet. Default is true.
 
-### Parameter: `appInsightsDefinition.kind`
+  - **`allowGatewayTransit`** (`bool`) - Optional
+    - **Description:** Allow gateway transit from remote VNet. Default is false.
 
-Resource kind.
+  - **`allowVirtualNetworkAccess`** (`bool`) - Optional
+    - **Description:** Allow VMs in local VNet to access VMs in remote VNet. Default is true.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'other'
-    'web'
-  ]
-  ```
+  - **`doNotVerifyRemoteGateways`** (`bool`) - Optional
+    - **Description:** Do not verify remote gateway provisioning state. Default is true.
 
-### Parameter: `appInsightsDefinition.disableIpMasking`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the VNet peering resource. Default: peer-localVnetName-remoteVnetName.
 
-Disable IP masking (true) or keep enabled (false).
+  - **`remotePeeringAllowForwardedTraffic`** (`bool`) - Optional
+    - **Description:** Allow forwarded traffic from remote peering. Default is true.
 
-- Required: No
-- Type: bool
+  - **`remotePeeringAllowGatewayTransit`** (`bool`) - Optional
+    - **Description:** Allow gateway transit from remote peering. Default is false.
 
-### Parameter: `appInsightsDefinition.name`
+  - **`remotePeeringAllowVirtualNetworkAccess`** (`bool`) - Optional
+    - **Description:** Allow virtual network access from remote peering. Default is true.
 
-Application Insights resource name.
+  - **`remotePeeringDoNotVerifyRemoteGateways`** (`bool`) - Optional
+    - **Description:** Do not verify provisioning state of remote peering gateway. Default is true.
 
-- Required: No
-- Type: string
+  - **`remotePeeringEnabled`** (`bool`) - Optional
+    - **Description:** Deploy outbound and inbound peering.
 
-### Parameter: `appInsightsDefinition.tags`
+  - **`remotePeeringName`** (`string`) - Optional
+    - **Description:** Name of the remote peering resource. Default: peer-remoteVnetName-localVnetName.
 
-Tags to apply to the component.
+  - **`remotePeeringUseRemoteGateways`** (`bool`) - Optional
+    - **Description:** Use remote gateways for transit if allowed. Default is false.
 
-- Required: No
-- Type: object
+  - **`remoteVirtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the remote Virtual Network to peer with.
 
-**Required parameters**
+  - **`useRemoteGateways`** (`bool`) - Optional
+    - **Description:** Use remote gateways on this Virtual Network for transit. Default is false.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-appinsightsdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
 
-### Parameter: `appInsightsDefinition.tags.>Any_other_property<`
+- **`peerings[*]`** (`object`) - Optional
+  - **Description:** Array item for vNetDefinition.peerings
 
-Arbitrary key for each tag.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to create on the Virtual Network.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition applied to the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version. Allowed value: 2.0.
 
-### Parameter: `bastionKeyVaultDefinition`
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of delegated managed identity.
 
- Dedicated Key Vault for JumpVM secrets (public network).
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      name: ''
-      roleAssignments: []
-      sku: 'standard'
-      tags: {}
-      tenantId: '[subscription().tenantId]'
-  }
-  ```
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the role assignment. If not provided, a GUID will be generated.
 
-**Optional parameters**
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the user/group/identity to assign the role to.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-bastionkeyvaultdefinitionname) | string | Key Vault name. |
-| [`roleAssignments`](#parameter-bastionkeyvaultdefinitionroleassignments) | array | Role assignments to create on the vault. |
-| [`sku`](#parameter-bastionkeyvaultdefinitionsku) | string | Key Vault SKU (e.g., standard, premium). |
-| [`tags`](#parameter-bastionkeyvaultdefinitiontags) | object | Tags to apply to the Key Vault. |
-| [`tenantId`](#parameter-bastionkeyvaultdefinitiontenantid) | string | AAD tenant ID for the vault. |
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type. Allowed values: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-### Parameter: `bastionKeyVaultDefinition.name`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign. Accepts role name, role GUID, or fully qualified role definition ID.
 
-Key Vault name.
 
-- Required: No
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for vNetDefinition.roleAssignments
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments`
+- **`subnets`** (`array`) - Optional
+  - **Description:** Array of subnets to deploy in the Virtual Network.
+  - **`addressPrefix`** (`string`) - Conditional
+    - **Description:** Address prefix for the subnet. Required if addressPrefixes is empty.
 
-Role assignments to create on the vault.
+  - **`addressPrefixes`** (`array`) - Conditional
+    - **Description:** List of address prefixes for the subnet. Required if addressPrefix is empty.
 
-- Required: No
-- Type: array
+  - **`applicationGatewayIPConfigurations`** (`array`) - Optional
+    - **Description:** Application Gateway IP configurations for the subnet.
 
-**Required parameters**
+  - **`defaultOutboundAccess`** (`bool`) - Optional
+    - **Description:** Disable default outbound connectivity for all VMs in subnet. Only allowed at creation time.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-bastionkeyvaultdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-bastionkeyvaultdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-bastionkeyvaultdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+  - **`delegation`** (`string`) - Optional
+    - **Description:** Delegation to enable on the subnet.
 
-**Optional parameters**
+  - **`ipamPoolPrefixAllocations`** (`array`) - Conditional
+    - **Description:** Address space for subnet from IPAM Pool. Required if both addressPrefix and addressPrefixes are empty and VNet uses IPAM Pool.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-bastionkeyvaultdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-bastionkeyvaultdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-bastionkeyvaultdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-bastionkeyvaultdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-bastionkeyvaultdefinitionroleassignmentsname) | string | Role assignment name. |
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the subnet.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.principalId`
+  - **`natGatewayResourceId`** (`string`) - Optional
+    - **Description:** NAT Gateway resource ID for the subnet.
 
-Principal (objectId) to assign.
+  - **`networkSecurityGroupResourceId`** (`string`) - Optional
+    - **Description:** NSG resource ID for the subnet.
 
-- Required: Yes
-- Type: string
+  - **`privateEndpointNetworkPolicies`** (`string`) - Optional
+    - **Description:** Policy for private endpoint network. Allowed values: Disabled, Enabled, NetworkSecurityGroupEnabled, RouteTableEnabled.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.principalType`
+  - **`privateLinkServiceNetworkPolicies`** (`string`) - Optional
+    - **Description:** Policy for private link service network. Allowed values: Disabled, Enabled.
 
-Principal type for the assignment.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to create on the subnet.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Condition applied to the role assignment.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Allowed value: 2.0.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.roleDefinitionIdOrName`
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Resource ID of delegated managed identity.
 
-Role definition ID or built-in role name.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description of the role assignment.
 
-- Required: Yes
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the role assignment. If not provided, a GUID will be generated.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.condition`
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal ID of the user/group/identity to assign the role to.
 
-Condition expression for the assignment.
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type. Allowed values: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-- Required: No
-- Type: string
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign. Accepts role name, role GUID, or fully qualified role definition ID.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.conditionVersion`
 
-Condition version (e.g., 2.0).
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for vNetDefinition.subnets[*].roleAssignments
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+  - **`routeTableResourceId`** (`string`) - Optional
+    - **Description:** Route table resource ID for the subnet.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+  - **`serviceEndpointPolicies`** (`array`) - Optional
+    - **Description:** Service endpoint policies for the subnet.
 
-Delegated managed identity resource ID.
+  - **`serviceEndpoints`** (`array`) - Optional
+    - **Description:** Service endpoints enabled on the subnet.
 
-- Required: No
-- Type: string
+  - **`sharingScope`** (`string`) - Optional
+    - **Description:** Sharing scope for the subnet. Allowed values: DelegatedServices, Tenant.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.description`
 
-Description for the assignment.
+- **`subnets[*]`** (`object`) - Optional
+  - **Description:** Array item for vNetDefinition.subnets
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition applied to the role assignment.
 
-- Required: No
-- Type: string
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version. Allowed value: 2.0.
 
-### Parameter: `bastionKeyVaultDefinition.roleAssignments.name`
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of delegated managed identity.
 
-Role assignment name.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the role assignment. If not provided, a GUID will be generated.
 
-### Parameter: `bastionKeyVaultDefinition.sku`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the user/group/identity to assign the role to.
 
-Key Vault SKU (e.g., standard, premium).
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type. Allowed values: Device, ForeignGroup, Group, ServicePrincipal, User.
 
-- Required: No
-- Type: string
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign. Accepts role name, role GUID, or fully qualified role definition ID.
 
-### Parameter: `bastionKeyVaultDefinition.tags`
 
-Tags to apply to the Key Vault.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Virtual Network.
 
-- Required: No
-- Type: object
+- **`virtualNetworkBgpCommunity`** (`string`) - Optional
+  - **Description:** The BGP community associated with the Virtual Network.
 
-**Required parameters**
+- **`vnetEncryption`** (`bool`) - Optional
+  - **Description:** Indicates if encryption is enabled for the Virtual Network. Requires the EnableVNetEncryption feature and a supported region.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-bastionkeyvaultdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`vnetEncryptionEnforcement`** (`string`) - Optional
+  - **Description:** Enforcement policy for unencrypted VMs in an encrypted VNet. Allowed values: AllowUnencrypted, DropUnencrypted.
 
-### Parameter: `bastionKeyVaultDefinition.tags.>Any_other_property<`
+### `wafPolicyDefinition`
 
-Arbitrary key for each tag.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `wafPolicyDefinition` | `object` | Conditional | Web Application Firewall (WAF) policy configuration. Required if deploy.wafPolicy is true and you are deploying Application Gateway via this template. |
 
-- Required: Yes
-- Type: string
+**Properties:**
 
-### Parameter: `bastionKeyVaultDefinition.tenantId`
+- **`customRules`** (`array`) - Optional
+  - **Description:** Custom rules inside the policy.
 
-AAD tenant ID for the vault.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-- Required: No
-- Type: string
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-### Parameter: `containerAppEnvDefinition`
+- **`managedRules`** (`object`) - Required
+  - **Description:** Managed rules configuration (rule sets and exclusions).
+  - **`exclusions`** (`array`) - Optional
+    - **Description:** Exclusions for specific rules or variables.
+    - **`excludedRuleSet`** (`object`) - Optional
+      - **Description:** Specific managed rule set exclusion details.
+      - **`ruleGroup`** (`array`) - Optional
+        - **Description:** Rule groups to exclude.
 
- Container App Environment configuration (used when Container Apps are deployed).
+      - **`ruleSetType`** (`string`) - Required
+        - **Description:** Rule set type (e.g., OWASP).
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      enableDiagnosticSettings: true
-      internalLoadBalancerEnabled: true
-      logAnalyticsWorkspaceResourceId: ''
-      name: ''
-      roleAssignments: []
-      subnetName: 'aca-environment-subnet'
-      tags: {}
-      userAssignedManagedIdentityIds: []
-      workloadProfiles: [
-        {
-          name: 'Consumption'
-          workloadProfileType: 'Consumption'
-        }
-        {
-          maximumCount: 3
-          minimumCount: 1
-          name: 'default'
-          workloadProfileType: 'D4'
-        }
-      ]
-      zoneRedundancyEnabled: true
-  }
-  ```
+      - **`ruleSetVersion`** (`string`) - Required
+        - **Description:** Rule set version (e.g., 3.2).
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`internalLoadBalancerEnabled`](#parameter-containerappenvdefinitioninternalloadbalancerenabled) | bool | Enable internal load balancer (true) to make the environment internal. |
-| [`userAssignedManagedIdentityIds`](#parameter-containerappenvdefinitionuserassignedmanagedidentityids) | array | List of user-assigned managed identity resource IDs to attach (can be empty). |
-| [`workloadProfiles`](#parameter-containerappenvdefinitionworkloadprofiles) | array | Workload profiles for the environment. |
-| [`zoneRedundancyEnabled`](#parameter-containerappenvdefinitionzoneredundancyenabled) | bool | Enable zone redundancy for the environment. |
+    - **`matchVariable`** (`string`) - Required
+      - **Description:** Match variable to exclude (e.g., RequestHeaderNames).
 
-**Optional parameters**
+    - **`selector`** (`string`) - Required
+      - **Description:** Selector value for the match variable.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enableDiagnosticSettings`](#parameter-containerappenvdefinitionenablediagnosticsettings) | bool | Enable diagnostic settings for the environment. |
-| [`logAnalyticsWorkspaceResourceId`](#parameter-containerappenvdefinitionloganalyticsworkspaceresourceid) | string | Resource ID of a Log Analytics workspace for diagnostics. |
-| [`name`](#parameter-containerappenvdefinitionname) | string | Container Apps Environment name. |
-| [`roleAssignments`](#parameter-containerappenvdefinitionroleassignments) | array | Role assignments to create on the environment. |
-| [`subnetName`](#parameter-containerappenvdefinitionsubnetname) | string | Subnet name where the environment is deployed when internal. |
-| [`tags`](#parameter-containerappenvdefinitiontags) | object | Tags to apply to the environment. |
+    - **`selectorMatchOperator`** (`string`) - Required
+      - **Description:** Selector match operator (e.g., Equals, Contains).
 
-### Parameter: `containerAppEnvDefinition.internalLoadBalancerEnabled`
 
-Enable internal load balancer (true) to make the environment internal.
+  - **`exclusions[*]`** (`object`) - Optional
+    - **Description:** Array item for wafPolicyDefinition.managedRules.exclusions
+    - **`ruleGroup`** (`array`) - Optional
+      - **Description:** Rule groups to exclude.
 
-- Required: Yes
-- Type: bool
+    - **`ruleSetType`** (`string`) - Required
+      - **Description:** Rule set type (e.g., OWASP).
 
-### Parameter: `containerAppEnvDefinition.userAssignedManagedIdentityIds`
+    - **`ruleSetVersion`** (`string`) - Required
+      - **Description:** Rule set version (e.g., 3.2).
 
-List of user-assigned managed identity resource IDs to attach (can be empty).
 
-- Required: Yes
-- Type: array
+  - **`managedRuleSets`** (`array`) - Required
+    - **Description:** Managed rule sets to apply.
+    - **`ruleGroupOverrides`** (`array`) - Optional
+      - **Description:** Overrides for specific rule groups.
+      - **`rule`** (`array`) - Required
+        - **Description:** Rule overrides within the group.
+        - **`action`** (`string`) - Required
+          - **Description:** Action to take (e.g., Allow, Block, Log).
 
-### Parameter: `containerAppEnvDefinition.workloadProfiles`
+        - **`enabled`** (`bool`) - Required
+          - **Description:** Whether the rule is enabled.
 
-Workload profiles for the environment.
+        - **`id`** (`string`) - Required
+          - **Description:** Rule ID.
 
-- Required: Yes
-- Type: array
 
-**Required parameters**
+      - **`rule[*]`** (`object`) - Optional
+        - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides[*].rule
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-containerappenvdefinitionworkloadprofilesname) | string | Profile name. |
-| [`workloadProfileType`](#parameter-containerappenvdefinitionworkloadprofilesworkloadprofiletype) | string | Workload profile type. |
+      - **`ruleGroupName`** (`string`) - Required
+        - **Description:** Name of the rule group.
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`maximumCount`](#parameter-containerappenvdefinitionworkloadprofilesmaximumcount) | int | Maximum number of nodes for this profile. |
-| [`minimumCount`](#parameter-containerappenvdefinitionworkloadprofilesminimumcount) | int | Minimum number of nodes for this profile. |
+    - **`ruleGroupOverrides[*]`** (`object`) - Optional
+      - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides
+      - **`action`** (`string`) - Required
+        - **Description:** Action to take (e.g., Allow, Block, Log).
 
-### Parameter: `containerAppEnvDefinition.workloadProfiles.name`
+      - **`enabled`** (`bool`) - Required
+        - **Description:** Whether the rule is enabled.
 
-Profile name.
+      - **`id`** (`string`) - Required
+        - **Description:** Rule ID.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `containerAppEnvDefinition.workloadProfiles.workloadProfileType`
+    - **`ruleSetType`** (`string`) - Required
+      - **Description:** Rule set type (e.g., OWASP).
 
-Workload profile type.
+    - **`ruleSetVersion`** (`string`) - Required
+      - **Description:** Rule set version.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Consumption'
-    'D16'
-    'D4'
-    'D8'
-    'E16'
-    'E32'
-    'E4'
-    'E8'
-  ]
-  ```
 
-### Parameter: `containerAppEnvDefinition.workloadProfiles.maximumCount`
+  - **`managedRuleSets[*]`** (`object`) - Optional
+    - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets
+    - **`rule`** (`array`) - Required
+      - **Description:** Rule overrides within the group.
+      - **`action`** (`string`) - Required
+        - **Description:** Action to take (e.g., Allow, Block, Log).
 
-Maximum number of nodes for this profile.
+      - **`enabled`** (`bool`) - Required
+        - **Description:** Whether the rule is enabled.
 
-- Required: No
-- Type: int
+      - **`id`** (`string`) - Required
+        - **Description:** Rule ID.
 
-### Parameter: `containerAppEnvDefinition.workloadProfiles.minimumCount`
 
-Minimum number of nodes for this profile.
+    - **`rule[*]`** (`object`) - Optional
+      - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides[*].rule
 
-- Required: No
-- Type: int
+    - **`ruleGroupName`** (`string`) - Required
+      - **Description:** Name of the rule group.
 
-### Parameter: `containerAppEnvDefinition.zoneRedundancyEnabled`
+    - **`action`** (`string`) - Required
+      - **Description:** Action to take (e.g., Allow, Block, Log).
 
-Enable zone redundancy for the environment.
+    - **`enabled`** (`bool`) - Required
+      - **Description:** Whether the rule is enabled.
 
-- Required: Yes
-- Type: bool
+    - **`id`** (`string`) - Required
+      - **Description:** Rule ID.
 
-### Parameter: `containerAppEnvDefinition.enableDiagnosticSettings`
+    - **`action`** (`string`) - Required
+      - **Description:** Action to take (e.g., Allow, Block, Log).
 
-Enable diagnostic settings for the environment.
+    - **`enabled`** (`bool`) - Required
+      - **Description:** Whether the rule is enabled.
 
-- Required: No
-- Type: bool
+    - **`id`** (`string`) - Required
+      - **Description:** Rule ID.
 
-### Parameter: `containerAppEnvDefinition.logAnalyticsWorkspaceResourceId`
 
-Resource ID of a Log Analytics workspace for diagnostics.
 
-- Required: No
-- Type: string
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Application Gateway WAF policy.
 
-### Parameter: `containerAppEnvDefinition.name`
+- **`policySettings`** (`object`) - Optional
+  - **Description:** Policy settings (state, mode, size limits).
+  - **`fileUploadLimitInMb`** (`int`) - Required
+    - **Description:** File upload size limit (MB).
 
-Container Apps Environment name.
+  - **`maxRequestBodySizeInKb`** (`int`) - Required
+    - **Description:** Maximum request body size (KB).
 
-- Required: No
-- Type: string
+  - **`mode`** (`string`) - Required
+    - **Description:** WAF mode (Prevention or Detection).
 
-### Parameter: `containerAppEnvDefinition.roleAssignments`
+  - **`requestBodyCheck`** (`bool`) - Required
+    - **Description:** Enable request body inspection.
 
-Role assignments to create on the environment.
+  - **`state`** (`string`) - Required
+    - **Description:** WAF policy state.
 
-- Required: Yes
-- Type: array
 
-**Required parameters**
+- **`tags`** (`object`) - Optional
+  - **Description:** Resource tags.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-containerappenvdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-containerappenvdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-containerappenvdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+### Optional Parameters
 
-**Optional parameters**
+### `acrPrivateDnsZoneDefinition`
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-containerappenvdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-containerappenvdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-containerappenvdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-containerappenvdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-containerappenvdefinitionroleassignmentsname) | string | Role assignment name. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `acrPrivateDnsZoneDefinition` | `object` | Optional | Container Registry Private DNS Zone configuration. |
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.principalId`
+**Properties:**
 
-Principal (objectId) to assign.
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.principalType`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-Principal type for the assignment.
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.roleDefinitionIdOrName`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.a
 
-Role definition ID or built-in role name.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: Yes
-- Type: string
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.condition`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-Condition expression for the assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: No
-- Type: string
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.conditionVersion`
 
-Condition version (e.g., 2.0).
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Delegated managed identity resource ID.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: No
-- Type: string
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.description`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Description for the assignment.
 
-- Required: No
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.roleAssignments
 
-### Parameter: `containerAppEnvDefinition.roleAssignments.name`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Role assignment name.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: No
-- Type: string
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `containerAppEnvDefinition.subnetName`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Subnet name where the environment is deployed when internal.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: No
-- Type: string
 
-### Parameter: `containerAppEnvDefinition.tags`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.virtualNetworkLinks
 
-Tags to apply to the environment.
+### `acrPrivateEndpointDefinition`
 
-- Required: No
-- Type: object
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `acrPrivateEndpointDefinition` | `object` | Optional | Azure Container Registry Private Endpoint configuration. |
 
-**Required parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-containerappenvdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-### Parameter: `containerAppEnvDefinition.tags.>Any_other_property<`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-Arbitrary key for each tag.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-- Required: Yes
-- Type: string
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-### Parameter: `containerRegistryDefinition`
 
- Container Registry configuration (used when ACR is deployed).
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.a
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      name: ''
-      sku: 'Premium'
-      tags: {}
-  }
-  ```
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-**Optional parameters**
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`dataPlaneProxy`](#parameter-containerregistrydefinitiondataplaneproxy) | object | Data plane proxy configuration. |
-| [`localAuthEnabled`](#parameter-containerregistrydefinitionlocalauthenabled) | bool | Enable local (admin) authentication. |
-| [`name`](#parameter-containerregistrydefinitionname) | string | Container Registry name. |
-| [`purgeProtectionEnabled`](#parameter-containerregistrydefinitionpurgeprotectionenabled) | bool | Enable purge protection for deleted artifacts. |
-| [`sku`](#parameter-containerregistrydefinitionsku) | string | Container Registry SKU. |
-| [`softDeleteRetentionInDays`](#parameter-containerregistrydefinitionsoftdeleteretentionindays) | int | Soft delete retention period in days. |
-| [`tags`](#parameter-containerregistrydefinitiontags) | object | Tags to apply to the Container Registry. |
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `containerRegistryDefinition.dataPlaneProxy`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Data plane proxy configuration.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: No
-- Type: object
 
-**Optional parameters**
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`authenticationMode`](#parameter-containerregistrydefinitiondataplaneproxyauthenticationmode) | string | Authentication mode for data plane proxy. |
-| [`privateLinkDelegation`](#parameter-containerregistrydefinitiondataplaneproxyprivatelinkdelegation) | string | Private Link delegation setting for data plane proxy. |
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `containerRegistryDefinition.dataPlaneProxy.authenticationMode`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Authentication mode for data plane proxy.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: Yes
-- Type: string
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `containerRegistryDefinition.dataPlaneProxy.privateLinkDelegation`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Private Link delegation setting for data plane proxy.
 
-- Required: Yes
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.roleAssignments
 
-### Parameter: `containerRegistryDefinition.localAuthEnabled`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Enable local (admin) authentication.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: No
-- Type: bool
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `containerRegistryDefinition.name`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Container Registry name.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: No
-- Type: string
 
-### Parameter: `containerRegistryDefinition.purgeProtectionEnabled`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.virtualNetworkLinks
 
-Enable purge protection for deleted artifacts.
+### `aiFoundryDefinition`
 
-- Required: No
-- Type: bool
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `aiFoundryDefinition` | `object` | Optional | AI Foundry project configuration (account/project, networking, associated resources, and deployments). |
 
-### Parameter: `containerRegistryDefinition.sku`
+**Properties:**
 
-Container Registry SKU.
+- **`aiFoundryConfiguration`** (`object`) - Optional
+  - **Description:** Custom configuration for the AI Foundry account.
+  - **`accountName`** (`string`) - Optional
+    - **Description:** The name of the AI Foundry account.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Basic'
-    'Premium'
-    'Standard'
-  ]
-  ```
+  - **`allowProjectManagement`** (`bool`) - Optional
+    - **Description:** Whether to allow project management in the account. Defaults to true.
 
-### Parameter: `containerRegistryDefinition.softDeleteRetentionInDays`
+  - **`createCapabilityHosts`** (`bool`) - Optional
+    - **Description:** Whether to create capability hosts for the AI Agent Service. Requires includeAssociatedResources = true. Defaults to false.
 
-Soft delete retention period in days.
+  - **`disableLocalAuth`** (`bool`) - Optional
+    - **Description:** Disables local authentication methods so that the account requires Microsoft Entra ID identities exclusively for authentication. Defaults to false for backward compatibility.
 
-- Required: No
-- Type: int
+  - **`location`** (`string`) - Optional
+    - **Description:** Location of the AI Foundry account. Defaults to resource group location.
 
-### Parameter: `containerRegistryDefinition.tags`
+  - **`networking`** (`object`) - Optional
+    - **Description:** Networking configuration for the AI Foundry account and project.
+    - **`agentServiceSubnetResourceId`** (`string`) - Optional
+      - **Description:** Subnet Resource ID for Azure AI Services. Required if you want to deploy AI Agent Service.
 
-Tags to apply to the Container Registry.
+    - **`aiServicesPrivateDnsZoneResourceId`** (`string`) - Required
+      - **Description:** Private DNS Zone Resource ID for Azure AI Services.
 
-- Required: No
-- Type: object
+    - **`cognitiveServicesPrivateDnsZoneResourceId`** (`string`) - Required
+      - **Description:** Private DNS Zone Resource ID for Cognitive Services.
 
-**Required parameters**
+    - **`openAiPrivateDnsZoneResourceId`** (`string`) - Required
+      - **Description:** Private DNS Zone Resource ID for OpenAI.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-containerregistrydefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
 
-### Parameter: `containerRegistryDefinition.tags.>Any_other_property<`
+  - **`project`** (`object`) - Optional
+    - **Description:** Default AI Foundry project.
+    - **`description`** (`string`) - Optional
+      - **Description:** Project description.
 
-Arbitrary key for each tag.
+    - **`displayName`** (`string`) - Optional
+      - **Description:** Friendly/display name of the project.
 
-- Required: Yes
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the project.
 
-### Parameter: `cosmosDbDefinition`
 
- Cosmos DB account configuration for the GenAI app (used when Cosmos DB is deployed).
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply to the AI Foundry account.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      automaticFailoverEnabled: true
-      name: ''
-      publicNetworkAccessEnabled: false
-  }
-  ```
+  - **`sku`** (`string`) - Optional
+    - **Description:** SKU of the AI Foundry / Cognitive Services account. Defaults to S0.
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`analyticalStorageConfig`](#parameter-cosmosdbdefinitionanalyticalstorageconfig) | object | Analytical storage configuration. |
-| [`analyticalStorageEnabled`](#parameter-cosmosdbdefinitionanalyticalstorageenabled) | bool | Enable analytical storage. |
-| [`automaticFailoverEnabled`](#parameter-cosmosdbdefinitionautomaticfailoverenabled) | bool | Enable automatic failover. |
-| [`backup`](#parameter-cosmosdbdefinitionbackup) | object | Backup policy configuration. |
-| [`capabilities`](#parameter-cosmosdbdefinitioncapabilities) | object | Capabilities to enable on the Cosmos DB account. |
-| [`capacity`](#parameter-cosmosdbdefinitioncapacity) | object | Capacity limits for the account. |
-| [`consistencyPolicy`](#parameter-cosmosdbdefinitionconsistencypolicy) | object | Consistency policy configuration. |
-| [`corsRule`](#parameter-cosmosdbdefinitioncorsrule) | object | CORS rules to allow on the account. |
-| [`localAuthenticationDisabled`](#parameter-cosmosdbdefinitionlocalauthenticationdisabled) | bool | Disable local authentication (keys). |
-| [`multipleWriteLocationsEnabled`](#parameter-cosmosdbdefinitionmultiplewritelocationsenabled) | bool | Enable multiple write locations. |
-| [`name`](#parameter-cosmosdbdefinitionname) | string | Cosmos DB account name. |
-| [`partitionMergeEnabled`](#parameter-cosmosdbdefinitionpartitionmergeenabled) | bool | Enable partition merge. |
-| [`publicNetworkAccessEnabled`](#parameter-cosmosdbdefinitionpublicnetworkaccessenabled) | bool | Enable public network access to the account. |
-| [`secondaryRegions`](#parameter-cosmosdbdefinitionsecondaryregions) | object | Map of secondary regions and failover properties. |
+- **`aiModelDeployments`** (`array`) - Optional
+  - **Description:** Specifies the OpenAI deployments to create.
+  - **`model`** (`object`) - Required
+    - **Description:** Deployment model configuration.
+    - **`format`** (`string`) - Required
+      - **Description:** Format of the deployment model.
 
-### Parameter: `cosmosDbDefinition.analyticalStorageConfig`
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the deployment model.
 
-Analytical storage configuration.
+    - **`version`** (`string`) - Required
+      - **Description:** Version of the deployment model.
 
-- Required: No
-- Type: object
 
-**Required parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the deployment.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`schemaType`](#parameter-cosmosdbdefinitionanalyticalstorageconfigschematype) | string | Schema type for analytical storage. |
+  - **`raiPolicyName`** (`string`) - Optional
+    - **Description:** Responsible AI policy name.
 
-### Parameter: `cosmosDbDefinition.analyticalStorageConfig.schemaType`
+  - **`sku`** (`object`) - Optional
+    - **Description:** SKU configuration for the deployment.
+    - **`capacity`** (`int`) - Optional
+      - **Description:** SKU capacity.
 
-Schema type for analytical storage.
+    - **`family`** (`string`) - Optional
+      - **Description:** SKU family.
 
-- Required: Yes
-- Type: string
+    - **`name`** (`string`) - Required
+      - **Description:** SKU name.
 
-### Parameter: `cosmosDbDefinition.analyticalStorageEnabled`
+    - **`size`** (`string`) - Optional
+      - **Description:** SKU size.
 
-Enable analytical storage.
+    - **`tier`** (`string`) - Optional
+      - **Description:** SKU tier.
 
-- Required: No
-- Type: bool
 
-### Parameter: `cosmosDbDefinition.automaticFailoverEnabled`
+  - **`versionUpgradeOption`** (`string`) - Optional
+    - **Description:** Version upgrade option.
 
-Enable automatic failover.
 
-- Required: No
-- Type: bool
+- **`aiModelDeployments[*]`** (`object`) - Optional
+  - **Description:** Array item for aiFoundryDefinition.aiModelDeployments
+  - **`format`** (`string`) - Required
+    - **Description:** Format of the deployment model.
 
-### Parameter: `cosmosDbDefinition.backup`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the deployment model.
 
-Backup policy configuration.
+  - **`version`** (`string`) - Required
+    - **Description:** Version of the deployment model.
 
-- Required: No
-- Type: object
+  - **`capacity`** (`int`) - Optional
+    - **Description:** SKU capacity.
 
-**Required parameters**
+  - **`family`** (`string`) - Optional
+    - **Description:** SKU family.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`intervalInMinutes`](#parameter-cosmosdbdefinitionbackupintervalinminutes) | int | Backup interval in minutes. |
-| [`retentionInHours`](#parameter-cosmosdbdefinitionbackupretentioninhours) | int | Retention period in hours. |
-| [`storageRedundancy`](#parameter-cosmosdbdefinitionbackupstorageredundancy) | string | Storage redundancy for backups. |
-| [`type`](#parameter-cosmosdbdefinitionbackuptype) | string | Backup type (e.g., Periodic/Continuous). |
+  - **`name`** (`string`) - Required
+    - **Description:** SKU name.
 
-**Optional parameters**
+  - **`size`** (`string`) - Optional
+    - **Description:** SKU size.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`tier`](#parameter-cosmosdbdefinitionbackuptier) | string | Backup tier (if applicable). |
+  - **`tier`** (`string`) - Optional
+    - **Description:** SKU tier.
 
-### Parameter: `cosmosDbDefinition.backup.intervalInMinutes`
 
-Backup interval in minutes.
+- **`aiSearchConfiguration`** (`object`) - Optional
+  - **Description:** Custom configuration for AI Search.
+  - **`existingResourceId`** (`string`) - Optional
+    - **Description:** Existing AI Search resource ID. If provided, other properties are ignored.
 
-- Required: Yes
-- Type: int
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the AI Search resource.
 
-### Parameter: `cosmosDbDefinition.backup.retentionInHours`
+  - **`privateDnsZoneResourceId`** (`string`) - Optional
+    - **Description:** Private DNS Zone Resource ID for AI Search. Required if private endpoints are used.
 
-Retention period in hours.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the AI Search resource.
 
-- Required: Yes
-- Type: int
 
-### Parameter: `cosmosDbDefinition.backup.storageRedundancy`
+- **`baseName`** (`string`) - Optional
+  - **Description:** A friendly application/environment name to serve as the base when using the default naming for all resources in this deployment.
 
-Storage redundancy for backups.
+- **`baseUniqueName`** (`string`) - Optional
+  - **Description:** A unique text value for the application/environment. Used to ensure resource names are unique for global resources. Defaults to a 5-character substring of the unique string generated from the subscription ID, resource group name, and base name.
 
-- Required: Yes
-- Type: string
+- **`cosmosDbConfiguration`** (`object`) - Optional
+  - **Description:** Custom configuration for Cosmos DB.
+  - **`existingResourceId`** (`string`) - Optional
+    - **Description:** Existing Cosmos DB resource ID. If provided, other properties are ignored.
 
-### Parameter: `cosmosDbDefinition.backup.type`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the Cosmos DB resource.
 
-Backup type (e.g., Periodic/Continuous).
+  - **`privateDnsZoneResourceId`** (`string`) - Optional
+    - **Description:** Private DNS Zone Resource ID for Cosmos DB. Required if private endpoints are used.
 
-- Required: Yes
-- Type: string
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the Cosmos DB resource.
 
-### Parameter: `cosmosDbDefinition.backup.tier`
 
-Backup tier (if applicable).
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module. Default is true.
 
-- Required: Yes
-- Type: string
+- **`includeAssociatedResources`** (`bool`) - Optional
+  - **Description:** Whether to include associated resources (Key Vault, AI Search, Storage Account, Cosmos DB). Defaults to false.
 
-### Parameter: `cosmosDbDefinition.capabilities`
+- **`keyVaultConfiguration`** (`object`) - Optional
+  - **Description:** Custom configuration for Key Vault.
+  - **`existingResourceId`** (`string`) - Optional
+    - **Description:** Existing Key Vault resource ID. If provided, other properties are ignored.
 
-Capabilities to enable on the Cosmos DB account.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the Key Vault.
 
-- Required: No
-- Type: object
+  - **`privateDnsZoneResourceId`** (`string`) - Optional
+    - **Description:** Private DNS Zone Resource ID for Key Vault. Required if private endpoints are used.
 
-**Required parameters**
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the Key Vault resource.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-cosmosdbdefinitioncapabilities>any_other_property<) | object | Arbitrary key for each capability entry. |
 
-### Parameter: `cosmosDbDefinition.capabilities.>Any_other_property<`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Defaults to the resource group location.
 
-Arbitrary key for each capability entry.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the AI resources.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Required parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-cosmosdbdefinitioncapabilities>any_other_property<name) | string | Capability name. |
 
-### Parameter: `cosmosDbDefinition.capabilities.>Any_other_property<.name`
+- **`privateEndpointSubnetResourceId`** (`string`) - Optional
+  - **Description:** The Resource ID of the subnet to establish Private Endpoint(s). If provided, private endpoints will be created for the AI Foundry account and associated resources. Each resource will also require supplied private DNS zone resource ID(s).
 
-Capability name.
+- **`storageAccountConfiguration`** (`object`) - Optional
+  - **Description:** Custom configuration for Storage Account.
+  - **`blobPrivateDnsZoneResourceId`** (`string`) - Optional
+    - **Description:** Private DNS Zone Resource ID for blob endpoint. Required if private endpoints are used.
 
-- Required: Yes
-- Type: string
+  - **`existingResourceId`** (`string`) - Optional
+    - **Description:** Existing Storage Account resource ID. If provided, other properties are ignored.
 
-### Parameter: `cosmosDbDefinition.capacity`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the Storage Account.
 
-Capacity limits for the account.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments for the Storage Account.
 
-- Required: No
-- Type: object
 
-**Required parameters**
+- **`tags`** (`object`) - Optional
+  - **Description:** Specifies the resource tags for all the resources.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`totalThroughputLimit`](#parameter-cosmosdbdefinitioncapacitytotalthroughputlimit) | int | Total throughput limit (RU/s) for the account. |
+### `aiSearchDefinition`
 
-### Parameter: `cosmosDbDefinition.capacity.totalThroughputLimit`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `aiSearchDefinition` | `object` | Optional | AI Search settings. |
 
-Total throughput limit (RU/s) for the account.
+**Properties:**
 
-- Required: Yes
-- Type: int
+- **`authOptions`** (`object`) - Optional
+  - **Description:** Defines the options for how the data plane API of a Search service authenticates requests. Must remain {} if disableLocalAuth=true.
+  - **`aadOrApiKey`** (`object`) - Optional
+    - **Description:** Indicates that either API key or an access token from Microsoft Entra ID can be used for authentication.
+    - **`aadAuthFailureMode`** (`string`) - Optional
+      - **Description:** Response sent when authentication fails. Allowed values: http401WithBearerChallenge, http403.
 
-### Parameter: `cosmosDbDefinition.consistencyPolicy`
 
-Consistency policy configuration.
+  - **`apiKeyOnly`** (`object`) - Optional
+    - **Description:** Indicates that only the API key can be used for authentication.
 
-- Required: No
-- Type: object
 
-**Required parameters**
+- **`cmkEnforcement`** (`string`) - Optional
+  - **Description:** Policy that determines how resources within the search service are encrypted with Customer Managed Keys. Default is Unspecified. Allowed values: Disabled, Enabled, Unspecified.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`consistencyLevel`](#parameter-cosmosdbdefinitionconsistencypolicyconsistencylevel) | string | Consistency level (e.g., Strong, Session). |
-| [`maxIntervalInSeconds`](#parameter-cosmosdbdefinitionconsistencypolicymaxintervalinseconds) | int | Maximum interval in seconds for Bounded Staleness. |
-| [`maxStalenessPrefix`](#parameter-cosmosdbdefinitionconsistencypolicymaxstalenessprefix) | int | Maximum staleness prefix for Bounded Staleness. |
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the search service.
+  - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+    - **Description:** Resource ID of the diagnostic Event Hub authorization rule.
 
-### Parameter: `cosmosDbDefinition.consistencyPolicy.consistencyLevel`
+  - **`eventHubName`** (`string`) - Optional
+    - **Description:** Name of the diagnostic Event Hub. Without this, one Event Hub per category will be created.
 
-Consistency level (e.g., Strong, Session).
+  - **`logAnalyticsDestinationType`** (`string`) - Optional
+    - **Description:** Destination type for Log Analytics. Allowed values: AzureDiagnostics, Dedicated.
 
-- Required: Yes
-- Type: string
+  - **`logCategoriesAndGroups`** (`array`) - Optional
+    - **Description:** Log categories and groups to collect. Use [] to disable.
+    - **`category`** (`string`) - Optional
+      - **Description:** Diagnostic log category.
 
-### Parameter: `cosmosDbDefinition.consistencyPolicy.maxIntervalInSeconds`
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Diagnostic log category group. Use allLogs to collect all logs.
 
-Maximum interval in seconds for Bounded Staleness.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable this log category. Default is true.
 
-- Required: Yes
-- Type: int
 
-### Parameter: `cosmosDbDefinition.consistencyPolicy.maxStalenessPrefix`
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+    - **Description:** Array item for aiSearchDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
-Maximum staleness prefix for Bounded Staleness.
+  - **`marketplacePartnerResourceId`** (`string`) - Optional
+    - **Description:** Marketplace partner resource ID to send logs to.
 
-- Required: Yes
-- Type: int
+  - **`metricCategories`** (`array`) - Optional
+    - **Description:** Metric categories to collect.
+    - **`category`** (`string`) - Required
+      - **Description:** Diagnostic metric category. Example: AllMetrics.
 
-### Parameter: `cosmosDbDefinition.corsRule`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Enable or disable this metric category. Default is true.
 
-CORS rules to allow on the account.
 
-- Required: No
-- Type: object
+  - **`metricCategories[*]`** (`object`) - Optional
+    - **Description:** Array item for aiSearchDefinition.diagnosticSettings[*].metricCategories
 
-**Required parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the diagnostic setting.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`allowedHeaders`](#parameter-cosmosdbdefinitioncorsruleallowedheaders) | array | Allowed headers for CORS. |
-| [`allowedMethods`](#parameter-cosmosdbdefinitioncorsruleallowedmethods) | array | Allowed HTTP methods for CORS. |
-| [`allowedOrigins`](#parameter-cosmosdbdefinitioncorsruleallowedorigins) | array | Allowed origins for CORS. |
-| [`exposedHeaders`](#parameter-cosmosdbdefinitioncorsruleexposedheaders) | array | Exposed headers for CORS. |
-| [`maxAgeInSeconds`](#parameter-cosmosdbdefinitioncorsrulemaxageinseconds) | int | Max age for preflight cache (seconds). |
+  - **`storageAccountResourceId`** (`string`) - Optional
+    - **Description:** Storage account resource ID for diagnostic logs.
 
-### Parameter: `cosmosDbDefinition.corsRule.allowedHeaders`
+  - **`workspaceResourceId`** (`string`) - Optional
+    - **Description:** Log Analytics workspace resource ID for diagnostic logs.
 
-Allowed headers for CORS.
 
-- Required: Yes
-- Type: array
+- **`diagnosticSettings[*]`** (`object`) - Optional
+  - **Description:** Array item for aiSearchDefinition.diagnosticSettings
+  - **`category`** (`string`) - Optional
+    - **Description:** Diagnostic log category.
 
-### Parameter: `cosmosDbDefinition.corsRule.allowedMethods`
+  - **`categoryGroup`** (`string`) - Optional
+    - **Description:** Diagnostic log category group. Use allLogs to collect all logs.
 
-Allowed HTTP methods for CORS.
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable this log category. Default is true.
 
-- Required: Yes
-- Type: array
+  - **`category`** (`string`) - Required
+    - **Description:** Diagnostic metric category. Example: AllMetrics.
 
-### Parameter: `cosmosDbDefinition.corsRule.allowedOrigins`
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Enable or disable this metric category. Default is true.
 
-Allowed origins for CORS.
 
-- Required: Yes
-- Type: array
+- **`disableLocalAuth`** (`bool`) - Optional
+  - **Description:** Disable local authentication via API keys. Cannot be true if authOptions are defined. Default is true.
 
-### Parameter: `cosmosDbDefinition.corsRule.exposedHeaders`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/disable usage telemetry for the module. Default is true.
 
-Exposed headers for CORS.
+- **`hostingMode`** (`string`) - Optional
+  - **Description:** Hosting mode, only for standard3 SKU. Allowed values: default, highDensity. Default is default.
 
-- Required: Yes
-- Type: array
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources. Default is resourceGroup().location.
 
-### Parameter: `cosmosDbDefinition.corsRule.maxAgeInSeconds`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the search service.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Type of lock. Allowed values: CanNotDelete, None, ReadOnly.
 
-Max age for preflight cache (seconds).
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the lock.
 
-- Required: Yes
-- Type: int
+  - **`notes`** (`string`) - Optional
+    - **Description:** Notes for the lock.
 
-### Parameter: `cosmosDbDefinition.localAuthenticationDisabled`
 
-Disable local authentication (keys).
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity definition for the search service.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enables system-assigned managed identity.
 
-- Required: No
-- Type: bool
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs. Required if user-assigned identity is used for encryption.
 
-### Parameter: `cosmosDbDefinition.multipleWriteLocationsEnabled`
 
-Enable multiple write locations.
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Azure Cognitive Search service to create or update. Must only contain lowercase letters, digits or dashes, cannot use dash as the first two or last one characters, cannot contain consecutive dashes, must be between 2 and 60 characters in length, and must be globally unique. Immutable after creation.
 
-- Required: No
-- Type: bool
+- **`networkRuleSet`** (`object`) - Optional
+  - **Description:** Network rules for the search service.
+  - **`bypass`** (`string`) - Optional
+    - **Description:** Bypass setting. Allowed values: AzurePortal, AzureServices, None.
 
-### Parameter: `cosmosDbDefinition.name`
+  - **`ipRules`** (`array`) - Optional
+    - **Description:** IP restriction rules applied when publicNetworkAccess=Enabled.
+    - **`value`** (`string`) - Required
+      - **Description:** IPv4 address (e.g., 123.1.2.3) or range in CIDR format (e.g., 123.1.2.3/24) to allow.
 
-Cosmos DB account name.
 
-- Required: No
-- Type: string
+  - **`ipRules[*]`** (`object`) - Optional
+    - **Description:** Array item for aiSearchDefinition.networkRuleSet.ipRules
 
-### Parameter: `cosmosDbDefinition.partitionMergeEnabled`
 
-Enable partition merge.
+- **`partitionCount`** (`int`) - Optional
+  - **Description:** Number of partitions in the search service. Valid values: 1,2,3,4,6,12 (or 1–3 for standard3 highDensity). Default is 1.
 
-- Required: No
-- Type: bool
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Configuration details for private endpoints.
 
-### Parameter: `cosmosDbDefinition.publicNetworkAccessEnabled`
+- **`publicNetworkAccess`** (`string`) - Optional
+  - **Description:** Public network access. Default is Enabled. Allowed values: Enabled, Disabled.
 
-Enable public network access to the account.
+- **`replicaCount`** (`int`) - Optional
+  - **Description:** Number of replicas in the search service. Must be 1–12 for Standard SKUs or 1–3 for Basic. Default is 3.
 
-- Required: No
-- Type: bool
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the search service.
 
-### Parameter: `cosmosDbDefinition.secondaryRegions`
+- **`secretsExportConfiguration`** (`object`) - Optional
+  - **Description:** Key Vault reference and secret settings for exporting admin keys.
+  - **`keyVaultResourceId`** (`string`) - Required
+    - **Description:** Key Vault resource ID where the API Admin keys will be stored.
 
-Map of secondary regions and failover properties.
+  - **`primaryAdminKeyName`** (`string`) - Optional
+    - **Description:** Secret name for the primary admin key.
 
-- Required: No
-- Type: object
+  - **`secondaryAdminKeyName`** (`string`) - Optional
+    - **Description:** Secret name for the secondary admin key.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-cosmosdbdefinitionsecondaryregions>any_other_property<) | object | Arbitrary key for each secondary region entry. |
+- **`semanticSearch`** (`string`) - Optional
+  - **Description:** Semantic search configuration. Allowed values: disabled, free, standard.
 
-### Parameter: `cosmosDbDefinition.secondaryRegions.>Any_other_property<`
+- **`sharedPrivateLinkResources`** (`array`) - Optional
+  - **Description:** Shared Private Link Resources to create. Default is [].
 
-Arbitrary key for each secondary region entry.
+- **`sku`** (`string`) - Optional
+  - **Description:** SKU of the search service. Determines price tier and limits. Default is standard. Allowed values: basic, free, standard, standard2, standard3, storage_optimized_l1, storage_optimized_l2.
 
-- Required: Yes
-- Type: object
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for categorizing the search service.
 
-**Required parameters**
+### `aiServicesPrivateDnsZoneDefinition`
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`failoverPriority`](#parameter-cosmosdbdefinitionsecondaryregions>any_other_property<failoverpriority) | int | Failover priority for the region (0 is primary). |
-| [`location`](#parameter-cosmosdbdefinitionsecondaryregions>any_other_property<location) | string | Secondary region location name. |
-| [`zoneRedundant`](#parameter-cosmosdbdefinitionsecondaryregions>any_other_property<zoneredundant) | bool | Whether zone redundancy is enabled in the region. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `aiServicesPrivateDnsZoneDefinition` | `object` | Optional | AI Services Private DNS Zone configuration. |
 
-### Parameter: `cosmosDbDefinition.secondaryRegions.>Any_other_property<.failoverPriority`
+**Properties:**
 
-Failover priority for the region (0 is primary).
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: Yes
-- Type: int
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-### Parameter: `cosmosDbDefinition.secondaryRegions.>Any_other_property<.location`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-Secondary region location name.
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `cosmosDbDefinition.secondaryRegions.>Any_other_property<.zoneRedundant`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.a
 
-Whether zone redundancy is enabled in the region.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: Yes
-- Type: bool
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-### Parameter: `firewallDefinition`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
- Azure Firewall configuration (used when Firewall is deployed).
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      name: ''
-      sku: 'AZFW_VNet'
-      tags: {}
-      tier: 'Standard'
-      zones: []
-  }
-  ```
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`sku`](#parameter-firewalldefinitionsku) | string | Azure Firewall SKU (e.g., AZFW_VNet). |
-| [`tier`](#parameter-firewalldefinitiontier) | string | Azure Firewall tier (Standard/Premium/Basic). |
-| [`zones`](#parameter-firewalldefinitionzones) | array | Availability zones to use (if any). |
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-**Optional parameters**
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-firewalldefinitionname) | string | Azure Firewall name. |
-| [`tags`](#parameter-firewalldefinitiontags) | object | Tags to apply to the firewall. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-### Parameter: `firewallDefinition.sku`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-Azure Firewall SKU (e.g., AZFW_VNet).
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- Required: Yes
-- Type: string
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-### Parameter: `firewallDefinition.tier`
 
-Azure Firewall tier (Standard/Premium/Basic).
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.roleAssignments
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Basic'
-    'Premium'
-    'Standard'
-  ]
-  ```
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-### Parameter: `firewallDefinition.zones`
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-Availability zones to use (if any).
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-- Required: Yes
-- Type: array
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-### Parameter: `firewallDefinition.name`
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-Azure Firewall name.
 
-- Required: No
-- Type: string
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.virtualNetworkLinks
 
-### Parameter: `firewallDefinition.tags`
+### `apimDefinition`
 
-Tags to apply to the firewall.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `apimDefinition` | `object` | Optional | API Management configuration. |
 
-- Required: Yes
-- Type: object
+**Properties:**
 
-**Required parameters**
+- **`additionalLocations`** (`array`) - Optional
+  - **Description:** Additional locations for the API Management service.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-firewalldefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`apiDiagnostics`** (`array`) - Optional
+  - **Description:** API diagnostics for APIs.
 
-### Parameter: `firewallDefinition.tags.>Any_other_property<`
+- **`apis`** (`array`) - Optional
+  - **Description:** APIs to create in the API Management service.
 
-Arbitrary key for each tag.
+- **`apiVersionSets`** (`array`) - Optional
+  - **Description:** API version sets to configure.
 
-- Required: Yes
-- Type: string
+- **`authorizationServers`** (`array`) - Optional
+  - **Description:** Authorization servers to configure.
 
-### Parameter: `hubVnetPeeringDefinition`
+- **`availabilityZones`** (`array`) - Optional
+  - **Description:** Availability Zones for HA deployment.
 
- Hub VNet peering configuration (required only when establishing hub-spoke peering).
+- **`backends`** (`array`) - Optional
+  - **Description:** Backends to configure.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      allowForwardedTraffic: true
-      allowGatewayTransit: false
-      allowVirtualNetworkAccess: true
-      createReversePeering: true
-      firewallIpAddress: ''
-      name: ''
-      peerVnetResourceId: ''
-      reverseAllowForwardedTraffic: true
-      reverseAllowGatewayTransit: false
-      reverseAllowVirtualNetworkAccess: true
-      reverseName: ''
-      reverseUseRemoteGateways: false
-      useRemoteGateways: false
-  }
-  ```
+- **`caches`** (`array`) - Optional
+  - **Description:** Caches to configure.
 
-**Required parameters**
+- **`certificates`** (`array`) - Optional
+  - **Description:** Certificates to configure for API Management. Maximum of 10 certificates.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`allowForwardedTraffic`](#parameter-hubvnetpeeringdefinitionallowforwardedtraffic) | bool | Allow forwarded traffic across the peering. |
-| [`allowGatewayTransit`](#parameter-hubvnetpeeringdefinitionallowgatewaytransit) | bool | Allow gateway transit across the peering. |
-| [`allowVirtualNetworkAccess`](#parameter-hubvnetpeeringdefinitionallowvirtualnetworkaccess) | bool | Allow virtual network access across the peering. |
-| [`createReversePeering`](#parameter-hubvnetpeeringdefinitioncreatereversepeering) | bool | Create reverse peering from hub back to this VNet. |
-| [`firewallIpAddress`](#parameter-hubvnetpeeringdefinitionfirewallipaddress) | string | Hub firewall private IP address for routing (if applicable). |
-| [`peerVnetResourceId`](#parameter-hubvnetpeeringdefinitionpeervnetresourceid) | string | Resource ID of the hub (peer) VNet. |
-| [`reverseAllowForwardedTraffic`](#parameter-hubvnetpeeringdefinitionreverseallowforwardedtraffic) | bool | Reverse peering: allow forwarded traffic. |
-| [`reverseAllowGatewayTransit`](#parameter-hubvnetpeeringdefinitionreverseallowgatewaytransit) | bool | Reverse peering: allow gateway transit. |
-| [`reverseAllowVirtualNetworkAccess`](#parameter-hubvnetpeeringdefinitionreverseallowvirtualnetworkaccess) | bool | Reverse peering: allow VNet access. |
-| [`reverseName`](#parameter-hubvnetpeeringdefinitionreversename) | string | Name of the reverse peering (hub->spoke). |
-| [`reverseUseRemoteGateways`](#parameter-hubvnetpeeringdefinitionreverseuseremotegateways) | bool | Reverse peering: use remote gateways. |
-| [`useRemoteGateways`](#parameter-hubvnetpeeringdefinitionuseremotegateways) | bool | Use remote gateways on the spoke peering. |
+- **`customProperties`** (`object`) - Optional
+  - **Description:** Custom properties to configure.
 
-**Optional parameters**
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the API Management service.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-hubvnetpeeringdefinitionname) | string | Name of the peering from spoke to hub. |
+- **`disableGateway`** (`bool`) - Optional
+  - **Description:** Disable gateway in a region (for multi-region setup).
 
-### Parameter: `hubVnetPeeringDefinition.allowForwardedTraffic`
+- **`enableClientCertificate`** (`bool`) - Optional
+  - **Description:** Enable client certificate for requests (Consumption SKU only).
 
-Allow forwarded traffic across the peering.
+- **`enableDeveloperPortal`** (`bool`) - Optional
+  - **Description:** Enable developer portal for the service.
 
-- Required: Yes
-- Type: bool
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/disable usage telemetry for module. Default is true.
 
-### Parameter: `hubVnetPeeringDefinition.allowGatewayTransit`
+- **`hostnameConfigurations`** (`array`) - Optional
+  - **Description:** Hostname configurations for the API Management service.
 
-Allow gateway transit across the peering.
+- **`identityProviders`** (`array`) - Optional
+  - **Description:** Identity providers to configure.
 
-- Required: Yes
-- Type: bool
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the API Management service. Default is resourceGroup().location.
 
-### Parameter: `hubVnetPeeringDefinition.allowVirtualNetworkAccess`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the API Management service.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Type of lock. Allowed values: CanNotDelete, None, ReadOnly.
 
-Allow virtual network access across the peering.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the lock.
 
-- Required: Yes
-- Type: bool
+  - **`notes`** (`string`) - Optional
+    - **Description:** Notes for the lock.
 
-### Parameter: `hubVnetPeeringDefinition.createReversePeering`
 
-Create reverse peering from hub back to this VNet.
+- **`loggers`** (`array`) - Optional
+  - **Description:** Loggers to configure.
 
-- Required: Yes
-- Type: bool
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity settings for the API Management service.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enables system-assigned managed identity.
 
-### Parameter: `hubVnetPeeringDefinition.firewallIpAddress`
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs.
 
-Hub firewall private IP address for routing (if applicable).
 
-- Required: Yes
-- Type: string
+- **`minApiVersion`** (`string`) - Optional
+  - **Description:** Minimum ARM API version to use for control-plane operations.
 
-### Parameter: `hubVnetPeeringDefinition.peerVnetResourceId`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the API Management service.
 
-Resource ID of the hub (peer) VNet.
+- **`namedValues`** (`array`) - Optional
+  - **Description:** Named values to configure.
 
-- Required: Yes
-- Type: string
+- **`newGuidValue`** (`string`) - Optional
+  - **Description:** Helper for generating new GUID values.
 
-### Parameter: `hubVnetPeeringDefinition.reverseAllowForwardedTraffic`
+- **`notificationSenderEmail`** (`string`) - Optional
+  - **Description:** Notification sender email address.
 
-Reverse peering: allow forwarded traffic.
+- **`policies`** (`array`) - Optional
+  - **Description:** Policies to configure.
 
-- Required: Yes
-- Type: bool
+- **`portalsettings`** (`array`) - Optional
+  - **Description:** Portal settings for the developer portal.
 
-### Parameter: `hubVnetPeeringDefinition.reverseAllowGatewayTransit`
+- **`products`** (`array`) - Optional
+  - **Description:** Products to configure.
 
-Reverse peering: allow gateway transit.
+- **`publicIpAddressResourceId`** (`string`) - Optional
+  - **Description:** Public IP address resource ID for API Management.
 
-- Required: Yes
-- Type: bool
+- **`publisherEmail`** (`string`) - Required
+  - **Description:** Publisher email address.
 
-### Parameter: `hubVnetPeeringDefinition.reverseAllowVirtualNetworkAccess`
+- **`publisherName`** (`string`) - Required
+  - **Description:** Publisher display name.
 
-Reverse peering: allow VNet access.
+- **`restore`** (`bool`) - Optional
+  - **Description:** Restore configuration for undeleting API Management services.
 
-- Required: Yes
-- Type: bool
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the API Management service.
 
-### Parameter: `hubVnetPeeringDefinition.reverseName`
+- **`sku`** (`string`) - Optional
+  - **Description:** SKU of the API Management service. Allowed values: Basic, BasicV2, Consumption, Developer, Premium, Standard, StandardV2.
 
-Name of the reverse peering (hub->spoke).
+- **`skuCapacity`** (`int`) - Conditional
+  - **Description:** SKU capacity. Required if SKU is not Consumption.
 
-- Required: Yes
-- Type: string
+- **`subnetResourceId`** (`string`) - Optional
+  - **Description:** Subnet resource ID for VNet integration.
 
-### Parameter: `hubVnetPeeringDefinition.reverseUseRemoteGateways`
+- **`subscriptions`** (`array`) - Optional
+  - **Description:** Subscriptions to configure.
 
-Reverse peering: use remote gateways.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the API Management service.
 
-- Required: Yes
-- Type: bool
+- **`virtualNetworkType`** (`string`) - Optional
+  - **Description:** Virtual network type. Allowed values: None, External, Internal.
 
-### Parameter: `hubVnetPeeringDefinition.useRemoteGateways`
+### `apimPrivateDnsZoneDefinition`
 
-Use remote gateways on the spoke peering.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `apimPrivateDnsZoneDefinition` | `object` | Optional | API Management Private DNS Zone configuration. |
 
-- Required: Yes
-- Type: bool
+**Properties:**
 
-### Parameter: `hubVnetPeeringDefinition.name`
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-Name of the peering from spoke to hub.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-### Parameter: `jumpVmAdminPassword`
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-Required when deploying Jump VM. Local admin password to set on the Windows JumpVM.
 
-- Required: No
-- Type: securestring
-- Default: `''`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.a
 
-### Parameter: `keyVaultDefinition`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
- Key Vault configuration for the GenAI app (used when KV is deployed).
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      name: ''
-      roleAssignments: []
-      sku: 'standard'
-      tags: {}
-      tenantId: '[subscription().tenantId]'
-  }
-  ```
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-**Optional parameters**
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-keyvaultdefinitionname) | string | Key Vault name. |
-| [`roleAssignments`](#parameter-keyvaultdefinitionroleassignments) | array | Role assignments to create on the vault. |
-| [`sku`](#parameter-keyvaultdefinitionsku) | string | Key Vault SKU (e.g., standard, premium). |
-| [`tags`](#parameter-keyvaultdefinitiontags) | object | Tags to apply to the Key Vault. |
-| [`tenantId`](#parameter-keyvaultdefinitiontenantid) | string | AAD tenant ID for the vault. |
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `keyVaultDefinition.name`
 
-Key Vault name.
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-- Required: No
-- Type: string
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `keyVaultDefinition.roleAssignments`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Role assignments to create on the vault.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: No
-- Type: array
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-**Required parameters**
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-keyvaultdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-keyvaultdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-keyvaultdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
 
-**Optional parameters**
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.roleAssignments
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-keyvaultdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-keyvaultdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-keyvaultdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-keyvaultdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-keyvaultdefinitionroleassignmentsname) | string | Role assignment name. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-### Parameter: `keyVaultDefinition.roleAssignments.principalId`
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-Principal (objectId) to assign.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-- Required: Yes
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-### Parameter: `keyVaultDefinition.roleAssignments.principalType`
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-Principal type for the assignment.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.virtualNetworkLinks
 
-### Parameter: `keyVaultDefinition.roleAssignments.roleDefinitionIdOrName`
+### `apimPrivateEndpointDefinition`
 
-Role definition ID or built-in role name.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `apimPrivateEndpointDefinition` | `object` | Optional | API Management Private Endpoint configuration. |
 
-- Required: Yes
-- Type: string
+**Properties:**
 
-### Parameter: `keyVaultDefinition.roleAssignments.condition`
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-Condition expression for the assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-### Parameter: `keyVaultDefinition.roleAssignments.conditionVersion`
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-Condition version (e.g., 2.0).
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.a
 
-### Parameter: `keyVaultDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-Delegated managed identity resource ID.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-- Required: No
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `keyVaultDefinition.roleAssignments.description`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Description for the assignment.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: No
-- Type: string
 
-### Parameter: `keyVaultDefinition.roleAssignments.name`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Role assignment name.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-### Parameter: `keyVaultDefinition.sku`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-Key Vault SKU (e.g., standard, premium).
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- Required: No
-- Type: string
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-### Parameter: `keyVaultDefinition.tags`
 
-Tags to apply to the Key Vault.
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.roleAssignments
 
-- Required: No
-- Type: object
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-**Required parameters**
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-keyvaultdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `keyVaultDefinition.tags.>Any_other_property<`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Arbitrary key for each tag.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `keyVaultDefinition.tenantId`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.virtualNetworkLinks
 
-AAD tenant ID for the vault.
+### `appConfigPrivateDnsZoneDefinition`
 
-- Required: No
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appConfigPrivateDnsZoneDefinition` | `object` | Optional | App Configuration Private DNS Zone configuration. |
 
-### Parameter: `logAnalyticsDefinition`
+**Properties:**
 
- Log Analytics Workspace configuration (required if you deploy App Insights and are not reusing an existing workspace).
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      name: ''
-      retention: 30
-      sku: 'PerGB2018'
-      tags: {}
-  }
-  ```
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-**Required parameters**
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`retention`](#parameter-loganalyticsdefinitionretention) | int | Data retention in days. |
-| [`sku`](#parameter-loganalyticsdefinitionsku) | string | Workspace SKU. |
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-loganalyticsdefinitionname) | string | Workspace name. If empty, a deterministic name is used. |
-| [`tags`](#parameter-loganalyticsdefinitiontags) | object | Tags to apply to the workspace. |
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.a
 
-### Parameter: `logAnalyticsDefinition.retention`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-Data retention in days.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-- Required: Yes
-- Type: int
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `logAnalyticsDefinition.sku`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Workspace SKU.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'CapacityReservation'
-    'Free'
-    'LACluster'
-    'PerGB2018'
-    'PerNode'
-    'Premium'
-    'Standalone'
-    'Standard'
-  ]
-  ```
 
-### Parameter: `logAnalyticsDefinition.name`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Workspace name. If empty, a deterministic name is used.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-### Parameter: `logAnalyticsDefinition.tags`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-Tags to apply to the workspace.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- Required: No
-- Type: object
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-loganalyticsdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.roleAssignments
 
-### Parameter: `logAnalyticsDefinition.tags.>Any_other_property<`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Arbitrary key for each tag.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: Yes
-- Type: string
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `privateDnsZoneIds`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
- Existing Private DNS Zone resource IDs per service; provide to reuse, or leave empty to create.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      acr: ''
-      aiServices: ''
-      appConfig: ''
-      appInsights: ''
-      blob: ''
-      cognitiveservices: ''
-      containerApps: ''
-      cosmosSql: ''
-      keyVault: ''
-      openai: ''
-      search: ''
-  }
-  ```
 
-### Parameter: `privateDnsZones`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.virtualNetworkLinks
 
- Private DNS Zones and VNet links configuration (used when creating zones).
+### `appConfigPrivateEndpointDefinition`
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      allowInternetResolutionFallback: false
-      existingZonesResourceGroupResourceId: ''
-      networkLinks: []
-  }
-  ```
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appConfigPrivateEndpointDefinition` | `object` | Optional | App Configuration Private Endpoint configuration. |
 
-**Required parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`networkLinks`](#parameter-privatednszonesnetworklinks) | array | VNet link definitions to associate with the zones (can be empty). |
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-**Optional parameters**
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`allowInternetResolutionFallback`](#parameter-privatednszonesallowinternetresolutionfallback) | bool | Allow fallback to internet DNS resolution when Private DNS is unavailable. |
-| [`existingZonesResourceGroupResourceId`](#parameter-privatednszonesexistingzonesresourcegroupresourceid) | string | Resource ID of the resource group that hosts existing Private DNS zones. |
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-### Parameter: `privateDnsZones.networkLinks`
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-VNet link definitions to associate with the zones (can be empty).
 
-- Required: Yes
-- Type: array
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.a
 
-**Required parameters**
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`vnetId`](#parameter-privatednszonesnetworklinksvnetid) | string | Resource ID of the VNet to link. |
-| [`vnetLinkName`](#parameter-privatednszonesnetworklinksvnetlinkname) | string | Name of the VNet link resource to create. |
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-**Optional parameters**
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`resolutionPolicy`](#parameter-privatednszonesnetworklinksresolutionpolicy) | string | DNS resolution policy for the link. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `privateDnsZones.networkLinks.vnetId`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-Resource ID of the VNet to link.
 
-- Required: Yes
-- Type: string
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-### Parameter: `privateDnsZones.networkLinks.vnetLinkName`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-Name of the VNet link resource to create.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-### Parameter: `privateDnsZones.networkLinks.resolutionPolicy`
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-DNS resolution policy for the link.
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Classic'
-    'Default'
-    'SecureOnly'
-  ]
-  ```
 
-### Parameter: `privateDnsZones.allowInternetResolutionFallback`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.roleAssignments
 
-Allow fallback to internet DNS resolution when Private DNS is unavailable.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-- Required: No
-- Type: bool
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-### Parameter: `privateDnsZones.existingZonesResourceGroupResourceId`
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-Resource ID of the resource group that hosts existing Private DNS zones.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-- Required: No
-- Type: string
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-### Parameter: `searchDefinition`
 
- Azure AI Search configuration for the GenAI app (used when Search is deployed).
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.virtualNetworkLinks
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      localAuthenticationEnabled: true
-      name: ''
-      partitionCount: 1
-      publicNetworkAccessEnabled: false
-      replicaCount: 2
-      semanticSearchSku: 'standard'
-      sku: 'standard'
-      tags: {}
-  }
-  ```
+### `appInsightsPrivateDnsZoneDefinition`
 
-**Optional parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `appInsightsPrivateDnsZoneDefinition` | `object` | Optional | Application Insights Private DNS Zone configuration. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enableTelemetry`](#parameter-searchdefinitionenabletelemetry) | bool | Enable module telemetry. |
-| [`localAuthenticationEnabled`](#parameter-searchdefinitionlocalauthenticationenabled) | bool | Enable local (admin keys) authentication. |
-| [`name`](#parameter-searchdefinitionname) | string | Search service name. |
-| [`partitionCount`](#parameter-searchdefinitionpartitioncount) | int | Number of partitions. |
-| [`publicNetworkAccessEnabled`](#parameter-searchdefinitionpublicnetworkaccessenabled) | bool | Enable public network access. |
-| [`replicaCount`](#parameter-searchdefinitionreplicacount) | int | Number of replicas. |
-| [`roleAssignments`](#parameter-searchdefinitionroleassignments) | array | Role assignments to create on the search service. |
-| [`semanticSearchSku`](#parameter-searchdefinitionsemanticsearchsku) | string | Semantic search SKU (e.g., standard). |
-| [`sku`](#parameter-searchdefinitionsku) | string | Search SKU (e.g., basic/standard). |
-| [`tags`](#parameter-searchdefinitiontags) | object | Tags to apply to the search service. |
+**Properties:**
 
-### Parameter: `searchDefinition.enableTelemetry`
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-Enable module telemetry.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- Required: No
-- Type: bool
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-### Parameter: `searchDefinition.localAuthenticationEnabled`
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-Enable local (admin keys) authentication.
 
-- Required: No
-- Type: bool
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.a
 
-### Parameter: `searchDefinition.name`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-Search service name.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-- Required: No
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `searchDefinition.partitionCount`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Number of partitions.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: No
-- Type: int
 
-### Parameter: `searchDefinition.publicNetworkAccessEnabled`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Enable public network access.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: bool
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-### Parameter: `searchDefinition.replicaCount`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-Number of replicas.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- Required: No
-- Type: int
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-### Parameter: `searchDefinition.roleAssignments`
 
-Role assignments to create on the search service.
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.roleAssignments
 
-- Required: No
-- Type: array
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-**Required parameters**
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-searchdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-searchdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-searchdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-**Optional parameters**
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-searchdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-searchdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-searchdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-searchdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-searchdefinitionroleassignmentsname) | string | Role assignment name. |
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-### Parameter: `searchDefinition.roleAssignments.principalId`
 
-Principal (objectId) to assign.
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.virtualNetworkLinks
 
-- Required: Yes
-- Type: string
+### `baseName`
 
-### Parameter: `searchDefinition.roleAssignments.principalType`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `baseName` | `string` | Optional | Base name to seed resource names; defaults to a 12-char token. |
 
-Principal type for the assignment.
+### `blobPrivateDnsZoneDefinition`
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `blobPrivateDnsZoneDefinition` | `object` | Optional | Blob Storage Private DNS Zone configuration. |
 
-### Parameter: `searchDefinition.roleAssignments.roleDefinitionIdOrName`
+**Properties:**
 
-Role definition ID or built-in role name.
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-### Parameter: `searchDefinition.roleAssignments.condition`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-Condition expression for the assignment.
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-- Required: No
-- Type: string
 
-### Parameter: `searchDefinition.roleAssignments.conditionVersion`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.a
 
-Condition version (e.g., 2.0).
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-### Parameter: `searchDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-Delegated managed identity resource ID.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: No
-- Type: string
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `searchDefinition.roleAssignments.description`
 
-Description for the assignment.
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-- Required: No
-- Type: string
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `searchDefinition.roleAssignments.name`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Role assignment name.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: No
-- Type: string
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `searchDefinition.semanticSearchSku`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Semantic search SKU (e.g., standard).
 
-- Required: No
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.roleAssignments
 
-### Parameter: `searchDefinition.sku`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Search SKU (e.g., basic/standard).
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: No
-- Type: string
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `searchDefinition.tags`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Tags to apply to the search service.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: No
-- Type: object
 
-**Required parameters**
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.virtualNetworkLinks
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-searchdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+### `buildVmMaintenanceDefinition`
 
-### Parameter: `searchDefinition.tags.>Any_other_property<`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `buildVmMaintenanceDefinition` | `object` | Optional | Build VM Maintenance Definition. Used when deploy.buildVm is true. |
 
-Arbitrary key for each tag.
+**Properties:**
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-### Parameter: `storageAccountDefinition`
+- **`extensionProperties`** (`object`) - Optional
+  - **Description:** Extension properties of the Maintenance Configuration.
 
- Storage Account configuration for the GenAI app (used when Storage is deployed).
+- **`installPatches`** (`object`) - Optional
+  - **Description:** Configuration settings for VM guest patching with Azure Update Manager.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      accountKind: 'StorageV2'
-      accountReplicationType: 'GRS'
-      accountTier: 'Standard'
-      name: ''
-      tags: {}
-  }
-  ```
+- **`location`** (`string`) - Optional
+  - **Description:** Resource location. Defaults to the resource group location.
 
-**Optional parameters**
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Maintenance Configuration.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`accessTier`](#parameter-storageaccountdefinitionaccesstier) | string | Access tier (Hot/Cool). |
-| [`accountKind`](#parameter-storageaccountdefinitionaccountkind) | string | Storage account kind (e.g., StorageV2). |
-| [`accountReplicationType`](#parameter-storageaccountdefinitionaccountreplicationtype) | string | Replication type (e.g., LRS/ZRS/GRS). |
-| [`accountTier`](#parameter-storageaccountdefinitionaccounttier) | string | Storage account tier (Standard/Premium). |
-| [`endpointTypes`](#parameter-storageaccountdefinitionendpointtypes) | array | Endpoint types to enable (e.g., blob, dfs). |
-| [`name`](#parameter-storageaccountdefinitionname) | string | Storage account name. |
-| [`publicNetworkAccessEnabled`](#parameter-storageaccountdefinitionpublicnetworkaccessenabled) | bool | Enable public network access. |
-| [`roleAssignments`](#parameter-storageaccountdefinitionroleassignments) | array | Role assignments to create on the account. |
-| [`sharedAccessKeyEnabled`](#parameter-storageaccountdefinitionsharedaccesskeyenabled) | bool | Enable shared access keys (account keys). |
-| [`tags`](#parameter-storageaccountdefinitiontags) | object | Tags to apply to the storage account. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `storageAccountDefinition.accessTier`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-Access tier (Hot/Cool).
 
-- Required: No
-- Type: string
+- **`maintenanceScope`** (`string`) - Optional
+  - **Description:** Maintenance scope of the configuration. Default is Host.
 
-### Parameter: `storageAccountDefinition.accountKind`
+- **`maintenanceWindow`** (`object`) - Optional
+  - **Description:** Definition of the Maintenance Window.
 
-Storage account kind (e.g., StorageV2).
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Maintenance Configuration.
 
-- Required: No
-- Type: string
+- **`namespace`** (`string`) - Optional
+  - **Description:** Namespace of the resource.
 
-### Parameter: `storageAccountDefinition.accountReplicationType`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to apply to the Maintenance Configuration.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition for the role assignment.
 
-Replication type (e.g., LRS/ZRS/GRS).
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version.
 
-- Required: No
-- Type: string
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Delegated managed identity resource ID.
 
-### Parameter: `storageAccountDefinition.accountTier`
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-Storage account tier (Standard/Premium).
+  - **`name`** (`string`) - Optional
+    - **Description:** Role assignment name (GUID). If omitted, a GUID is generated.
 
-- Required: No
-- Type: string
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the identity being assigned.
 
-### Parameter: `storageAccountDefinition.endpointTypes`
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type of the assigned identity.
 
-Endpoint types to enable (e.g., blob, dfs).
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign (display name, GUID, or full resource ID).
 
-- Required: No
-- Type: array
 
-### Parameter: `storageAccountDefinition.name`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for buildVmMaintenanceDefinition.roleAssignments
 
-Storage account name.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Maintenance Configuration resource.
 
-- Required: No
-- Type: string
+- **`visibility`** (`string`) - Optional
+  - **Description:** Visibility of the configuration. Default is Custom.
 
-### Parameter: `storageAccountDefinition.publicNetworkAccessEnabled`
+### `cognitiveServicesPrivateDnsZoneDefinition`
 
-Enable public network access.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `cognitiveServicesPrivateDnsZoneDefinition` | `object` | Optional | Cognitive Services Private DNS Zone configuration. |
 
-- Required: No
-- Type: bool
+**Properties:**
 
-### Parameter: `storageAccountDefinition.roleAssignments`
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-Role assignments to create on the account.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- Required: No
-- Type: array
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-**Required parameters**
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-storageaccountdefinitionroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-storageaccountdefinitionroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-storageaccountdefinitionroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
 
-**Optional parameters**
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.a
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-storageaccountdefinitionroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-storageaccountdefinitionroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-storageaccountdefinitionroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-storageaccountdefinitionroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-storageaccountdefinitionroleassignmentsname) | string | Role assignment name. |
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-### Parameter: `storageAccountDefinition.roleAssignments.principalId`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-Principal (objectId) to assign.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `storageAccountDefinition.roleAssignments.principalType`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-Principal type for the assignment.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-### Parameter: `storageAccountDefinition.roleAssignments.roleDefinitionIdOrName`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-Role definition ID or built-in role name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-### Parameter: `storageAccountDefinition.roleAssignments.condition`
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-Condition expression for the assignment.
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-- Required: No
-- Type: string
 
-### Parameter: `storageAccountDefinition.roleAssignments.conditionVersion`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.roleAssignments
 
-Condition version (e.g., 2.0).
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-### Parameter: `storageAccountDefinition.roleAssignments.delegatedManagedIdentityResourceId`
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-Delegated managed identity resource ID.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-- Required: No
-- Type: string
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-### Parameter: `storageAccountDefinition.roleAssignments.description`
 
-Description for the assignment.
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.virtualNetworkLinks
 
-- Required: No
-- Type: string
+### `containerAppEnvPrivateEndpointDefinition`
 
-### Parameter: `storageAccountDefinition.roleAssignments.name`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `containerAppEnvPrivateEndpointDefinition` | `object` | Optional | Container Apps Environment Private Endpoint configuration. |
 
-Role assignment name.
+**Properties:**
 
-- Required: No
-- Type: string
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-### Parameter: `storageAccountDefinition.sharedAccessKeyEnabled`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-Enable shared access keys (account keys).
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-- Required: No
-- Type: bool
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-### Parameter: `storageAccountDefinition.tags`
 
-Tags to apply to the storage account.
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.a
 
-- Required: No
-- Type: object
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-**Required parameters**
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-storageaccountdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `storageAccountDefinition.tags.>Any_other_property<`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Arbitrary key for each tag.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `wafPolicyDefinition`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
- Web Application Firewall (WAF) policy configuration (required when Application Gateway with WAF is deployed).
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      managedRules: {
-        exclusions: []
-        managedRuleSets: [
-          {
-            ruleGroupOverride: []
-            type: 'OWASP'
-            version: '3.2'
-          }
-        ]
-      }
-      name: ''
-      policySettings: {
-        enabledState: 'Enabled'
-        fileUploadLimitInMb: 100
-        maxRequestBodySizeInKb: 128
-        mode: 'Prevention'
-        requestBodyCheck: true
-      }
-      tags: {}
-  }
-  ```
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-**Required parameters**
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`managedRules`](#parameter-wafpolicydefinitionmanagedrules) | object | Managed rule sets and exclusions for the WAF policy. |
-| [`name`](#parameter-wafpolicydefinitionname) | string | WAF policy resource name. |
-| [`policySettings`](#parameter-wafpolicydefinitionpolicysettings) | object | WAF policy settings (state, mode, size limits). |
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-**Optional parameters**
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`tags`](#parameter-wafpolicydefinitiontags) | object | Tags to apply to the WAF Policy. |
 
-### Parameter: `wafPolicyDefinition.managedRules`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.roleAssignments
 
-Managed rule sets and exclusions for the WAF policy.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-- Required: Yes
-- Type: object
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-**Required parameters**
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`managedRuleSets`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesets) | array | Managed rule sets to apply. |
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-**Optional parameters**
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`exclusions`](#parameter-wafpolicydefinitionmanagedrulesexclusions) | array | Exclusions for specific rules or variables. |
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.virtualNetworkLinks
 
-Managed rule sets to apply.
+### `containerAppsList`
 
-- Required: Yes
-- Type: array
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `containerAppsList` | `array` | Optional | List of Container Apps to create. |
 
-**Required parameters**
+### `containerAppsPrivateDnsZoneDefinition`
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`type`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetstype) | string | Rule set type (e.g., OWASP). |
-| [`version`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsversion) | string | Rule set version. |
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `containerAppsPrivateDnsZoneDefinition` | `object` | Optional | Container Apps Private DNS Zone configuration. |
 
-**Optional parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`ruleGroupOverride`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverride) | array | Overrides for specific rule groups. |
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.type`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-Rule set type (e.g., OWASP).
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-- Required: Yes
-- Type: string
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.version`
 
-Rule set version.
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.a
 
-- Required: Yes
-- Type: string
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-Overrides for specific rule groups.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: array
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Required parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`rule`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverriderule) | array | Rule overrides within the group. |
-| [`ruleGroupName`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverriderulegroupname) | string | Name of the rule group. |
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride.rule`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Rule overrides within the group.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: Yes
-- Type: array
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-**Required parameters**
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`action`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverrideruleaction) | string | Action to take (e.g., Allow, Block, Log). |
-| [`enabled`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverrideruleenabled) | bool | Whether the rule is enabled. |
-| [`id`](#parameter-wafpolicydefinitionmanagedrulesmanagedrulesetsrulegroupoverrideruleid) | string | Rule ID. |
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride.rule.action`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Action to take (e.g., Allow, Block, Log).
 
-- Required: Yes
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.roleAssignments
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride.rule.enabled`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Whether the rule is enabled.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: Yes
-- Type: bool
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride.rule.id`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Rule ID.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `wafPolicyDefinition.managedRules.managedRuleSets.ruleGroupOverride.ruleGroupName`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.virtualNetworkLinks
 
-Name of the rule group.
+### `cosmosDbDefinition`
 
-- Required: Yes
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `cosmosDbDefinition` | `object` | Optional | Cosmos DB settings. |
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions`
+**Properties:**
 
-Exclusions for specific rules or variables.
+- **`automaticFailover`** (`bool`) - Optional
+  - **Description:** Enable automatic failover for regions. Defaults to true.
 
-- Required: Yes
-- Type: array
+- **`backupIntervalInMinutes`** (`int`) - Optional
+  - **Description:** Interval in minutes between two backups (periodic only). Defaults to 240. Range: 60–1440.
 
-**Required parameters**
+- **`backupPolicyContinuousTier`** (`string`) - Optional
+  - **Description:** Retention period for continuous mode backup. Default is Continuous30Days. Allowed values: Continuous30Days, Continuous7Days.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`matchVariable`](#parameter-wafpolicydefinitionmanagedrulesexclusionsmatchvariable) | string | Match variable to exclude (e.g., RequestHeaderNames). |
-| [`selector`](#parameter-wafpolicydefinitionmanagedrulesexclusionsselector) | string | Selector value for the match variable. |
-| [`selectorMatchOperator`](#parameter-wafpolicydefinitionmanagedrulesexclusionsselectormatchoperator) | string | Selector match operator (e.g., Equals, Contains). |
+- **`backupPolicyType`** (`string`) - Optional
+  - **Description:** Backup mode. Periodic must be used if multiple write locations are enabled. Default is Continuous. Allowed values: Continuous, Periodic.
 
-**Optional parameters**
+- **`backupRetentionIntervalInHours`** (`int`) - Optional
+  - **Description:** Time (hours) each backup is retained (periodic only). Default is 8. Range: 2–720.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`excludedRuleSet`](#parameter-wafpolicydefinitionmanagedrulesexclusionsexcludedruleset) | object | Specific managed rule set exclusion details. |
+- **`backupStorageRedundancy`** (`string`) - Optional
+  - **Description:** Type of backup residency (periodic only). Default is Local. Allowed values: Geo, Local, Zone.
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.matchVariable`
+- **`capabilitiesToAdd`** (`array`) - Optional
+  - **Description:** List of Cosmos DB specific capabilities to enable.
 
-Match variable to exclude (e.g., RequestHeaderNames).
+- **`databaseAccountOfferType`** (`string`) - Optional
+  - **Description:** The offer type for the account. Default is Standard. Allowed value: Standard.
 
-- Required: Yes
-- Type: string
+- **`dataPlaneRoleAssignments`** (`array`) - Optional
+  - **Description:** Cosmos DB for NoSQL native role-based access control assignments.
+  - **`name`** (`string`) - Optional
+    - **Description:** Unique name of the role assignment.
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.selector`
+  - **`principalId`** (`string`) - Required
+    - **Description:** The Microsoft Entra principal ID granted access by this assignment.
 
-Selector value for the match variable.
+  - **`roleDefinitionId`** (`string`) - Required
+    - **Description:** The unique identifier of the NoSQL native role definition.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.selectorMatchOperator`
+- **`dataPlaneRoleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleAssignments
 
-Selector match operator (e.g., Equals, Contains).
+- **`dataPlaneRoleDefinitions`** (`array`) - Optional
+  - **Description:** Cosmos DB for NoSQL native role-based access control definitions.
+  - **`assignableScopes`** (`array`) - Optional
+    - **Description:** Assignable scopes for the definition.
 
-- Required: Yes
-- Type: string
+  - **`assignments`** (`array`) - Optional
+    - **Description:** Assignments associated with this role definition.
+    - **`name`** (`string`) - Optional
+      - **Description:** Unique identifier name for the role assignment.
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.excludedRuleSet`
+    - **`principalId`** (`string`) - Required
+      - **Description:** The Microsoft Entra principal ID granted access by this role assignment.
 
-Specific managed rule set exclusion details.
 
-- Required: Yes
-- Type: object
+  - **`assignments[*]`** (`object`) - Optional
+    - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleDefinitions[*].assignments
 
-**Required parameters**
+  - **`dataActions`** (`array`) - Optional
+    - **Description:** Array of allowed data actions.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`type`](#parameter-wafpolicydefinitionmanagedrulesexclusionsexcludedrulesettype) | string | Rule set type (e.g., OWASP). |
-| [`version`](#parameter-wafpolicydefinitionmanagedrulesexclusionsexcludedrulesetversion) | string | Rule set version (e.g., 3.2). |
+  - **`name`** (`string`) - Optional
+    - **Description:** Unique identifier for the role definition.
 
-**Optional parameters**
+  - **`roleName`** (`string`) - Required
+    - **Description:** A user-friendly unique name for the role definition.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`ruleGroup`](#parameter-wafpolicydefinitionmanagedrulesexclusionsexcludedrulesetrulegroup) | array | Rule groups to exclude. |
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.excludedRuleSet.type`
+- **`dataPlaneRoleDefinitions[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleDefinitions
+  - **`name`** (`string`) - Optional
+    - **Description:** Unique identifier name for the role assignment.
 
-Rule set type (e.g., OWASP).
+  - **`principalId`** (`string`) - Required
+    - **Description:** The Microsoft Entra principal ID granted access by this role assignment.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.excludedRuleSet.version`
+- **`defaultConsistencyLevel`** (`string`) - Optional
+  - **Description:** Default consistency level. Default is Session. Allowed values: BoundedStaleness, ConsistentPrefix, Eventual, Session, Strong.
 
-Rule set version (e.g., 3.2).
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** Diagnostic settings for the Cosmos DB account.
 
-- Required: Yes
-- Type: string
+- **`disableKeyBasedMetadataWriteAccess`** (`bool`) - Optional
+  - **Description:** Disable write operations on metadata resources via account keys. Default is true.
 
-### Parameter: `wafPolicyDefinition.managedRules.exclusions.excludedRuleSet.ruleGroup`
+- **`disableLocalAuthentication`** (`bool`) - Optional
+  - **Description:** Opt-out of local authentication, enforcing Microsoft Entra-only auth. Default is true.
 
-Rule groups to exclude.
+- **`enableAnalyticalStorage`** (`bool`) - Optional
+  - **Description:** Enable analytical storage. Default is false.
 
-- Required: Yes
-- Type: array
+- **`enableFreeTier`** (`bool`) - Optional
+  - **Description:** Enable Free Tier. Default is false.
 
-### Parameter: `wafPolicyDefinition.name`
+- **`enableMultipleWriteLocations`** (`bool`) - Optional
+  - **Description:** Enable multiple write locations. Requires periodic backup. Default is false.
 
-WAF policy resource name.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry. Default is true.
 
-- Required: Yes
-- Type: string
+- **`failoverLocations`** (`array`) - Optional
+  - **Description:** Failover locations configuration.
+  - **`failoverPriority`** (`int`) - Required
+    - **Description:** Failover priority. 0 = write region.
 
-### Parameter: `wafPolicyDefinition.policySettings`
+  - **`isZoneRedundant`** (`bool`) - Optional
+    - **Description:** Zone redundancy flag for region. Default is true.
 
-WAF policy settings (state, mode, size limits).
+  - **`locationName`** (`string`) - Required
+    - **Description:** Region name.
 
-- Required: Yes
-- Type: object
 
-**Required parameters**
+- **`failoverLocations[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosDbDefinition.failoverLocations
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`enabledState`](#parameter-wafpolicydefinitionpolicysettingsenabledstate) | string | WAF policy enabled state. |
-| [`fileUploadLimitInMb`](#parameter-wafpolicydefinitionpolicysettingsfileuploadlimitinmb) | int | File upload size limit (MB). |
-| [`maxRequestBodySizeInKb`](#parameter-wafpolicydefinitionpolicysettingsmaxrequestbodysizeinkb) | int | Maximum request body size (KB). |
-| [`mode`](#parameter-wafpolicydefinitionpolicysettingsmode) | string | WAF mode (Prevention or Detection). |
-| [`requestBodyCheck`](#parameter-wafpolicydefinitionpolicysettingsrequestbodycheck) | bool | Enable request body inspection. |
+- **`gremlinDatabases`** (`array`) - Optional
+  - **Description:** Gremlin database configurations.
 
-### Parameter: `wafPolicyDefinition.policySettings.enabledState`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the account. Defaults to resourceGroup().location.
 
-WAF policy enabled state.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock settings for the Cosmos DB account.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type. Allowed values: CanNotDelete, None, ReadOnly.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Disabled'
-    'Enabled'
-  ]
-  ```
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `wafPolicyDefinition.policySettings.fileUploadLimitInMb`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-File upload size limit (MB).
 
-- Required: Yes
-- Type: int
+- **`managedIdentities`** (`object`) - Optional
+  - **Description:** Managed identity configuration.
+  - **`systemAssigned`** (`bool`) - Optional
+    - **Description:** Enables system-assigned identity.
 
-### Parameter: `wafPolicyDefinition.policySettings.maxRequestBodySizeInKb`
+  - **`userAssignedResourceIds`** (`array`) - Optional
+    - **Description:** User-assigned identity resource IDs.
 
-Maximum request body size (KB).
 
-- Required: Yes
-- Type: int
+- **`maxIntervalInSeconds`** (`int`) - Optional
+  - **Description:** Maximum lag time in seconds (BoundedStaleness). Defaults to 300.
 
-### Parameter: `wafPolicyDefinition.policySettings.mode`
+- **`maxStalenessPrefix`** (`int`) - Optional
+  - **Description:** Maximum stale requests (BoundedStaleness). Defaults to 100000.
 
-WAF mode (Prevention or Detection).
+- **`minimumTlsVersion`** (`string`) - Optional
+  - **Description:** Minimum allowed TLS version. Default is Tls12.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Detection'
-    'Prevention'
-  ]
-  ```
+- **`mongodbDatabases`** (`array`) - Optional
+  - **Description:** MongoDB database configurations.
 
-### Parameter: `wafPolicyDefinition.policySettings.requestBodyCheck`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the account.
 
-Enable request body inspection.
+- **`networkRestrictions`** (`object`) - Optional
+  - **Description:** Network restrictions for the Cosmos DB account.
 
-- Required: Yes
-- Type: bool
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Private endpoint configurations for secure connectivity.
 
-### Parameter: `wafPolicyDefinition.tags`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Control plane Azure role assignments for Cosmos DB.
 
-Tags to apply to the WAF Policy.
+- **`serverVersion`** (`string`) - Optional
+  - **Description:** MongoDB server version (if using MongoDB API). Default is 4.2.
 
-- Required: Yes
-- Type: object
+- **`sqlDatabases`** (`array`) - Optional
+  - **Description:** SQL (NoSQL) database configurations.
 
-**Required parameters**
+- **`tables`** (`array`) - Optional
+  - **Description:** Table API database configurations.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-wafpolicydefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Cosmos DB account.
 
-### Parameter: `wafPolicyDefinition.tags.>Any_other_property<`
+- **`totalThroughputLimit`** (`int`) - Optional
+  - **Description:** Total throughput limit in RU/s. Default is unlimited (-1).
 
-Arbitrary key for each tag.
+- **`zoneRedundant`** (`bool`) - Optional
+  - **Description:** Zone redundancy for single-region accounts. Default is true.
 
-- Required: Yes
-- Type: string
+### `cosmosPrivateDnsZoneDefinition`
 
-### Parameter: `aiFoundryDefinition`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `cosmosPrivateDnsZoneDefinition` | `object` | Optional | Cosmos DB Private DNS Zone configuration. |
 
- AI Foundry project configuration (account/project, networking, associated resources, and deployments).
+**Properties:**
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      aiFoundryConfiguration: {
-        accountName: ''
-        allowProjectManagement: true
-        createCapabilityHosts: false
-        location: '[parameters(\'location\')]'
-        networking: {
-          agentServiceSubnetResourceId: ''
-          aiServicesPrivateDnsZoneResourceId: ''
-          cognitiveServicesPrivateDnsZoneResourceId: ''
-          openAiPrivateDnsZoneResourceId: ''
-        }
-        project: {
-          desc: 'This is the default project for AI Foundry.'
-          displayName: ''
-          name: ''
-        }
-        roleAssignments: []
-        sku: 'S0'
-      }
-      aiModelDeployments: [
-        {
-          model: {
-            format: 'OpenAI'
-            name: 'gpt-4o'
-            version: '2024-11-20'
-          }
-          name: 'chat'
-          raiPolicyName: ''
-          scale: {
-            capacity: 1
-            family: ''
-            size: ''
-            tier: ''
-            type: 'Standard'
-          }
-          versionUpgradeOption: ''
-        }
-        {
-          model: {
-            format: 'OpenAI'
-            name: 'text-embedding-3-large'
-            version: '1'
-          }
-          name: 'text-embedding'
-          raiPolicyName: ''
-          scale: {
-            capacity: 1
-            family: ''
-            size: ''
-            tier: ''
-            type: 'Standard'
-          }
-          versionUpgradeOption: ''
-        }
-      ]
-      aiProjects: []
-      aiSearchConfiguration: {
-        existingResourceId: ''
-        name: ''
-        privateDnsZoneResourceId: ''
-        roleAssignments: []
-      }
-      baseUniqueName: ''
-      cosmosDbConfiguration: {
-        existingResourceId: ''
-        name: ''
-        privateDnsZoneResourceId: ''
-        roleAssignments: []
-      }
-      enableTelemetry: '[parameters(\'enableTelemetry\')]'
-      includeAssociatedResources: true
-      keyVaultConfiguration: {
-        existingResourceId: ''
-        name: ''
-        privateDnsZoneResourceId: ''
-        roleAssignments: []
-      }
-      location: '[parameters(\'location\')]'
-      lock: {
-        kind: 'None'
-        name: ''
-      }
-      privateEndpointSubnetResourceId: ''
-      storageAccountConfiguration: {
-        blobPrivateDnsZoneResourceId: ''
-        existingResourceId: ''
-        name: ''
-        roleAssignments: []
-      }
-  }
-  ```
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-**Required parameters**
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`aiModelDeployments`](#parameter-aifoundrydefinitionaimodeldeployments) | array | Model deployments to provision (can be empty). |
-| [`aiProjects`](#parameter-aifoundrydefinitionaiprojects) | array | Array of AI Projects to create (can be empty). |
-| [`lock`](#parameter-aifoundrydefinitionlock) | object | Optional lock configuration for created resources. |
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-**Optional parameters**
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`aiFoundryConfiguration`](#parameter-aifoundrydefinitionaifoundryconfiguration) | object | AI Foundry account/project level configuration. |
-| [`aiSearchConfiguration`](#parameter-aifoundrydefinitionaisearchconfiguration) | object | Azure AI Search configuration (reuse or create) for AI Foundry associated resources. |
-| [`baseUniqueName`](#parameter-aifoundrydefinitionbaseuniquename) | string | Base unique name used for related resources. |
-| [`cosmosDbConfiguration`](#parameter-aifoundrydefinitioncosmosdbconfiguration) | object | Cosmos DB configuration (reuse or create) for AI Foundry associated resources. |
-| [`createByor`](#parameter-aifoundrydefinitioncreatebyor) | bool | Create BYOR (bring-your-own resource) links where applicable. |
-| [`enableTelemetry`](#parameter-aifoundrydefinitionenabletelemetry) | bool | Enable telemetry for the pattern modules. |
-| [`includeAssociatedResources`](#parameter-aifoundrydefinitionincludeassociatedresources) | bool | Include associated resources (Search/Cosmos/Storage/KV) in the deployment. |
-| [`keyVaultConfiguration`](#parameter-aifoundrydefinitionkeyvaultconfiguration) | object | Key Vault configuration (reuse or create) for AI Foundry associated resources. |
-| [`location`](#parameter-aifoundrydefinitionlocation) | string | Location/region for the AI Foundry resources. |
-| [`privateEndpointSubnetResourceId`](#parameter-aifoundrydefinitionprivateendpointsubnetresourceid) | string | Subnet resource ID where Private Endpoints should be created. |
-| [`storageAccountConfiguration`](#parameter-aifoundrydefinitionstorageaccountconfiguration) | object | Storage Account configuration (reuse or create) for AI Foundry associated resources. |
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.a
 
-Model deployments to provision (can be empty).
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: Yes
-- Type: array
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-**Required parameters**
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`model`](#parameter-aifoundrydefinitionaimodeldeploymentsmodel) | object | Model identification (format/name/version). |
-| [`name`](#parameter-aifoundrydefinitionaimodeldeploymentsname) | string | Deployment name. |
-| [`scale`](#parameter-aifoundrydefinitionaimodeldeploymentsscale) | object | Capacity configuration (family/size/tier/type/capacity). |
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Optional parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`raiPolicyName`](#parameter-aifoundrydefinitionaimodeldeploymentsraipolicyname) | string | Name of the associated RAI policy to apply. |
-| [`versionUpgradeOption`](#parameter-aifoundrydefinitionaimodeldeploymentsversionupgradeoption) | string | Version upgrade option for this deployment. |
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.model`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Model identification (format/name/version).
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-**Required parameters**
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`format`](#parameter-aifoundrydefinitionaimodeldeploymentsmodelformat) | string | Model format (e.g., OpenAI, HF, ONNX). |
-| [`name`](#parameter-aifoundrydefinitionaimodeldeploymentsmodelname) | string | Model name. |
-| [`version`](#parameter-aifoundrydefinitionaimodeldeploymentsmodelversion) | string | Model version. |
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.model.format`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Model format (e.g., OpenAI, HF, ONNX).
 
-- Required: Yes
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.roleAssignments
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.model.name`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Model name.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: Yes
-- Type: string
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.model.version`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Model version.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.name`
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.virtualNetworkLinks
 
-Deployment name.
+### `cosmosPrivateEndpointDefinition`
 
-- Required: Yes
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `cosmosPrivateEndpointDefinition` | `object` | Optional | Cosmos DB Private Endpoint configuration. |
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale`
+**Properties:**
 
-Capacity configuration (family/size/tier/type/capacity).
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: Yes
-- Type: object
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-**Required parameters**
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`capacity`](#parameter-aifoundrydefinitionaimodeldeploymentsscalecapacity) | int | Target capacity (number of instances). |
-| [`family`](#parameter-aifoundrydefinitionaimodeldeploymentsscalefamily) | string | VM family or accelerator family. |
-| [`size`](#parameter-aifoundrydefinitionaimodeldeploymentsscalesize) | string | VM size or SKU size. |
-| [`tier`](#parameter-aifoundrydefinitionaimodeldeploymentsscaletier) | string | Billing tier. |
-| [`type`](#parameter-aifoundrydefinitionaimodeldeploymentsscaletype) | string | Resource type (dedicated/consumption/etc.). |
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale.capacity`
 
-Target capacity (number of instances).
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.a
 
-- Required: Yes
-- Type: int
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale.family`
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-VM family or accelerator family.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale.size`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-VM size or SKU size.
 
-- Required: Yes
-- Type: string
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale.tier`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-Billing tier.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.scale.type`
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-Resource type (dedicated/consumption/etc.).
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.raiPolicyName`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.roleAssignments
 
-Name of the associated RAI policy to apply.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-- Required: No
-- Type: string
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-### Parameter: `aiFoundryDefinition.aiModelDeployments.versionUpgradeOption`
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-Version upgrade option for this deployment.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-- Required: No
-- Type: string
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-### Parameter: `aiFoundryDefinition.aiProjects`
 
-Array of AI Projects to create (can be empty).
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.virtualNetworkLinks
 
-- Required: Yes
-- Type: array
+### `enableTelemetry`
 
-**Required parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `enableTelemetry` | `bool` | Optional | Enable/Disable usage telemetry for module. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`desc`](#parameter-aifoundrydefinitionaiprojectsdesc) | string | Description for the project. |
-| [`displayName`](#parameter-aifoundrydefinitionaiprojectsdisplayname) | string | Display name for the project. |
-| [`name`](#parameter-aifoundrydefinitionaiprojectsname) | string | Project resource name. |
+### `existingVNetSubnetsDefinition`
 
-**Optional parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `existingVNetSubnetsDefinition` | `object` | Optional | Configuration for adding subnets to an existing VNet. Use this when you want to deploy subnets to an existing VNet instead of creating a new one. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`aiSearchConnection`](#parameter-aifoundrydefinitionaiprojectsaisearchconnection) | object | AI Search connection reference. |
-| [`cosmosDbConnection`](#parameter-aifoundrydefinitionaiprojectscosmosdbconnection) | object | Cosmos DB connection reference. |
-| [`createProjectConnections`](#parameter-aifoundrydefinitionaiprojectscreateprojectconnections) | bool | Whether to auto-create project connections (BYOR). |
-| [`keyVaultConnection`](#parameter-aifoundrydefinitionaiprojectskeyvaultconnection) | object | Key Vault connection reference. |
-| [`sku`](#parameter-aifoundrydefinitionaiprojectssku) | string | Project SKU. |
-| [`storageAccountConnection`](#parameter-aifoundrydefinitionaiprojectsstorageaccountconnection) | object | Storage Account connection reference. |
+**Properties:**
 
-### Parameter: `aiFoundryDefinition.aiProjects.desc`
+- **`existingVNetName`** (`string`) - Required
+  - **Description:** Name or Resource ID of the existing Virtual Network. For cross-subscription/resource group scenarios, use the full Resource ID format: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.Network/virtualNetworks/{vnet-name}
 
-Description for the project.
+- **`subnets`** (`array`) - Optional
+  - **Description:** Array of custom subnets to add to the existing VNet. If not provided and useDefaultSubnets is true, uses default AI Landing Zone subnets.
+  - **`addressPrefix`** (`string`) - Conditional
+    - **Description:** Address prefix for the subnet. Required if addressPrefixes is empty.
 
-- Required: Yes
-- Type: string
+  - **`addressPrefixes`** (`array`) - Conditional
+    - **Description:** List of address prefixes for the subnet. Required if addressPrefix is empty.
 
-### Parameter: `aiFoundryDefinition.aiProjects.displayName`
+  - **`applicationGatewayIPConfigurations`** (`array`) - Optional
+    - **Description:** Application Gateway IP configurations for the subnet.
 
-Display name for the project.
+  - **`defaultOutboundAccess`** (`bool`) - Optional
+    - **Description:** Disable default outbound connectivity for all VMs in subnet.
 
-- Required: Yes
-- Type: string
+  - **`delegation`** (`string`) - Optional
+    - **Description:** Delegation to enable on the subnet.
 
-### Parameter: `aiFoundryDefinition.aiProjects.name`
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the subnet.
 
-Project resource name.
+  - **`natGatewayResourceId`** (`string`) - Optional
+    - **Description:** NAT Gateway resource ID for the subnet.
 
-- Required: Yes
-- Type: string
+  - **`networkSecurityGroupResourceId`** (`string`) - Optional
+    - **Description:** NSG resource ID for the subnet.
 
-### Parameter: `aiFoundryDefinition.aiProjects.aiSearchConnection`
+  - **`privateEndpointNetworkPolicies`** (`string`) - Optional
+    - **Description:** Policy for private endpoint network.
 
-AI Search connection reference.
+  - **`privateLinkServiceNetworkPolicies`** (`string`) - Optional
+    - **Description:** Policy for private link service network.
 
-- Required: No
-- Type: object
+  - **`routeTableResourceId`** (`string`) - Optional
+    - **Description:** Route table resource ID for the subnet.
 
-**Optional parameters**
+  - **`serviceEndpointPolicies`** (`array`) - Optional
+    - **Description:** Service endpoint policies for the subnet.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionaiprojectsaisearchconnectionexistingresourceid) | string | Resource ID of an existing resource to connect to. |
-| [`newResourceMapKey`](#parameter-aifoundrydefinitionaiprojectsaisearchconnectionnewresourcemapkey) | string | Key referencing a newly created resource within the deployment map. |
+  - **`serviceEndpoints`** (`array`) - Optional
+    - **Description:** Service endpoints enabled on the subnet.
 
-### Parameter: `aiFoundryDefinition.aiProjects.aiSearchConnection.existingResourceId`
+  - **`sharingScope`** (`string`) - Optional
+    - **Description:** Sharing scope for the subnet.
 
-Resource ID of an existing resource to connect to.
 
-- Required: No
-- Type: string
+- **`subnets[*]`** (`object`) - Optional
+  - **Description:** Array item for existingVNetSubnetsDefinition.subnets
 
-### Parameter: `aiFoundryDefinition.aiProjects.aiSearchConnection.newResourceMapKey`
+- **`useDefaultSubnets`** (`bool`) - Optional
+  - **Description:** Use default AI Landing Zone subnets with 192.168.x.x addressing. Default: true.
 
-Key referencing a newly created resource within the deployment map.
+### `flagPlatformLandingZone`
 
-- Required: No
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `flagPlatformLandingZone` | `bool` | Optional | Enable platform landing zone integration. When true, private DNS zones and private endpoints are managed by the platform landing zone. |
 
-### Parameter: `aiFoundryDefinition.aiProjects.cosmosDbConnection`
+### `hubVnetPeeringDefinition`
 
-Cosmos DB connection reference.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `hubVnetPeeringDefinition` | `object` | Optional | Hub VNet peering configuration. Configure this to establish hub-spoke peering topology. |
 
-- Required: No
-- Type: object
+### `jumpVmMaintenanceDefinition`
 
-**Optional parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `jumpVmMaintenanceDefinition` | `object` | Optional | Jump VM Maintenance Definition. Used when deploy.jumpVm is true. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionaiprojectscosmosdbconnectionexistingresourceid) | string | Resource ID of an existing resource to connect to. |
-| [`newResourceMapKey`](#parameter-aifoundrydefinitionaiprojectscosmosdbconnectionnewresourcemapkey) | string | Key referencing a newly created resource within the deployment map. |
+**Properties:**
 
-### Parameter: `aiFoundryDefinition.aiProjects.cosmosDbConnection.existingResourceId`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable or disable usage telemetry for the module. Default is true.
 
-Resource ID of an existing resource to connect to.
+- **`extensionProperties`** (`object`) - Optional
+  - **Description:** Extension properties of the Maintenance Configuration.
 
-- Required: No
-- Type: string
+- **`installPatches`** (`object`) - Optional
+  - **Description:** Configuration settings for VM guest patching with Azure Update Manager.
 
-### Parameter: `aiFoundryDefinition.aiProjects.cosmosDbConnection.newResourceMapKey`
+- **`location`** (`string`) - Optional
+  - **Description:** Resource location. Defaults to the resource group location.
 
-Key referencing a newly created resource within the deployment map.
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Maintenance Configuration.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-### Parameter: `aiFoundryDefinition.aiProjects.createProjectConnections`
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-Whether to auto-create project connections (BYOR).
 
-- Required: No
-- Type: bool
+- **`maintenanceScope`** (`string`) - Optional
+  - **Description:** Maintenance scope of the configuration. Default is Host.
 
-### Parameter: `aiFoundryDefinition.aiProjects.keyVaultConnection`
+- **`maintenanceWindow`** (`object`) - Optional
+  - **Description:** Definition of the Maintenance Window.
 
-Key Vault connection reference.
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Maintenance Configuration.
 
-- Required: No
-- Type: object
+- **`namespace`** (`string`) - Optional
+  - **Description:** Namespace of the resource.
 
-**Optional parameters**
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments to apply to the Maintenance Configuration.
+  - **`condition`** (`string`) - Optional
+    - **Description:** Condition for the role assignment.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionaiprojectskeyvaultconnectionexistingresourceid) | string | Resource ID of an existing resource to connect to. |
-| [`newResourceMapKey`](#parameter-aifoundrydefinitionaiprojectskeyvaultconnectionnewresourcemapkey) | string | Key referencing a newly created resource within the deployment map. |
+  - **`conditionVersion`** (`string`) - Optional
+    - **Description:** Condition version.
 
-### Parameter: `aiFoundryDefinition.aiProjects.keyVaultConnection.existingResourceId`
+  - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+    - **Description:** Delegated managed identity resource ID.
 
-Resource ID of an existing resource to connect to.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Role assignment name (GUID). If omitted, a GUID is generated.
 
-### Parameter: `aiFoundryDefinition.aiProjects.keyVaultConnection.newResourceMapKey`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID of the identity being assigned.
 
-Key referencing a newly created resource within the deployment map.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type of the assigned identity.
 
-- Required: No
-- Type: string
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role to assign (display name, GUID, or full resource ID).
 
-### Parameter: `aiFoundryDefinition.aiProjects.sku`
 
-Project SKU.
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for jumpVmMaintenanceDefinition.roleAssignments
 
-- Required: No
-- Type: string
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Maintenance Configuration resource.
 
-### Parameter: `aiFoundryDefinition.aiProjects.storageAccountConnection`
+- **`visibility`** (`string`) - Optional
+  - **Description:** Visibility of the configuration. Default is Custom.
 
-Storage Account connection reference.
+### `keyVaultDefinition`
 
-- Required: No
-- Type: object
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `keyVaultDefinition` | `object` | Optional | Key Vault settings. |
 
-**Optional parameters**
+**Properties:**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionaiprojectsstorageaccountconnectionexistingresourceid) | string | Resource ID of an existing resource to connect to. |
-| [`newResourceMapKey`](#parameter-aifoundrydefinitionaiprojectsstorageaccountconnectionnewresourcemapkey) | string | Key referencing a newly created resource within the deployment map. |
+- **`accessPolicies`** (`array`) - Optional
+  - **Description:** All access policies to create.
+  - **`applicationId`** (`string`) - Optional
+    - **Description:** Application ID of the client making request on behalf of a principal.
 
-### Parameter: `aiFoundryDefinition.aiProjects.storageAccountConnection.existingResourceId`
+  - **`objectId`** (`string`) - Required
+    - **Description:** The object ID of a user, service principal or security group in the tenant for the vault.
 
-Resource ID of an existing resource to connect to.
+  - **`permissions`** (`object`) - Required
+    - **Description:** Permissions the identity has for keys, secrets and certificates.
+    - **`certificates`** (`array`) - Optional
+      - **Description:** Permissions to certificates.
 
-- Required: No
-- Type: string
+    - **`keys`** (`array`) - Optional
+      - **Description:** Permissions to keys.
 
-### Parameter: `aiFoundryDefinition.aiProjects.storageAccountConnection.newResourceMapKey`
+    - **`secrets`** (`array`) - Optional
+      - **Description:** Permissions to secrets.
 
-Key referencing a newly created resource within the deployment map.
+    - **`storage`** (`array`) - Optional
+      - **Description:** Permissions to storage accounts.
 
-- Required: No
-- Type: string
 
-### Parameter: `aiFoundryDefinition.lock`
+  - **`tenantId`** (`string`) - Optional
+    - **Description:** The tenant ID that is used for authenticating requests to the key vault.
 
-Optional lock configuration for created resources.
 
-- Required: Yes
-- Type: object
+- **`accessPolicies[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultDefinition.accessPolicies
+  - **`certificates`** (`array`) - Optional
+    - **Description:** Permissions to certificates.
 
-**Optional parameters**
+  - **`keys`** (`array`) - Optional
+    - **Description:** Permissions to keys.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`kind`](#parameter-aifoundrydefinitionlockkind) | string | Specify the type of lock. |
-| [`name`](#parameter-aifoundrydefinitionlockname) | string | Specify the name of lock. |
-| [`notes`](#parameter-aifoundrydefinitionlocknotes) | string | Specify the notes of the lock. |
+  - **`secrets`** (`array`) - Optional
+    - **Description:** Permissions to secrets.
 
-### Parameter: `aiFoundryDefinition.lock.kind`
+  - **`storage`** (`array`) - Optional
+    - **Description:** Permissions to storage accounts.
 
-Specify the type of lock.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'CanNotDelete'
-    'None'
-    'ReadOnly'
-  ]
-  ```
+- **`createMode`** (`string`) - Optional
+  - **Description:** The vault's create mode to indicate whether the vault needs to be recovered or not.
 
-### Parameter: `aiFoundryDefinition.lock.name`
+- **`diagnosticSettings`** (`array`) - Optional
+  - **Description:** The diagnostic settings of the service.
 
-Specify the name of lock.
+- **`enablePurgeProtection`** (`bool`) - Optional
+  - **Description:** Provide true to enable Key Vault purge protection feature.
 
-- Required: No
-- Type: string
+- **`enableRbacAuthorization`** (`bool`) - Optional
+  - **Description:** Controls how data actions are authorized. When true, RBAC is used for authorization.
 
-### Parameter: `aiFoundryDefinition.lock.notes`
+- **`enableSoftDelete`** (`bool`) - Optional
+  - **Description:** Switch to enable/disable Key Vault soft delete feature.
 
-Specify the notes of the lock.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for module.
 
-- Required: No
-- Type: string
+- **`enableVaultForDeployment`** (`bool`) - Optional
+  - **Description:** Specifies if the vault is enabled for deployment by script or compute.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration`
+- **`enableVaultForDiskEncryption`** (`bool`) - Optional
+  - **Description:** Specifies if the platform has access to the vault for disk encryption scenarios.
 
-AI Foundry account/project level configuration.
+- **`enableVaultForTemplateDeployment`** (`bool`) - Optional
+  - **Description:** Specifies if the vault is enabled for a template deployment.
 
-- Required: No
-- Type: object
+- **`keys`** (`array`) - Optional
+  - **Description:** All keys to create.
 
-**Optional parameters**
+- **`location`** (`string`) - Optional
+  - **Description:** Location for all resources.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`accountName`](#parameter-aifoundrydefinitionaifoundryconfigurationaccountname) | string | Account name for AI Foundry. |
-| [`allowProjectManagement`](#parameter-aifoundrydefinitionaifoundryconfigurationallowprojectmanagement) | bool | Allow project management operations. |
-| [`createCapabilityHosts`](#parameter-aifoundrydefinitionaifoundryconfigurationcreatecapabilityhosts) | bool | Create capability hosts (data plane services). |
-| [`location`](#parameter-aifoundrydefinitionaifoundryconfigurationlocation) | string | Location for the account (defaults to RG location if omitted). |
-| [`networking`](#parameter-aifoundrydefinitionaifoundryconfigurationnetworking) | object | Networking configuration (subnet & private DNS zones). |
-| [`privateDnsZoneResourceIds`](#parameter-aifoundrydefinitionaifoundryconfigurationprivatednszoneresourceids) | array | Consolidated list of Private DNS Zone resource IDs. |
-| [`project`](#parameter-aifoundrydefinitionaifoundryconfigurationproject) | object | Default project properties. |
-| [`roleAssignments`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignments) | array | Role assignments to create on the account. |
-| [`sku`](#parameter-aifoundrydefinitionaifoundryconfigurationsku) | string | Account SKU. |
+- **`lock`** (`object`) - Optional
+  - **Description:** The lock settings of the service.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Specify the type of lock.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.accountName`
+  - **`name`** (`string`) - Optional
+    - **Description:** Specify the name of the lock.
 
-Account name for AI Foundry.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Specify the notes of the lock.
 
-- Required: No
-- Type: string
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.allowProjectManagement`
+- **`name`** (`string`) - Required
+  - **Description:** Name of the Key Vault. Must be globally unique.
 
-Allow project management operations.
+- **`networkAcls`** (`object`) - Optional
+  - **Description:** Rules governing the accessibility of the resource from specific networks.
 
-- Required: No
-- Type: bool
+- **`privateEndpoints`** (`array`) - Optional
+  - **Description:** Configuration details for private endpoints.
+  - **`applicationSecurityGroupResourceIds`** (`array`) - Optional
+    - **Description:** Application security groups in which the Private Endpoint IP configuration is included.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.createCapabilityHosts`
+  - **`customDnsConfigs`** (`array`) - Optional
+    - **Description:** Custom DNS configurations.
+    - **`fqdn`** (`string`) - Optional
+      - **Description:** FQDN that resolves to private endpoint IP address.
 
-Create capability hosts (data plane services).
+    - **`ipAddresses`** (`array`) - Required
+      - **Description:** A list of private IP addresses of the private endpoint.
 
-- Required: No
-- Type: bool
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.location`
+  - **`customDnsConfigs[*]`** (`object`) - Optional
+    - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].customDnsConfigs
 
-Location for the account (defaults to RG location if omitted).
+  - **`customNetworkInterfaceName`** (`string`) - Optional
+    - **Description:** The custom name of the network interface attached to the Private Endpoint.
 
-- Required: No
-- Type: string
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable/Disable usage telemetry for module.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.networking`
+  - **`ipConfigurations`** (`array`) - Optional
+    - **Description:** A list of IP configurations of the Private Endpoint.
+    - **`name`** (`string`) - Required
+      - **Description:** The name of the resource that is unique within a resource group.
 
-Networking configuration (subnet & private DNS zones).
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties of private endpoint IP configurations.
+      - **`groupId`** (`string`) - Required
+        - **Description:** The ID of a group obtained from the remote resource to connect to.
 
-- Required: No
-- Type: object
+      - **`memberName`** (`string`) - Required
+        - **Description:** The member name of a group obtained from the remote resource.
 
-**Optional parameters**
+      - **`privateIPAddress`** (`string`) - Required
+        - **Description:** A private IP address obtained from the private endpoint's subnet.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`agentServiceSubnetResourceId`](#parameter-aifoundrydefinitionaifoundryconfigurationnetworkingagentservicesubnetresourceid) | string | Subnet Resource ID for the Agent Service. |
-| [`aiServicesPrivateDnsZoneResourceId`](#parameter-aifoundrydefinitionaifoundryconfigurationnetworkingaiservicesprivatednszoneresourceid) | string | Private DNS zone Resource ID for AI Services. |
-| [`cognitiveServicesPrivateDnsZoneResourceId`](#parameter-aifoundrydefinitionaifoundryconfigurationnetworkingcognitiveservicesprivatednszoneresourceid) | string | Private DNS zone Resource ID for AI Services. |
-| [`openAiPrivateDnsZoneResourceId`](#parameter-aifoundrydefinitionaifoundryconfigurationnetworkingopenaiprivatednszoneresourceid) | string | Private DNS zone Resource ID for OpenAI. |
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.networking.agentServiceSubnetResourceId`
 
-Subnet Resource ID for the Agent Service.
+  - **`ipConfigurations[*]`** (`object`) - Optional
+    - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].ipConfigurations
+    - **`groupId`** (`string`) - Required
+      - **Description:** The ID of a group obtained from the remote resource to connect to.
 
-- Required: No
-- Type: string
+    - **`memberName`** (`string`) - Required
+      - **Description:** The member name of a group obtained from the remote resource.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.networking.aiServicesPrivateDnsZoneResourceId`
+    - **`privateIPAddress`** (`string`) - Required
+      - **Description:** A private IP address obtained from the private endpoint's subnet.
 
-Private DNS zone Resource ID for AI Services.
 
-- Required: No
-- Type: string
+  - **`isManualConnection`** (`bool`) - Optional
+    - **Description:** If Manual Private Link Connection is required.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.networking.cognitiveServicesPrivateDnsZoneResourceId`
+  - **`location`** (`string`) - Optional
+    - **Description:** The location to deploy the Private Endpoint to.
 
-Private DNS zone Resource ID for AI Services.
+  - **`lock`** (`object`) - Optional
+    - **Description:** Lock settings for the Private Endpoint.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Specify the type of lock.
 
-- Required: No
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Specify the name of the lock.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.networking.openAiPrivateDnsZoneResourceId`
+    - **`notes`** (`string`) - Optional
+      - **Description:** Specify the notes of the lock.
 
-Private DNS zone Resource ID for OpenAI.
 
-- Required: No
-- Type: string
+  - **`manualConnectionRequestMessage`** (`string`) - Optional
+    - **Description:** A message passed with the manual connection request.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.privateDnsZoneResourceIds`
+  - **`name`** (`string`) - Optional
+    - **Description:** The name of the Private Endpoint.
 
-Consolidated list of Private DNS Zone resource IDs.
+  - **`privateDnsZoneGroup`** (`object`) - Optional
+    - **Description:** The private DNS zone group to configure for the Private Endpoint.
+    - **`name`** (`string`) - Optional
+      - **Description:** The name of the Private DNS Zone Group.
 
-- Required: No
-- Type: array
+    - **`privateDnsZoneGroupConfigs`** (`array`) - Required
+      - **Description:** The private DNS Zone Groups to associate the Private Endpoint.
+      - **`name`** (`string`) - Optional
+        - **Description:** The name of the private DNS Zone Group config.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.project`
+      - **`privateDnsZoneResourceId`** (`string`) - Required
+        - **Description:** The resource ID of the private DNS zone.
 
-Default project properties.
 
-- Required: No
-- Type: object
+    - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
+      - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
-**Optional parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`desc`](#parameter-aifoundrydefinitionaifoundryconfigurationprojectdesc) | string | Default project description. |
-| [`displayName`](#parameter-aifoundrydefinitionaifoundryconfigurationprojectdisplayname) | string | Default project display name. |
-| [`name`](#parameter-aifoundrydefinitionaifoundryconfigurationprojectname) | string | Default project name. |
+  - **`privateLinkServiceConnectionName`** (`string`) - Optional
+    - **Description:** The name of the private link connection to create.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.project.desc`
+  - **`resourceGroupResourceId`** (`string`) - Optional
+    - **Description:** The resource ID of the Resource Group the Private Endpoint will be created in.
 
-Default project description.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Array of role assignments to create for the Private Endpoint.
 
-- Required: No
-- Type: string
+  - **`service`** (`string`) - Optional
+    - **Description:** The subresource to deploy the Private Endpoint for (e.g., vault).
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.project.displayName`
+  - **`subnetResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the subnet where the endpoint needs to be created.
 
-Default project display name.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the Private Endpoint.
 
-- Required: No
-- Type: string
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.project.name`
+- **`privateEndpoints[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultDefinition.privateEndpoints
+  - **`fqdn`** (`string`) - Optional
+    - **Description:** FQDN that resolves to private endpoint IP address.
 
-Default project name.
+  - **`ipAddresses`** (`array`) - Required
+    - **Description:** A list of private IP addresses of the private endpoint.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the resource that is unique within a resource group.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments`
+  - **`properties`** (`object`) - Required
+    - **Description:** Properties of private endpoint IP configurations.
+    - **`groupId`** (`string`) - Required
+      - **Description:** The ID of a group obtained from the remote resource to connect to.
 
-Role assignments to create on the account.
+    - **`memberName`** (`string`) - Required
+      - **Description:** The member name of a group obtained from the remote resource.
 
-- Required: No
-- Type: array
+    - **`privateIPAddress`** (`string`) - Required
+      - **Description:** A private IP address obtained from the private endpoint's subnet.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsprincipaltype) | string | Principal type. |
-| [`roleDefinitionIdOrName`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+  - **`groupId`** (`string`) - Required
+    - **Description:** The ID of a group obtained from the remote resource to connect to.
 
-**Optional parameters**
+  - **`memberName`** (`string`) - Required
+    - **Description:** The member name of a group obtained from the remote resource.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-aifoundrydefinitionaifoundryconfigurationroleassignmentsname) | string | Role assignment name. |
+  - **`privateIPAddress`** (`string`) - Required
+    - **Description:** A private IP address obtained from the private endpoint's subnet.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.principalId`
+  - **`groupId`** (`string`) - Required
+    - **Description:** The ID of a group obtained from the remote resource to connect to.
 
-Principal (objectId) to assign.
+  - **`memberName`** (`string`) - Required
+    - **Description:** The member name of a group obtained from the remote resource.
 
-- Required: Yes
-- Type: string
+  - **`privateIPAddress`** (`string`) - Required
+    - **Description:** A private IP address obtained from the private endpoint's subnet.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.principalType`
+  - **`kind`** (`string`) - Optional
+    - **Description:** Specify the type of lock.
 
-Principal type.
+  - **`name`** (`string`) - Optional
+    - **Description:** Specify the name of the lock.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+  - **`notes`** (`string`) - Optional
+    - **Description:** Specify the notes of the lock.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.roleDefinitionIdOrName`
+  - **`name`** (`string`) - Optional
+    - **Description:** The name of the Private DNS Zone Group.
 
-Role definition ID or built-in role name.
+  - **`privateDnsZoneGroupConfigs`** (`array`) - Required
+    - **Description:** The private DNS Zone Groups to associate the Private Endpoint.
+    - **`name`** (`string`) - Optional
+      - **Description:** The name of the private DNS Zone Group config.
 
-- Required: Yes
-- Type: string
+    - **`privateDnsZoneResourceId`** (`string`) - Required
+      - **Description:** The resource ID of the private DNS zone.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.condition`
 
-Condition expression for the assignment.
+  - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
+    - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** The name of the private DNS Zone Group config.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.conditionVersion`
+  - **`privateDnsZoneResourceId`** (`string`) - Required
+    - **Description:** The resource ID of the private DNS zone.
 
-Condition version (e.g., 2.0).
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`publicNetworkAccess`** (`string`) - Optional
+  - **Description:** Whether or not public network access is allowed for this resource.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.delegatedManagedIdentityResourceId`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Array of role assignments to create at the vault level.
 
-Delegated managed identity resource ID.
+- **`secrets`** (`array`) - Optional
+  - **Description:** All secrets to create.
+  - **`attributes`** (`object`) - Optional
+    - **Description:** Contains attributes of the secret.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Defines whether the secret is enabled or disabled.
 
-- Required: No
-- Type: string
+    - **`exp`** (`int`) - Optional
+      - **Description:** Expiration time of the secret, in epoch seconds.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.description`
+    - **`nbf`** (`int`) - Optional
+      - **Description:** Not-before time of the secret, in epoch seconds.
 
-Description for the assignment.
 
-- Required: No
-- Type: string
+  - **`contentType`** (`string`) - Optional
+    - **Description:** The content type of the secret.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.roleAssignments.name`
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the secret.
 
-Role assignment name.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Array of role assignments to create for the secret.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Resource tags for the secret.
 
-### Parameter: `aiFoundryDefinition.aiFoundryConfiguration.sku`
+  - **`value`** (`securestring`) - Required
+    - **Description:** The value of the secret.
 
-Account SKU.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'C2'
-    'C3'
-    'C4'
-    'DC0'
-    'F0'
-    'F1'
-    'S'
-    'S0'
-    'S1'
-    'S10'
-    'S2'
-    'S3'
-    'S4'
-    'S5'
-    'S6'
-    'S7'
-    'S8'
-    'S9'
-  ]
-  ```
+- **`secrets[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultDefinition.secrets
+  - **`enabled`** (`bool`) - Optional
+    - **Description:** Defines whether the secret is enabled or disabled.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration`
+  - **`exp`** (`int`) - Optional
+    - **Description:** Expiration time of the secret, in epoch seconds.
 
-Azure AI Search configuration (reuse or create) for AI Foundry associated resources.
+  - **`nbf`** (`int`) - Optional
+    - **Description:** Not-before time of the secret, in epoch seconds.
 
-- Required: Yes
-- Type: object
 
-**Optional parameters**
+- **`sku`** (`string`) - Optional
+  - **Description:** Specifies the SKU for the vault.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionaisearchconfigurationexistingresourceid) | string | Existing Search resource ID to reuse. |
-| [`name`](#parameter-aifoundrydefinitionaisearchconfigurationname) | string | Name for a new Search service (if creating). |
-| [`privateDnsZoneResourceId`](#parameter-aifoundrydefinitionaisearchconfigurationprivatednszoneresourceid) | string | Private DNS Zone resource ID for Search. |
-| [`roleAssignments`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignments) | array | Role assignments to create on the Search service. |
+- **`softDeleteRetentionInDays`** (`int`) - Optional
+  - **Description:** Soft delete retention days (between 7 and 90).
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.existingResourceId`
+- **`tags`** (`object`) - Optional
+  - **Description:** Resource tags for the vault.
 
-Existing Search resource ID to reuse.
+### `keyVaultPrivateDnsZoneDefinition`
 
-- Required: No
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `keyVaultPrivateDnsZoneDefinition` | `object` | Optional | Key Vault Private DNS Zone configuration. |
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.name`
+**Properties:**
 
-Name for a new Search service (if creating).
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.privateDnsZoneResourceId`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-Private DNS Zone resource ID for Search.
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-- Required: No
-- Type: string
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.a
 
-Role assignments to create on the Search service.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: No
-- Type: array
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-**Required parameters**
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-**Optional parameters**
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-aifoundrydefinitionaisearchconfigurationroleassignmentsname) | string | Role assignment name. |
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.principalId`
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-Principal (objectId) to assign.
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.principalType`
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-Principal type for the assignment.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.roleDefinitionIdOrName`
 
-Role definition ID or built-in role name.
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.roleAssignments
 
-- Required: Yes
-- Type: string
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.condition`
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-Condition expression for the assignment.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.conditionVersion`
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-Condition version (e.g., 2.0).
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.virtualNetworkLinks
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.delegatedManagedIdentityResourceId`
+### `keyVaultPrivateEndpointDefinition`
 
-Delegated managed identity resource ID.
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `keyVaultPrivateEndpointDefinition` | `object` | Optional | Key Vault Private Endpoint configuration. |
 
-- Required: No
-- Type: string
+**Properties:**
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.description`
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-Description for the assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-### Parameter: `aiFoundryDefinition.aiSearchConfiguration.roleAssignments.name`
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-Role assignment name.
 
-- Required: No
-- Type: string
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.a
 
-### Parameter: `aiFoundryDefinition.baseUniqueName`
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-Base unique name used for related resources.
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-- Required: No
-- Type: string
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration`
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-Cosmos DB configuration (reuse or create) for AI Foundry associated resources.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- Required: Yes
-- Type: object
 
-**Optional parameters**
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitioncosmosdbconfigurationexistingresourceid) | string | Existing Cosmos DB account resource ID to reuse. |
-| [`name`](#parameter-aifoundrydefinitioncosmosdbconfigurationname) | string | Name for a new Cosmos DB account (if creating). |
-| [`privateDnsZoneResourceId`](#parameter-aifoundrydefinitioncosmosdbconfigurationprivatednszoneresourceid) | string | Private DNS Zone resource ID for Cosmos. |
-| [`roleAssignments`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignments) | array | Role assignments to create on the Cosmos DB account. |
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.existingResourceId`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Existing Cosmos DB account resource ID to reuse.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: No
-- Type: string
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.name`
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-Name for a new Cosmos DB account (if creating).
 
-- Required: No
-- Type: string
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.roleAssignments
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.privateDnsZoneResourceId`
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-Private DNS Zone resource ID for Cosmos.
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- Required: No
-- Type: string
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-Role assignments to create on the Cosmos DB account.
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-- Required: No
-- Type: array
 
-**Required parameters**
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.virtualNetworkLinks
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+### `location`
 
-**Optional parameters**
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `location` | `string` | Optional | Azure region for AI LZ resources. Defaults to the resource group location. |
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-aifoundrydefinitioncosmosdbconfigurationroleassignmentsname) | string | Role assignment name. |
+### `nsgDefinitions`
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.principalId`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `nsgDefinitions` | `object` | Optional | NSG definitions per subnet role; each entry deploys an NSG for that subnet when a non-empty NSG definition is provided. |
 
-Principal (objectId) to assign.
+**Properties:**
 
-- Required: Yes
-- Type: string
+- **`acaEnvironment`** (`object`) - Optional
+  - **Description:** NSG definition applied to the Azure Container Apps environment (infrastructure) subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.principalType`
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-Principal type for the assignment.
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.roleDefinitionIdOrName`
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-Role definition ID or built-in role name.
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.condition`
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.acaEnvironment.diagnosticSettings[*].logCategoriesAndGroups
 
-Condition expression for the assignment.
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-- Required: No
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.conditionVersion`
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-Condition version (e.g., 2.0).
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.delegatedManagedIdentityResourceId`
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.acaEnvironment.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-Delegated managed identity resource ID.
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-- Required: No
-- Type: string
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.description`
 
-Description for the assignment.
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-- Required: No
-- Type: string
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-### Parameter: `aiFoundryDefinition.cosmosDbConfiguration.roleAssignments.name`
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-Role assignment name.
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-- Required: No
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-### Parameter: `aiFoundryDefinition.createByor`
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-Create BYOR (bring-your-own resource) links where applicable.
 
-- Required: No
-- Type: bool
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-### Parameter: `aiFoundryDefinition.enableTelemetry`
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-Enable telemetry for the pattern modules.
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-- Required: No
-- Type: bool
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-### Parameter: `aiFoundryDefinition.includeAssociatedResources`
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-Include associated resources (Search/Cosmos/Storage/KV) in the deployment.
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-- Required: No
-- Type: bool
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration`
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-Key Vault configuration (reuse or create) for AI Foundry associated resources.
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-- Required: Yes
-- Type: object
 
-**Optional parameters**
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.acaEnvironment.roleAssignments
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`existingResourceId`](#parameter-aifoundrydefinitionkeyvaultconfigurationexistingresourceid) | string | Existing Key Vault resource ID to reuse. |
-| [`name`](#parameter-aifoundrydefinitionkeyvaultconfigurationname) | string | Name for a new Key Vault (if creating). |
-| [`privateDnsZoneResourceId`](#parameter-aifoundrydefinitionkeyvaultconfigurationprivatednszoneresourceid) | string | Private DNS Zone resource ID for Vault. |
-| [`roleAssignments`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignments) | array | Role assignments to create on the vault. |
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.existingResourceId`
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-Existing Key Vault resource ID to reuse.
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-- Required: No
-- Type: string
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.name`
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-Name for a new Key Vault (if creating).
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: string
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.privateDnsZoneResourceId`
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-Private DNS Zone resource ID for Vault.
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: No
-- Type: string
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments`
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-Role assignments to create on the vault.
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: No
-- Type: array
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-**Required parameters**
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsprincipaltype) | string | Principal type. |
-| [`roleDefinitionIdOrName`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-**Optional parameters**
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-aifoundrydefinitionkeyvaultconfigurationroleassignmentsname) | string | Role assignment name. |
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.principalId`
 
-Principal (objectId) to assign.
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.acaEnvironment.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-- Required: Yes
-- Type: string
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.principalType`
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-Principal type.
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.roleDefinitionIdOrName`
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-Role definition ID or built-in role name.
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-- Required: Yes
-- Type: string
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.condition`
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-Condition expression for the assignment.
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-- Required: No
-- Type: string
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.conditionVersion`
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-Condition version (e.g., 2.0).
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.delegatedManagedIdentityResourceId`
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-Delegated managed identity resource ID.
 
-- Required: No
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.description`
 
-Description for the assignment.
+- **`agent`** (`object`) - Optional
+  - **Description:** NSG definition applied to the agent (workload) subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-- Required: No
-- Type: string
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-### Parameter: `aiFoundryDefinition.keyVaultConfiguration.roleAssignments.name`
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-Role assignment name.
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-- Required: No
-- Type: string
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-### Parameter: `aiFoundryDefinition.location`
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-Location/region for the AI Foundry resources.
 
-- Required: No
-- Type: string
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.agent.diagnosticSettings[*].logCategoriesAndGroups
 
-### Parameter: `aiFoundryDefinition.privateEndpointSubnetResourceId`
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-Subnet resource ID where Private Endpoints should be created.
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-- Required: No
-- Type: string
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration`
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-Storage Account configuration (reuse or create) for AI Foundry associated resources.
 
-- Required: Yes
-- Type: object
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.agent.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-**Optional parameters**
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`blobPrivateDnsZoneResourceId`](#parameter-aifoundrydefinitionstorageaccountconfigurationblobprivatednszoneresourceid) | string | Private DNS Zone resource ID for Blob (if using Private Endpoints). |
-| [`existingResourceId`](#parameter-aifoundrydefinitionstorageaccountconfigurationexistingresourceid) | string | Existing Storage Account resource ID to reuse. |
-| [`name`](#parameter-aifoundrydefinitionstorageaccountconfigurationname) | string | Name for a new Storage Account (if creating). |
-| [`roleAssignments`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignments) | array | Role assignments to create on the Storage Account. |
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.blobPrivateDnsZoneResourceId`
 
-Private DNS Zone resource ID for Blob (if using Private Endpoints).
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-- Required: No
-- Type: string
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.existingResourceId`
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-Existing Storage Account resource ID to reuse.
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-- Required: No
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.name`
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-Name for a new Storage Account (if creating).
 
-- Required: No
-- Type: string
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments`
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-Role assignments to create on the Storage Account.
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-- Required: No
-- Type: array
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-**Required parameters**
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`principalId`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsprincipalid) | string | Principal (objectId) to assign. |
-| [`principalType`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsprincipaltype) | string | Principal type for the assignment. |
-| [`roleDefinitionIdOrName`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsroledefinitionidorname) | string | Role definition ID or built-in role name. |
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-**Optional parameters**
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`condition`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentscondition) | string | Condition expression for the assignment. |
-| [`conditionVersion`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsconditionversion) | string | Condition version (e.g., 2.0). |
-| [`delegatedManagedIdentityResourceId`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsdelegatedmanagedidentityresourceid) | string | Delegated managed identity resource ID. |
-| [`description`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsdescription) | string | Description for the assignment. |
-| [`name`](#parameter-aifoundrydefinitionstorageaccountconfigurationroleassignmentsname) | string | Role assignment name. |
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.principalId`
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-Principal (objectId) to assign.
 
-- Required: Yes
-- Type: string
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.agent.roleAssignments
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.principalType`
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-Principal type for the assignment.
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Device'
-    'ForeignGroup'
-    'Group'
-    'ServicePrincipal'
-    'User'
-  ]
-  ```
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.roleDefinitionIdOrName`
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-Role definition ID or built-in role name.
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-- Required: Yes
-- Type: string
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.condition`
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-Condition expression for the assignment.
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-- Required: No
-- Type: string
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.conditionVersion`
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-Condition version (e.g., 2.0).
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    '2.0'
-  ]
-  ```
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.delegatedManagedIdentityResourceId`
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-Delegated managed identity resource ID.
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: string
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.description`
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-Description for the assignment.
 
-- Required: No
-- Type: string
 
-### Parameter: `aiFoundryDefinition.storageAccountConfiguration.roleAssignments.name`
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.agent.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-Role assignment name.
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-- Required: No
-- Type: string
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `azdoPat`
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-PAT used to register the Azure DevOps agent (when runner = azdo).
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: securestring
-- Default: `''`
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `baseName`
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
- Base name to seed resource names; defaults to a 12-char token.
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: No
-- Type: string
-- Default: `[substring(parameters('resourceToken'), 0, 12)]`
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `buildVmDefinition`
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
- Build VM configuration to support CI/CD workers (Linux).
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      adminUsername: 'azureuser'
-      azdo: {
-        orgUrl: 'https://dev.azure.com/<org>'
-        pool: 'Default'
-      }
-      enableTelemetry: '[parameters(\'enableTelemetry\')]'
-      name: ''
-      runner: 'azdo'
-      sku: 'Standard_B2s'
-      sshPublicKey: ''
-      tags: {}
-  }
-  ```
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-**Required parameters**
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`adminUsername`](#parameter-buildvmdefinitionadminusername) | string | Admin username to create (e.g., azureuser). |
-| [`runner`](#parameter-buildvmdefinitionrunner) | string | Which agent to install. |
-| [`sku`](#parameter-buildvmdefinitionsku) | string | VM size SKU (e.g., Standard_B2s). |
-| [`sshPublicKey`](#parameter-buildvmdefinitionsshpublickey) | string | SSH public key for the admin user. |
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-**Optional parameters**
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`azdo`](#parameter-buildvmdefinitionazdo) | object | Azure DevOps settings (required when runner = azdo). |
-| [`enableTelemetry`](#parameter-buildvmdefinitionenabletelemetry) | bool | Enable AVM telemetry. |
-| [`github`](#parameter-buildvmdefinitiongithub) | object | GitHub settings (required when runner = github). |
-| [`imageReference`](#parameter-buildvmdefinitionimagereference) | object | Marketplace image reference for the VM. |
-| [`name`](#parameter-buildvmdefinitionname) | string | VM name. |
-| [`osType`](#parameter-buildvmdefinitionostype) | string | OS type for the VM. |
-| [`tags`](#parameter-buildvmdefinitiontags) | object | Tags to apply to the Build VM resource. |
 
-### Parameter: `buildVmDefinition.adminUsername`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-Admin username to create (e.g., azureuser).
 
-- Required: Yes
-- Type: string
+- **`apiManagement`** (`object`) - Optional
+  - **Description:** NSG definition applied to the API Management subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-### Parameter: `buildVmDefinition.runner`
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-Which agent to install.
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'azdo'
-    'github'
-  ]
-  ```
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-### Parameter: `buildVmDefinition.sku`
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-VM size SKU (e.g., Standard_B2s).
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `buildVmDefinition.sshPublicKey`
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.apiManagement.diagnosticSettings[*].logCategoriesAndGroups
 
-SSH public key for the admin user.
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-- Required: Yes
-- Type: string
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-### Parameter: `buildVmDefinition.azdo`
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-Azure DevOps settings (required when runner = azdo).
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-- Required: No
-- Type: object
 
-**Required parameters**
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.apiManagement.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`orgUrl`](#parameter-buildvmdefinitionazdoorgurl) | string | Azure DevOps organization URL (e.g., https://dev.azure.com/contoso). |
-| [`pool`](#parameter-buildvmdefinitionazdopool) | string | Agent pool name. |
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-**Optional parameters**
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`agentName`](#parameter-buildvmdefinitionazdoagentname) | string | Agent name. |
-| [`workFolder`](#parameter-buildvmdefinitionazdoworkfolder) | string | Working folder. |
 
-### Parameter: `buildVmDefinition.azdo.orgUrl`
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-Azure DevOps organization URL (e.g., https://dev.azure.com/contoso).
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-- Required: Yes
-- Type: string
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-### Parameter: `buildVmDefinition.azdo.pool`
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-Agent pool name.
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-- Required: Yes
-- Type: string
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-### Parameter: `buildVmDefinition.azdo.agentName`
 
-Agent name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-- Required: No
-- Type: string
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-### Parameter: `buildVmDefinition.azdo.workFolder`
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-Working folder.
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-- Required: No
-- Type: string
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-### Parameter: `buildVmDefinition.enableTelemetry`
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-Enable AVM telemetry.
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-- Required: No
-- Type: bool
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-### Parameter: `buildVmDefinition.github`
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-GitHub settings (required when runner = github).
 
-- Required: No
-- Type: object
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.apiManagement.roleAssignments
 
-**Required parameters**
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`owner`](#parameter-buildvmdefinitiongithubowner) | string | GitHub owner (org or user). |
-| [`repo`](#parameter-buildvmdefinitiongithubrepo) | string | Repository name. |
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-**Optional parameters**
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`agentName`](#parameter-buildvmdefinitiongithubagentname) | string | Runner name. |
-| [`labels`](#parameter-buildvmdefinitiongithublabels) | string | Runner labels (comma-separated). |
-| [`workFolder`](#parameter-buildvmdefinitiongithubworkfolder) | string | Working folder. |
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `buildVmDefinition.github.owner`
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-GitHub owner (org or user).
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: string
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `buildVmDefinition.github.repo`
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-Repository name.
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: Yes
-- Type: string
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `buildVmDefinition.github.agentName`
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-Runner name.
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: No
-- Type: string
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-### Parameter: `buildVmDefinition.github.labels`
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-Runner labels (comma-separated).
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-- Required: No
-- Type: string
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-### Parameter: `buildVmDefinition.github.workFolder`
 
-Working folder.
 
-- Required: No
-- Type: string
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.apiManagement.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-### Parameter: `buildVmDefinition.imageReference`
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-Marketplace image reference for the VM.
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-- Required: No
-- Type: object
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-**Required parameters**
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`offer`](#parameter-buildvmdefinitionimagereferenceoffer) | string | Offer name. |
-| [`publisher`](#parameter-buildvmdefinitionimagereferencepublisher) | string | Publisher name. |
-| [`sku`](#parameter-buildvmdefinitionimagereferencesku) | string | SKU name. |
-| [`version`](#parameter-buildvmdefinitionimagereferenceversion) | string | Image version (e.g., latest). |
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `buildVmDefinition.imageReference.offer`
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-Offer name.
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: Yes
-- Type: string
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `buildVmDefinition.imageReference.publisher`
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-Publisher name.
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: Yes
-- Type: string
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-### Parameter: `buildVmDefinition.imageReference.sku`
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-SKU name.
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-- Required: Yes
-- Type: string
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-### Parameter: `buildVmDefinition.imageReference.version`
 
-Image version (e.g., latest).
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `buildVmDefinition.name`
+- **`applicationGateway`** (`object`) - Optional
+  - **Description:** NSG definition applied to the Application Gateway subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-VM name.
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-- Required: No
-- Type: string
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-### Parameter: `buildVmDefinition.osType`
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-OS type for the VM.
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Linux'
-    'Windows'
-  ]
-  ```
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `buildVmDefinition.tags`
 
-Tags to apply to the Build VM resource.
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.applicationGateway.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: object
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-**Required parameters**
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-buildvmdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-### Parameter: `buildVmDefinition.tags.>Any_other_property<`
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-Arbitrary key for each tag.
 
-- Required: Yes
-- Type: string
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.applicationGateway.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-### Parameter: `containerAppsList`
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-List of Container Apps to create.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-- Required: No
-- Type: array
-- Default:
-  ```Bicep
-  [
-    {
-      app_id: 'hello-world'
-      external: true
-      max_replicas: 1
-      min_replicas: 1
-      name: ''
-      profile_name: 'default'
-    }
-  ]
-  ```
 
-**Required parameters**
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`app_id`](#parameter-containerappslistapp_id) | string |  Logical app identifier (used for Dapr and container name). |
-| [`external`](#parameter-containerappslistexternal) | bool |  Whether to expose through the environment’s external ingress. |
-| [`max_replicas`](#parameter-containerappslistmax_replicas) | int | Maximum number of replicas. |
-| [`min_replicas`](#parameter-containerappslistmin_replicas) | int | Minimum number of replicas. |
-| [`profile_name`](#parameter-containerappslistprofile_name) | string | Workload profile name to schedule to. |
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-**Optional parameters**
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`name`](#parameter-containerappslistname) | string | Container App resource name. |
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-### Parameter: `containerAppsList.app_id`
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
- Logical app identifier (used for Dapr and container name).
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `containerAppsList.external`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
- Whether to expose through the environment’s external ingress.
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-- Required: No
-- Type: bool
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-### Parameter: `containerAppsList.max_replicas`
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-Maximum number of replicas.
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-- Required: Yes
-- Type: int
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-### Parameter: `containerAppsList.min_replicas`
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-Minimum number of replicas.
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-- Required: Yes
-- Type: int
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-### Parameter: `containerAppsList.profile_name`
 
-Workload profile name to schedule to.
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.applicationGateway.roleAssignments
 
-- Required: Yes
-- Type: string
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-### Parameter: `containerAppsList.name`
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-Container App resource name.
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-- Required: No
-- Type: string
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `deployGenAiAppBackingServices`
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
- Deploy GenAI app services; defaults to true.
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: bool
-- Default: `True`
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `deployToggles`
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
- Per-service deployment toggles; set false to skip creating a service. Reuse still works via resourceIds.
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      aiFoundry: true
-      apiManagement: true
-      appConfig: true
-      appInsights: true
-      applicationGateway: true
-      buildVm: true
-      containerApps: true
-      containerEnv: true
-      containerRegistry: true
-      cosmosDb: true
-      firewall: true
-      jumpVm: true
-      keyVault: true
-      logAnalytics: true
-      searchService: true
-      storageAccount: true
-      virtualNetwork: true
-      wafPolicy: true
-  }
-  ```
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-**Required parameters**
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`aiFoundry`](#parameter-deploytogglesaifoundry) | bool | Toggle to deploy AI Foundry (true) or not (false). |
-| [`apiManagement`](#parameter-deploytogglesapimanagement) | bool | Toggle to deploy API Management (true) or not (false). |
-| [`appConfig`](#parameter-deploytogglesappconfig) | bool | Toggle to deploy App Configuration (true) or not (false). |
-| [`appInsights`](#parameter-deploytogglesappinsights) | bool | Toggle to deploy Application Insights (true) or not (false). |
-| [`applicationGateway`](#parameter-deploytogglesapplicationgateway) | bool | Toggle to deploy Application Gateway (true) or not (false). |
-| [`buildVm`](#parameter-deploytogglesbuildvm) | bool | Toggle to deploy Build VM (true) or not (false). |
-| [`containerApps`](#parameter-deploytogglescontainerapps) | bool | Toggle to deploy Container Apps (true) or not (false). |
-| [`containerEnv`](#parameter-deploytogglescontainerenv) | bool | Toggle to deploy Container Apps Environment (true) or not (false). |
-| [`containerRegistry`](#parameter-deploytogglescontainerregistry) | bool | Toggle to deploy Azure Container Registry (true) or not (false). |
-| [`cosmosDb`](#parameter-deploytogglescosmosdb) | bool | Toggle to deploy Cosmos DB (true) or not (false). |
-| [`firewall`](#parameter-deploytogglesfirewall) | bool | Toggle to deploy Azure Firewall (true) or not (false). |
-| [`jumpVm`](#parameter-deploytogglesjumpvm) | bool | Toggle to deploy Jump VM (true) or not (false). |
-| [`keyVault`](#parameter-deploytoggleskeyvault) | bool | Toggle to deploy Key Vault (true) or not (false). |
-| [`logAnalytics`](#parameter-deploytogglesloganalytics) | bool | Toggle to deploy Log Analytics (true) or not (false). |
-| [`searchService`](#parameter-deploytogglessearchservice) | bool | Toggle to deploy Azure AI Search (true) or not (false). |
-| [`storageAccount`](#parameter-deploytogglesstorageaccount) | bool | Toggle to deploy Storage Account (true) or not (false). |
-| [`virtualNetwork`](#parameter-deploytogglesvirtualnetwork) | bool | Toggle to deploy a new Virtual Network (true) or not (false). |
-| [`wafPolicy`](#parameter-deploytoggleswafpolicy) | bool | Toggle to deploy an Application Gateway WAF policy (true) or not (false). |
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `deployToggles.aiFoundry`
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-Toggle to deploy AI Foundry (true) or not (false).
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: bool
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-### Parameter: `deployToggles.apiManagement`
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-Toggle to deploy API Management (true) or not (false).
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `deployToggles.appConfig`
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.applicationGateway.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-Toggle to deploy App Configuration (true) or not (false).
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-- Required: Yes
-- Type: bool
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `deployToggles.appInsights`
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-Toggle to deploy Application Insights (true) or not (false).
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: bool
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `deployToggles.applicationGateway`
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-Toggle to deploy Application Gateway (true) or not (false).
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: Yes
-- Type: bool
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `deployToggles.buildVm`
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-Toggle to deploy Build VM (true) or not (false).
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: Yes
-- Type: bool
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-### Parameter: `deployToggles.containerApps`
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-Toggle to deploy Container Apps (true) or not (false).
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-- Required: Yes
-- Type: bool
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-### Parameter: `deployToggles.containerEnv`
 
-Toggle to deploy Container Apps Environment (true) or not (false).
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `deployToggles.containerRegistry`
+- **`devopsBuildAgents`** (`object`) - Optional
+  - **Description:** NSG definition applied to the DevOps build agents subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-Toggle to deploy Azure Container Registry (true) or not (false).
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-- Required: Yes
-- Type: bool
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-### Parameter: `deployToggles.cosmosDb`
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-Toggle to deploy Cosmos DB (true) or not (false).
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-- Required: Yes
-- Type: bool
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `deployToggles.firewall`
 
-Toggle to deploy Azure Firewall (true) or not (false).
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.devopsBuildAgents.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: bool
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-### Parameter: `deployToggles.jumpVm`
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-Toggle to deploy Jump VM (true) or not (false).
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-- Required: Yes
-- Type: bool
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-### Parameter: `deployToggles.keyVault`
 
-Toggle to deploy Key Vault (true) or not (false).
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.devopsBuildAgents.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-- Required: Yes
-- Type: bool
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-### Parameter: `deployToggles.logAnalytics`
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-Toggle to deploy Log Analytics (true) or not (false).
 
-- Required: Yes
-- Type: bool
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-### Parameter: `deployToggles.searchService`
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-Toggle to deploy Azure AI Search (true) or not (false).
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-- Required: Yes
-- Type: bool
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-### Parameter: `deployToggles.storageAccount`
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-Toggle to deploy Storage Account (true) or not (false).
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-- Required: Yes
-- Type: bool
 
-### Parameter: `deployToggles.virtualNetwork`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-Toggle to deploy a new Virtual Network (true) or not (false).
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-- Required: Yes
-- Type: bool
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-### Parameter: `deployToggles.wafPolicy`
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-Toggle to deploy an Application Gateway WAF policy (true) or not (false).
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-- Required: Yes
-- Type: bool
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-### Parameter: `enableTelemetry`
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
- Enable module telemetry. See https://aka.ms/avm/telemetryinfo.
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-- Required: No
-- Type: bool
-- Default: `True`
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-### Parameter: `firewallPolicyDefinition`
 
- Azure Firewall Policy configuration (only used if your deployment wires a policy).
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.devopsBuildAgents.roleAssignments
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      networkPolicyRuleCollectionGroupName: null
-      networkPolicyRuleCollectionGroupPriority: 100
-      networkRules: []
-  }
-  ```
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-**Required parameters**
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`networkRules`](#parameter-firewallpolicydefinitionnetworkrules) | array | Network rules to include in the policy (can be empty). |
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-**Optional parameters**
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`networkPolicyRuleCollectionGroupName`](#parameter-firewallpolicydefinitionnetworkpolicyrulecollectiongroupname) | string | Name of the Network Rule Collection Group. |
-| [`networkPolicyRuleCollectionGroupPriority`](#parameter-firewallpolicydefinitionnetworkpolicyrulecollectiongrouppriority) | int | Priority for the Network Rule Collection Group. |
-| [`ruleCollectionGroups`](#parameter-firewallpolicydefinitionrulecollectiongroups) | array | List of custom Rule Collection Groups with collections and rules. |
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-### Parameter: `firewallPolicyDefinition.networkRules`
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-Network rules to include in the policy (can be empty).
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-- Required: Yes
-- Type: array
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-**Required parameters**
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`destinationAddresses`](#parameter-firewallpolicydefinitionnetworkrulesdestinationaddresses) | array | Destination IP addresses. |
-| [`destinationPorts`](#parameter-firewallpolicydefinitionnetworkrulesdestinationports) | array | Destination ports. |
-| [`name`](#parameter-firewallpolicydefinitionnetworkrulesname) | string | Rule name. |
-| [`protocols`](#parameter-firewallpolicydefinitionnetworkrulesprotocols) | array | Allowed protocols (e.g., TCP, UDP, ICMP, Any). |
-| [`sourceAddresses`](#parameter-firewallpolicydefinitionnetworkrulessourceaddresses) | array | Source IP addresses. |
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-**Optional parameters**
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`description`](#parameter-firewallpolicydefinitionnetworkrulesdescription) | string | Rule description. |
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `firewallPolicyDefinition.networkRules.destinationAddresses`
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-Destination IP addresses.
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: array
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-### Parameter: `firewallPolicyDefinition.networkRules.destinationPorts`
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-Destination ports.
 
-- Required: Yes
-- Type: array
 
-### Parameter: `firewallPolicyDefinition.networkRules.name`
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.devopsBuildAgents.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-Rule name.
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-- Required: Yes
-- Type: string
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-### Parameter: `firewallPolicyDefinition.networkRules.protocols`
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-Allowed protocols (e.g., TCP, UDP, ICMP, Any).
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: array
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-### Parameter: `firewallPolicyDefinition.networkRules.sourceAddresses`
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-Source IP addresses.
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-- Required: Yes
-- Type: array
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-### Parameter: `firewallPolicyDefinition.networkRules.description`
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-Rule description.
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-- Required: Yes
-- Type: string
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-### Parameter: `firewallPolicyDefinition.networkPolicyRuleCollectionGroupName`
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-Name of the Network Rule Collection Group.
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-- Required: No
-- Type: string
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-### Parameter: `firewallPolicyDefinition.networkPolicyRuleCollectionGroupPriority`
 
-Priority for the Network Rule Collection Group.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-- Required: No
-- Type: int
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups`
+- **`jumpbox`** (`object`) - Optional
+  - **Description:** NSG definition applied to the jumpbox (bastion-accessed) subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-List of custom Rule Collection Groups with collections and rules.
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-- Required: No
-- Type: array
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-**Required parameters**
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`collections`](#parameter-firewallpolicydefinitionrulecollectiongroupscollections) | array | Rule collections that belong to this group. |
-| [`name`](#parameter-firewallpolicydefinitionrulecollectiongroupsname) | string | Name of the Rule Collection Group. |
-| [`priority`](#parameter-firewallpolicydefinitionrulecollectiongroupspriority) | int | Priority of the Rule Collection Group (lower value = higher priority). |
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections`
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-Rule collections that belong to this group.
 
-- Required: Yes
-- Type: array
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.jumpbox.diagnosticSettings[*].logCategoriesAndGroups
 
-**Required parameters**
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`action`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsaction) | string | Action to apply on the rule collection (Allow or Deny). |
-| [`name`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsname) | string | Name of the rule collection. |
-| [`rules`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrules) | array | List of rules contained in this rule collection. |
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.action`
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-Action to apply on the rule collection (Allow or Deny).
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-- Required: Yes
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Allow'
-    'Deny'
-  ]
-  ```
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.name`
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.jumpbox.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-Name of the rule collection.
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-- Required: Yes
-- Type: string
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules`
 
-List of rules contained in this rule collection.
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-- Required: Yes
-- Type: array
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-**Required parameters**
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`destinationAddresses`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulesdestinationaddresses) | array | Destination IP addresses. |
-| [`destinationPorts`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulesdestinationports) | array | Destination ports. |
-| [`name`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulesname) | string | Rule name. |
-| [`protocols`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulesprotocols) | array | Allowed protocols (e.g., TCP, UDP, ICMP, Any). |
-| [`sourceAddresses`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulessourceaddresses) | array | Source IP addresses. |
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-**Optional parameters**
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`description`](#parameter-firewallpolicydefinitionrulecollectiongroupscollectionsrulesdescription) | string | Rule description. |
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.destinationAddresses`
 
-Destination IP addresses.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-- Required: Yes
-- Type: array
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.destinationPorts`
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-Destination ports.
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-- Required: Yes
-- Type: array
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.name`
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-Rule name.
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-- Required: Yes
-- Type: string
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.protocols`
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-Allowed protocols (e.g., TCP, UDP, ICMP, Any).
 
-- Required: Yes
-- Type: array
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.jumpbox.roleAssignments
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.sourceAddresses`
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
-Source IP addresses.
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-- Required: Yes
-- Type: array
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.collections.rules.description`
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-Rule description.
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-- Required: Yes
-- Type: string
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.name`
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-Name of the Rule Collection Group.
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-- Required: Yes
-- Type: string
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-### Parameter: `firewallPolicyDefinition.ruleCollectionGroups.priority`
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-Priority of the Rule Collection Group (lower value = higher priority).
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-- Required: Yes
-- Type: int
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `flagPlatformLandingZone`
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
- Enable platform landing zone integration.
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: No
-- Type: bool
-- Default: `False`
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-### Parameter: `githubPat`
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-PAT used to request a GitHub runner registration token (when runner = github).
 
-- Required: No
-- Type: securestring
-- Default: `''`
 
-### Parameter: `jumpVmDefinition`
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.jumpbox.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
- Jump (bastion) VM configuration (Windows).
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      adminUsername: 'azureuser'
-      enableTelemetry: '[parameters(\'enableTelemetry\')]'
-      name: ''
-      sku: 'Standard_D2s_v5'
-      tags: {}
-      vmKeyVaultSecName: 'jump-admin-password'
-  }
-  ```
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-**Required parameters**
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`adminUsername`](#parameter-jumpvmdefinitionadminusername) | string | Admin username. |
-| [`enableTelemetry`](#parameter-jumpvmdefinitionenabletelemetry) | bool | Enable telemetry for helper scripts. |
-| [`sku`](#parameter-jumpvmdefinitionsku) | string | VM size SKU (e.g., Standard_D2s_v5). |
-| [`tags`](#parameter-jumpvmdefinitiontags) | object | Tags to apply to the Jump VM. |
-| [`vmKeyVaultSecName`](#parameter-jumpvmdefinitionvmkeyvaultsecname) | string | Name of the admin password secret in the Bastion Key Vault. |
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-**Optional parameters**
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`imageReference`](#parameter-jumpvmdefinitionimagereference) | object | Marketplace image reference for the VM. |
-| [`name`](#parameter-jumpvmdefinitionname) | string | VM resource name. |
-| [`osType`](#parameter-jumpvmdefinitionostype) | string | OS type for the VM. |
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-### Parameter: `jumpVmDefinition.adminUsername`
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-Admin username.
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-- Required: Yes
-- Type: string
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-### Parameter: `jumpVmDefinition.enableTelemetry`
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-Enable telemetry for helper scripts.
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-- Required: Yes
-- Type: bool
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-### Parameter: `jumpVmDefinition.sku`
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-VM size SKU (e.g., Standard_D2s_v5).
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `jumpVmDefinition.tags`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-Tags to apply to the Jump VM.
 
-- Required: Yes
-- Type: object
+- **`pe`** (`object`) - Optional
+  - **Description:** NSG definition applied to the private endpoints (PE) subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
 
-**Required parameters**
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`>Any_other_property<`](#parameter-jumpvmdefinitiontags>any_other_property<) | string | Arbitrary key for each tag. |
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
 
-### Parameter: `jumpVmDefinition.tags.>Any_other_property<`
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
 
-Arbitrary key for each tag.
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
 
-- Required: Yes
-- Type: string
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
 
-### Parameter: `jumpVmDefinition.vmKeyVaultSecName`
 
-Name of the admin password secret in the Bastion Key Vault.
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.pe.diagnosticSettings[*].logCategoriesAndGroups
 
-- Required: Yes
-- Type: string
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
 
-### Parameter: `jumpVmDefinition.imageReference`
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
 
-Marketplace image reference for the VM.
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
 
-- Required: No
-- Type: object
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
 
-**Required parameters**
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`offer`](#parameter-jumpvmdefinitionimagereferenceoffer) | string | Offer name. |
-| [`publisher`](#parameter-jumpvmdefinitionimagereferencepublisher) | string | Publisher name. |
-| [`sku`](#parameter-jumpvmdefinitionimagereferencesku) | string | SKU name. |
-| [`version`](#parameter-jumpvmdefinitionimagereferenceversion) | string | Image version (e.g., latest). |
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.pe.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
 
-### Parameter: `jumpVmDefinition.imageReference.offer`
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
 
-Offer name.
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `jumpVmDefinition.imageReference.publisher`
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
 
-Publisher name.
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
 
-- Required: Yes
-- Type: string
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
 
-### Parameter: `jumpVmDefinition.imageReference.sku`
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
 
-SKU name.
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
 
-- Required: Yes
-- Type: string
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
 
-### Parameter: `jumpVmDefinition.imageReference.version`
 
-Image version (e.g., latest).
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
 
-- Required: Yes
-- Type: string
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
 
-### Parameter: `jumpVmDefinition.name`
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
 
-VM resource name.
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
 
-- Required: No
-- Type: string
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
 
-### Parameter: `jumpVmDefinition.osType`
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
 
-OS type for the VM.
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
 
-- Required: No
-- Type: string
-- Allowed:
-  ```Bicep
-  [
-    'Linux'
-    'Windows'
-  ]
-  ```
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
 
-### Parameter: `networkIsolation`
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
-Enable network isolation posture (Private Endpoints + Private DNS).
 
-- Required: No
-- Type: bool
-- Default: `True`
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.pe.roleAssignments
 
-### Parameter: `resourceIds`
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
 
- Existing resource IDs to reuse; leave empty to create new resources.
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      apimServiceResourceId: ''
-      appConfigResourceId: ''
-      appInsightsResourceId: ''
-      applicationGatewayResourceId: ''
-      bastionHostResourceId: ''
-      containerEnvResourceId: ''
-      containerRegistryResourceId: ''
-      dbAccountResourceId: ''
-      firewallResourceId: ''
-      groundingServiceResourceId: ''
-      keyVaultResourceId: ''
-      logAnalyticsWorkspaceResourceId: ''
-      searchServiceResourceId: ''
-      storageAccountResourceId: ''
-      virtualNetworkResourceId: ''
-  }
-  ```
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
 
-**Optional parameters**
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`apimServiceResourceId`](#parameter-resourceidsapimserviceresourceid) | string | Existing API Management service resource ID to reuse. |
-| [`appConfigResourceId`](#parameter-resourceidsappconfigresourceid) | string | Existing App Configuration store resource ID to reuse. |
-| [`appInsightsResourceId`](#parameter-resourceidsappinsightsresourceid) | string | Existing Application Insights resource ID to reuse. |
-| [`applicationGatewayResourceId`](#parameter-resourceidsapplicationgatewayresourceid) | string | Existing Application Gateway resource ID to reuse. |
-| [`bastionHostResourceId`](#parameter-resourceidsbastionhostresourceid) | string | Existing Azure Bastion resource ID to reuse; leave empty to skip. |
-| [`containerEnvResourceId`](#parameter-resourceidscontainerenvresourceid) | string | Existing Container Apps Environment resource ID to reuse. |
-| [`containerRegistryResourceId`](#parameter-resourceidscontainerregistryresourceid) | string | Existing Azure Container Registry resource ID to reuse. |
-| [`dbAccountResourceId`](#parameter-resourceidsdbaccountresourceid) | string | Existing Cosmos DB account resource ID to reuse. |
-| [`firewallResourceId`](#parameter-resourceidsfirewallresourceid) | string | Existing Azure Firewall resource ID to reuse. |
-| [`groundingServiceResourceId`](#parameter-resourceidsgroundingserviceresourceid) | string | Existing Grounding service resource ID to reuse. |
-| [`keyVaultResourceId`](#parameter-resourceidskeyvaultresourceid) | string | Existing Key Vault resource ID to reuse. |
-| [`logAnalyticsWorkspaceResourceId`](#parameter-resourceidsloganalyticsworkspaceresourceid) | string | Existing Log Analytics Workspace resource ID to reuse. |
-| [`searchServiceResourceId`](#parameter-resourceidssearchserviceresourceid) | string | Existing Azure AI Search service resource ID to reuse. |
-| [`storageAccountResourceId`](#parameter-resourceidsstorageaccountresourceid) | string | Existing Storage Account resource ID to reuse. |
-| [`virtualNetworkResourceId`](#parameter-resourceidsvirtualnetworkresourceid) | string | Existing VNet resource ID to reuse; leave empty to create a new VNet. |
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
 
-### Parameter: `resourceIds.apimServiceResourceId`
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-Existing API Management service resource ID to reuse.
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-- Required: Yes
-- Type: string
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
 
-### Parameter: `resourceIds.appConfigResourceId`
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
 
-Existing App Configuration store resource ID to reuse.
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-- Required: Yes
-- Type: string
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
 
-### Parameter: `resourceIds.appInsightsResourceId`
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-Existing Application Insights resource ID to reuse.
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
 
-- Required: Yes
-- Type: string
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
 
-### Parameter: `resourceIds.applicationGatewayResourceId`
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
 
-Existing Application Gateway resource ID to reuse.
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `resourceIds.bastionHostResourceId`
 
-Existing Azure Bastion resource ID to reuse; leave empty to skip.
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.pe.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
 
-- Required: Yes
-- Type: string
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
 
-### Parameter: `resourceIds.containerEnvResourceId`
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
 
-Existing Container Apps Environment resource ID to reuse.
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
 
-- Required: Yes
-- Type: string
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
 
-### Parameter: `resourceIds.containerRegistryResourceId`
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
 
-Existing Azure Container Registry resource ID to reuse.
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
 
-- Required: Yes
-- Type: string
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
 
-### Parameter: `resourceIds.dbAccountResourceId`
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
 
-Existing Cosmos DB account resource ID to reuse.
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
 
-- Required: Yes
-- Type: string
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
 
-### Parameter: `resourceIds.firewallResourceId`
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
 
-Existing Azure Firewall resource ID to reuse.
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
 
-- Required: Yes
-- Type: string
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
 
-### Parameter: `resourceIds.groundingServiceResourceId`
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
 
-Existing Grounding service resource ID to reuse.
 
-- Required: Yes
-- Type: string
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
 
-### Parameter: `resourceIds.keyVaultResourceId`
 
-Existing Key Vault resource ID to reuse.
+### `openAiPrivateDnsZoneDefinition`
 
-- Required: Yes
-- Type: string
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `openAiPrivateDnsZoneDefinition` | `object` | Optional | OpenAI Private DNS Zone configuration. |
 
-### Parameter: `resourceIds.logAnalyticsWorkspaceResourceId`
+**Properties:**
 
-Existing Log Analytics Workspace resource ID to reuse.
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- Required: Yes
-- Type: string
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-### Parameter: `resourceIds.searchServiceResourceId`
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
 
-Existing Azure AI Search service resource ID to reuse.
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
 
-- Required: Yes
-- Type: string
 
-### Parameter: `resourceIds.storageAccountResourceId`
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.a
 
-Existing Storage Account resource ID to reuse.
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
 
-- Required: Yes
-- Type: string
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
 
-### Parameter: `resourceIds.virtualNetworkResourceId`
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-Existing VNet resource ID to reuse; leave empty to create a new VNet.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- Required: Yes
-- Type: string
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-### Parameter: `resourceToken`
 
- Deterministic token for resource names; auto-generated if not provided.
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
 
-- Required: No
-- Type: string
-- Default: `[toLower(uniqueString(subscription().id, resourceGroup().name, parameters('location')))]`
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-### Parameter: `shareResources`
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-Share services between the GenAI app and AI Foundry (Search, KV, Cosmos DB, Storage).
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- Required: No
-- Type: object
-- Default:
-  ```Bicep
-  {
-      cosmosDb: false
-      keyVault: false
-      searchService: false
-      storageAccount: false
-  }
-  ```
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-**Required parameters**
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
 
-| Parameter | Type | Description |
-| :-- | :-- | :-- |
-| [`cosmosDb`](#parameter-shareresourcescosmosdb) | bool | Share the Cosmos DB account across services. |
-| [`keyVault`](#parameter-shareresourceskeyvault) | bool | Share the Key Vault across services. |
-| [`searchService`](#parameter-shareresourcessearchservice) | bool | Share the Azure AI Search service across services. |
-| [`storageAccount`](#parameter-shareresourcesstorageaccount) | bool | Share the Storage Account across services. |
 
-### Parameter: `shareResources.cosmosDb`
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.roleAssignments
 
-Share the Cosmos DB account across services.
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
 
-- Required: Yes
-- Type: bool
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-### Parameter: `shareResources.keyVault`
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
 
-Share the Key Vault across services.
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
 
-- Required: Yes
-- Type: bool
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
 
-### Parameter: `shareResources.searchService`
 
-Share the Azure AI Search service across services.
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.virtualNetworkLinks
 
-- Required: Yes
-- Type: bool
+### `privateDnsZonesDefinition`
 
-### Parameter: `shareResources.storageAccount`
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `privateDnsZonesDefinition` | `object` | Optional | Private DNS Zone configuration for private endpoints. Used when not in platform landing zone mode. |
 
-Share the Storage Account across services.
+**Properties:**
 
-- Required: Yes
-- Type: bool
+- **`acrZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Azure Container Registry.
 
-### Parameter: `tags`
+- **`aiServicesZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for AI Services.
 
- Tags applied to all deployed resources.
+- **`allowInternetResolutionFallback`** (`bool`) - Optional
+  - **Description:** Allow fallback to internet DNS resolution when Private DNS is unavailable.
 
-- Required: No
-- Type: object
-- Default: `{}`
+- **`apimZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Azure API Management.
+
+- **`appConfigZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for App Configuration.
+
+- **`appInsightsZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Application Insights.
+
+- **`blobZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Blob Storage.
+
+- **`cognitiveservicesZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Cognitive Services.
+
+- **`containerAppsZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Container Apps.
+
+- **`cosmosSqlZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Cosmos DB (SQL API).
+
+- **`createNetworkLinks`** (`bool`) - Optional
+  - **Description:** Create VNet link to associate Spoke with the zones (can be empty).
+
+- **`keyVaultZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Key Vault.
+
+- **`openaiZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Azure OpenAI.
+
+- **`searchZoneId`** (`string`) - Optional
+  - **Description:** Existing Private DNS Zone resource ID for Azure Cognitive Search.
+
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags to apply to the Private DNS Zones.
+
+### `resourceIds`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `resourceIds` | `object` | Optional | Existing resource IDs to reuse (can be empty). |
+
+**Properties:**
+
+- **`acaEnvironmentNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the Azure Container Apps environment subnet.
+
+- **`agentNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the agent (workload) subnet.
+
+- **`apiManagementNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the API Management subnet.
+
+- **`apimServiceResourceId`** (`string`) - Optional
+  - **Description:** Existing API Management service resource ID to reuse.
+
+- **`appConfigResourceId`** (`string`) - Optional
+  - **Description:** Existing App Configuration store resource ID to reuse.
+
+- **`appGatewayPublicIpResourceId`** (`string`) - Optional
+  - **Description:** Existing Public IP resource ID to reuse for the Application Gateway.
+
+- **`appInsightsResourceId`** (`string`) - Optional
+  - **Description:** Existing Application Insights resource ID to reuse.
+
+- **`applicationGatewayNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the Application Gateway subnet.
+
+- **`applicationGatewayResourceId`** (`string`) - Optional
+  - **Description:** Existing Application Gateway resource ID to reuse.
+
+- **`bastionHostResourceId`** (`string`) - Optional
+  - **Description:** Existing Azure Bastion resource ID to reuse; leave empty to skip.
+
+- **`containerEnvResourceId`** (`string`) - Optional
+  - **Description:** Existing Container Apps Environment resource ID to reuse.
+
+- **`containerRegistryResourceId`** (`string`) - Optional
+  - **Description:** Existing Azure Container Registry resource ID to reuse.
+
+- **`dbAccountResourceId`** (`string`) - Optional
+  - **Description:** Existing Cosmos DB account resource ID to reuse.
+
+- **`devopsBuildAgentsNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the DevOps build agents subnet.
+
+- **`firewallPolicyResourceId`** (`string`) - Optional
+  - **Description:** Existing Azure Firewall Policy resource ID to reuse.
+
+- **`firewallPublicIpResourceId`** (`string`) - Optional
+  - **Description:** Existing Public IP resource ID to reuse for the Azure Firewall.
+
+- **`firewallResourceId`** (`string`) - Optional
+  - **Description:** Existing Azure Firewall resource ID to reuse.
+
+- **`groundingServiceResourceId`** (`string`) - Optional
+  - **Description:** Existing Grounding service resource ID to reuse.
+
+- **`jumpboxNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the jumpbox (bastion-accessed) subnet.
+
+- **`keyVaultResourceId`** (`string`) - Optional
+  - **Description:** Existing Key Vault resource ID to reuse.
+
+- **`logAnalyticsWorkspaceResourceId`** (`string`) - Optional
+  - **Description:** Existing Log Analytics Workspace resource ID to reuse.
+
+- **`peNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the private endpoints (PE) subnet.
+
+- **`searchServiceResourceId`** (`string`) - Optional
+  - **Description:** Existing Azure AI Search service resource ID to reuse.
+
+- **`storageAccountResourceId`** (`string`) - Optional
+  - **Description:** Existing Storage Account resource ID to reuse.
+
+- **`virtualNetworkResourceId`** (`string`) - Optional
+  - **Description:** Existing VNet resource ID to reuse; leave empty to create a new VNet.
+
+### `resourceToken`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `resourceToken` | `string` | Optional | Deterministic token for resource names; auto-generated if not provided. |
+
+### `searchPrivateDnsZoneDefinition`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `searchPrivateDnsZoneDefinition` | `object` | Optional | Azure AI Search Private DNS Zone configuration. |
+
+**Properties:**
+
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
+
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
+
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
+
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
+
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
+
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
+
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
+
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
+
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.virtualNetworkLinks
+
+### `searchPrivateEndpointDefinition`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `searchPrivateEndpointDefinition` | `object` | Optional | Azure AI Search Private Endpoint configuration. |
+
+**Properties:**
+
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
+
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
+
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
+
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
+
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
+
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
+
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
+
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
+
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.virtualNetworkLinks
+
+### `storageBlobPrivateEndpointDefinition`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `storageBlobPrivateEndpointDefinition` | `object` | Optional | Storage Account Private Endpoint configuration. |
+
+**Properties:**
+
+- **`a`** (`array`) - Optional
+  - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
+
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
+  - **Description:** Enable/Disable usage telemetry for the module.
+
+- **`location`** (`string`) - Optional
+  - **Description:** Location for the resource. Defaults to "global".
+
+- **`lock`** (`object`) - Optional
+  - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
+
+- **`name`** (`string`) - Required
+  - **Description:** The name of the Private DNS Zone.
+
+- **`roleAssignments`** (`array`) - Optional
+  - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
+
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
+  - **Description:** Tags for the Private DNS Zone.
+
+- **`virtualNetworkLinks`** (`array`) - Optional
+  - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
+
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.virtualNetworkLinks
+
+### `tags`
+
+| Parameter | Type | Required | Description |
+| :-- | :-- | :-- | :-- |
+| `tags` | `object` | Optional | Tags to apply to all resources. |
 
 ## Outputs
 
-| Output | Type |
-| :-- | :-- |
-| `apimServiceResourceId` | string |
-| `appConfigResourceId` | string |
-| `applicationGatewayResourceId` | string |
-| `applicationInsightsResourceId` | string |
-| `containerEnvResourceId` | string |
-| `containerRegistryResourceId` | string |
-| `dbAccountResourceId` | string |
-| `firewallResourceId` | string |
-| `keyVaultResourceId` | string |
-| `location` | string |
-| `logAnalyticsWorkspaceResourceId` | string |
-| `resourceGroupName` | string |
-| `searchServiceResourceId` | string |
-| `storageAccountResourceId` | string |
-| `subscriptionId` | string |
-| `tenantId` | string |
-| `virtualNetworkResourceId` | string |
-| `wafPolicyResourceId` | string |
+| Output Name | Type | Description |
+| :-- | :-- | :-- |
+| `acaEnvironmentNsgResourceId` | string | Azure Container Apps Environment subnet Network Security Group resource ID (newly created or existing). |
+| `acrPrivateDnsZoneResourceId` | string | Container Registry Private DNS Zone resource ID (newly created or existing). |
+| `agentNsgResourceId` | string | Agent subnet Network Security Group resource ID (newly created or existing). |
+| `aiFoundryAiServicesName` | string | AI Foundry AI Services name. |
+| `aiFoundryCosmosAccountName` | string | AI Foundry Cosmos DB account name. |
+| `aiFoundryKeyVaultName` | string | AI Foundry Key Vault name. |
+| `aiFoundryProjectName` | string | AI Foundry project name. |
+| `aiFoundryResourceGroupName` | string | AI Foundry resource group name. |
+| `aiFoundrySearchServiceName` | string | AI Foundry AI Search service name. |
+| `aiFoundryStorageAccountName` | string | AI Foundry Storage Account name. |
+| `aiSearchName` | string | AI Search name. |
+| `aiSearchResourceId` | string | AI Search resource ID. |
+| `aiServicesPrivateDnsZoneResourceId` | string | AI Services Private DNS Zone resource ID (newly created or existing). |
+| `apiManagementNsgResourceId` | string | API Management subnet Network Security Group resource ID (newly created or existing). |
+| `apimPrivateDnsZoneResourceId` | string | API Management Private DNS Zone resource ID (newly created or existing). |
+| `apimServiceName` | string | API Management service name. |
+| `apimServiceResourceId` | string | API Management service resource ID. |
+| `appConfigPrivateDnsZoneResourceId` | string | App Configuration Private DNS Zone resource ID (newly created or existing). |
+| `appConfigResourceId` | string | App Configuration Store resource ID. |
+| `appGatewayPublicIpResourceId` | string | Application Gateway Public IP resource ID (newly created or existing). |
+| `appInsightsPrivateDnsZoneResourceId` | string | Application Insights Private DNS Zone resource ID (newly created or existing). |
+| `appInsightsResourceId` | string | Application Insights resource ID. |
+| `applicationGatewayName` | string | Application Gateway name. |
+| `applicationGatewayNsgResourceId` | string | Application Gateway subnet Network Security Group resource ID (newly created or existing). |
+| `applicationGatewayResourceId` | string | Application Gateway resource ID (newly created or existing). |
+| `bingConnectionId` | string | Bing Search connection ID (if deployed). |
+| `bingResourceGroupName` | string | Bing Search resource group name (if deployed). |
+| `bingSearchResourceId` | string | Bing Search service resource ID (if deployed). |
+| `blobPrivateDnsZoneResourceId` | string | Blob Storage Private DNS Zone resource ID (newly created or existing). |
+| `buildVmName` | string | Build VM name (if deployed). |
+| `buildVmResourceId` | string | Build VM resource ID (if deployed). |
+| `cognitiveServicesPrivateDnsZoneResourceId` | string | Cognitive Services Private DNS Zone resource ID (newly created or existing). |
+| `containerAppsCount` | int | Container Apps deployment count. |
+| `containerAppsPrivateDnsZoneResourceId` | string | Container Apps Private DNS Zone resource ID (newly created or existing). |
+| `containerEnvResourceId` | string | Container App Environment resource ID. |
+| `containerRegistryResourceId` | string | Container Registry resource ID. |
+| `cosmosDbName` | string | Cosmos DB name. |
+| `cosmosDbResourceId` | string | Cosmos DB resource ID. |
+| `cosmosSqlPrivateDnsZoneResourceId` | string | Cosmos DB (SQL API) Private DNS Zone resource ID (newly created or existing). |
+| `devopsBuildAgentsNsgResourceId` | string | DevOps Build Agents subnet Network Security Group resource ID (newly created or existing). |
+| `firewallName` | string | Azure Firewall name. |
+| `firewallPolicyName` | string | Azure Firewall Policy name (if deployed). |
+| `firewallPolicyResourceId` | string | Azure Firewall Policy resource ID (if deployed). |
+| `firewallPrivateIp` | string | Azure Firewall private IP address (if deployed). |
+| `firewallPublicIpResourceId` | string | Firewall Public IP resource ID (newly created or existing). |
+| `firewallResourceId` | string | Azure Firewall resource ID (newly created or existing). |
+| `hubToSpokePeeringResourceId` | string | Hub to Spoke peering resource ID (if hub peering is enabled). |
+| `jumpboxNsgResourceId` | string | Jumpbox subnet Network Security Group resource ID (newly created or existing). |
+| `jumpVmName` | string | Jump VM name (if deployed). |
+| `jumpVmResourceId` | string | Jump VM resource ID (if deployed). |
+| `keyVaultName` | string | Key Vault name. |
+| `keyVaultPrivateDnsZoneResourceId` | string | Key Vault Private DNS Zone resource ID (newly created or existing). |
+| `keyVaultResourceId` | string | Key Vault resource ID. |
+| `logAnalyticsWorkspaceResourceId` | string | Log Analytics workspace resource ID. |
+| `openAiPrivateDnsZoneResourceId` | string | OpenAI Private DNS Zone resource ID (newly created or existing). |
+| `peNsgResourceId` | string | Private Endpoints subnet Network Security Group resource ID (newly created or existing). |
+| `searchPrivateDnsZoneResourceId` | string | Azure AI Search Private DNS Zone resource ID (newly created or existing). |
+| `storageAccountResourceId` | string | Storage Account resource ID. |
+| `virtualNetworkResourceId` | string | Virtual Network resource ID (newly created or existing). |
+| `wafPolicyName` | string | WAF Policy name (if deployed). |
+| `wafPolicyResourceId` | string | WAF Policy resource ID (if deployed). |
 
-## Cross-referenced modules
 
-This section gives you an overview of all local-referenced module files (i.e., other modules that are referenced in this module) and all remote-referenced files (i.e., Bicep modules that are referenced from a Bicep Registry or Template Specs).
-
-| Reference | Type |
-| :-- | :-- |
-| `br/public:avm/res/api-management/service:0.9.1` | Remote reference |
-| `br/public:avm/res/app-configuration/configuration-store:0.9.1` | Remote reference |
-| `br/public:avm/res/app/container-app:0.18.1` | Remote reference |
-| `br/public:avm/res/app/managed-environment:0.11.3` | Remote reference |
-| `br/public:avm/res/cognitive-services/account:0.12.0` | Remote reference |
-| `br/public:avm/res/cognitive-services/account:0.13.2` | Remote reference |
-| `br/public:avm/res/compute/virtual-machine:0.18.0` | Remote reference |
-| `br/public:avm/res/container-registry/registry:0.9.3` | Remote reference |
-| `br/public:avm/res/document-db/database-account:0.15.1` | Remote reference |
-| `br/public:avm/res/insights/component:0.6.0` | Remote reference |
-| `br/public:avm/res/key-vault/vault:0.13.3` | Remote reference |
-| `br/public:avm/res/network/application-gateway-web-application-firewall-policy:0.2.0` | Remote reference |
-| `br/public:avm/res/network/application-gateway:0.7.1` | Remote reference |
-| `br/public:avm/res/network/azure-firewall:0.8.0` | Remote reference |
-| `br/public:avm/res/network/firewall-policy:0.3.1` | Remote reference |
-| `br/public:avm/res/network/private-dns-zone:0.7.1` | Remote reference |
-| `br/public:avm/res/network/private-endpoint:0.11.0` | Remote reference |
-| `br/public:avm/res/network/public-ip-address:0.9.0` | Remote reference |
-| `br/public:avm/res/network/virtual-network:0.7.0` | Remote reference |
-| `br/public:avm/res/operational-insights/workspace:0.12.0` | Remote reference |
-| `br/public:avm/res/search/search-service:0.11.1` | Remote reference |
-| `br/public:avm/res/storage/storage-account:0.26.2` | Remote reference |
-| `br/public:avm/utl/types/avm-common-types:0.6.0` | Remote reference |
-
-## Data Collection
-
-The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the [repository](https://aka.ms/avm/telemetry). There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.

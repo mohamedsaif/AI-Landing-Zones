@@ -1,237 +1,230 @@
-# Examples — AI Landing Zone (Bicep AVM Pattern)
 
-Use these **parameter snippets** as starting points. Omit anything you do not need; sensible defaults apply.
 
----
+# AI/ML Landing Zone — Bicep parameter examples
 
-## Table of Contents
+This page provides three complete examples of parameter files for deploying the AI/ML Landing Zone (Bicep AVM).
 
-* [1) Greenfield — everything created & isolated](#1-greenfield--everything-created--isolated)
-* [2) Minimal app footprint (no perimeter)](#2-minimal-app-footprint-no-perimeter)
-* [3) Reuse shared VNet + LAW/Insights + ACR (and reuse PDNS)](#3-reuse-shared-vnet--lawinsights--acr-and-reuse-pdns)
-* [4) AI Foundry scenarios](#4-ai-foundry-scenarios)
-  * [4.1) Full Foundry — Agent Service **on**, auto‑deps **on**, with model deployments](#41-full-foundry--agent-service-on-auto-deps-on-with-model-deployments)
-  * [4.2) Project only — **no Agent Service**, no auto‑deps (BYOR)](#42-project-only--no-agent-service-no-auto-deps-byor)
-* [5) Platform Landing Zone integration (PDNS/PE managed by platform)](#5-platform-landing-zone-integration-pdnspe-managed-by-platform)
-* [6) Use the pattern as an AVM module (in your repo)](#6-use-the-pattern-as-an-avm-module-in-your-repo)
+- [1. Greenfield — full new and isolated deployment](#1-greenfield--full-new-and-isolated-deployment)
+- [2. Existing VNet — reuse an existing virtual network](#2-existing-vnet--reuse-an-existing-virtual-network)
+- [3. Platform Landing Zone — PDNS/PE managed by the platform](#3-platform-landing-zone--pdnspe-managed-by-the-platform)
 
 ---
 
-## 1) Greenfield — everything created & isolated
+## 1. Greenfield — full new and isolated deployment
 
-Everything new in a private, isolated spoke. **Agent Service ON**, **auto‑deps ON**, with two example model deployments.
+Use this scenario for a **new environment from scratch**.
+It creates all required resources — Virtual Network with the standard subnets (address space `192.168.0.0/22`), Network Security Groups, Private Endpoints, Private DNS Zones, and the entire AI/ML stack (App Gateway, APIM, Firewall, AI services, etc.).
+This is the default “everything on” template.
 
-```json
-{
-  "parameters": {
-    "location": { "value": "westus3" },
-    "tags": { "value": { "env": "dev", "owner": "ai-team" } },
+```
+using './main.bicep'
 
-    "aiFoundryDefinition": {
-      "value": {
-        "includeAssociatedResources": true,
-        "aiFoundryConfiguration": {
-          "accountName": "af-${baseName}",
-          "createCapabilityHosts": true,
-          "project": { "name": "proj-${baseName}", "displayName": "AI Project" }
-        },
-        "aiModelDeployments": [
-          {
-            "name": "chat",
-            "model": { "format": "OpenAI", "name": "gpt-4o", "version": "2024-11-20" },
-            "scale": { "type": "Standard", "capacity": 1 }
-          },
-          {
-            "name": "text-embedding",
-            "model": { "format": "OpenAI", "name": "text-embedding-3-large", "version": "1" },
-            "scale": { "type": "Standard", "capacity": 1 }
-          }
-        ]
-      }
-    }
-  }
+@description('Per-service deployment toggles.')
+param deployToggles = {
+  acaEnvironmentNsg: true
+  agentNsg: true
+  apiManagement: true
+  apiManagementNsg: true
+  appConfig: true
+  appInsights: true
+  applicationGateway: true
+  applicationGatewayNsg: true
+  applicationGatewayPublicIp: true
+  bastionHost: true
+  buildVm: true
+  containerApps: true
+  containerEnv: true
+  containerRegistry: true
+  cosmosDb: true
+  devopsBuildAgentsNsg: true
+  firewall: true
+  groundingWithBingSearch: true
+  jumpVm: true
+  jumpboxNsg: true
+  keyVault: true
+  logAnalytics: true
+  peNsg: true
+  searchService: true
+  storageAccount: true
+  virtualNetwork: true
+  wafPolicy: true
 }
+
+@description('Existing resource IDs (empty means create new).')
+param resourceIds = {}
+
+@description('Enable platform landing zone integration. When true, private DNS zones and private endpoints are managed by the platform landing zone.')
+param flagPlatformLandingZone = false
+
+@description('Deployment location.')
+param location = 'eastus2'
 ```
 
-*No perimeter changes needed; WAF/AGW/APIM/Firewall follow defaults. VNet/PDNS/PE are created automatically (isolated posture).*
+This configuration automatically provisions the **entire network topology** defined in `main.bicep`, including
+the delegated `/23` subnet for Azure Container Apps and all other subnets with the recommended prefix sizes.
 
 ---
 
-## 2) Minimal app footprint (no perimeter)
+## 2. Existing VNet — reuse an existing virtual network
 
-Deploy the core app stack without AGW/APIM/Firewall, and keep Foundry light (**no Agent Service**, **no auto‑deps**).
+Use this when you already have a **pre-existing VNet** and only need to add the AI/ML Landing Zone subnets and resources.
+The deployment **does not create a new VNet**; instead, it creates all required subnets, with the same names and address prefixes as in the greenfield setup (`192.168.0.0/22`), inside the specified VNet.
+All NSGs are created and automatically associated.
 
-```json
-{
-  "parameters": {
-    "tags": { "value": { "env": "dev" } },
-
-    "deployToggles": {
-      "value": {
-        "apiManagement": false,
-        "applicationGateway": false,
-        "firewall": false,
-        "wafPolicy": false,
-        "buildVm": false,
-        "jumpVm": false
-      }
-    },
-
-    "aiFoundryDefinition": {
-      "value": {
-        "includeAssociatedResources": false,
-        "aiFoundryConfiguration": {
-          "createCapabilityHosts": false,
-          "project": { "name": "proj-${baseName}", "displayName": "Project Only" }
-        }
-      }
-    }
-  }
-}
 ```
+using './main.bicep'
+
+@description('Deploy only subnets and NSGs inside an existing VNet.')
+param deployToggles = {
+  logAnalytics: false
+  appInsights: false
+  containerEnv: false
+  containerRegistry: false
+  cosmosDb: false
+  keyVault: false
+  storageAccount: false
+  groundingWithBingSearch: false
+  appConfig: false
+  apiManagement: false
+  applicationGateway: false
+  applicationGatewayPublicIp: false
+  firewall: false
+  wafPolicy: false
+  buildVm: false
+  bastionHost: false
+  jumpVm: false
+
+  agentNsg: true
+  peNsg: true
+  applicationGatewayNsg: true
+  apiManagementNsg: true
+  acaEnvironmentNsg: true
+  jumpboxNsg: true
+  devopsBuildAgentsNsg: true
+
+  virtualNetwork: false
+}
+
+@description('Reference to the existing VNet and subnets to create.')
+param existingVNetSubnetsDefinition = {
+  existingVNetName: 'your-existing-vnet-name'
+  useDefaultSubnets: false
+  subnets: [
+    {
+      name: 'agent-subnet'
+      addressPrefix: '192.168.0.0/27'
+      delegation: 'Microsoft.App/environments'
+      serviceEndpoints: ['Microsoft.CognitiveServices']
+    }
+    {
+      name: 'pe-subnet'
+      addressPrefix: '192.168.0.32/27'
+      serviceEndpoints: ['Microsoft.AzureCosmosDB']
+      privateEndpointNetworkPolicies: 'Disabled'
+    }
+    {
+      name: 'AzureBastionSubnet'
+      addressPrefix: '192.168.0.64/26'
+    }
+    {
+      name: 'AzureFirewallSubnet'
+      addressPrefix: '192.168.0.128/26'
+    }
+    {
+      name: 'appgw-subnet'
+      addressPrefix: '192.168.0.192/27'
+    }
+    {
+      name: 'apim-subnet'
+      addressPrefix: '192.168.0.224/27'
+    }
+    {
+      name: 'jumpbox-subnet'
+      addressPrefix: '192.168.1.0/28'
+    }
+    {
+      name: 'aca-env-subnet'
+      addressPrefix: '192.168.2.0/23'
+      delegation: 'Microsoft.App/environments'
+      serviceEndpoints: ['Microsoft.AzureCosmosDB']
+    }
+    {
+      name: 'devops-agents-subnet'
+      addressPrefix: '192.168.1.32/27'
+    }
+  ]
+}
+
+@description('Deployment location.')
+param location = 'eastus2'
+```
+
+Make sure your existing VNet has the **`192.168.0.0/22` address space** available or adjust prefixes while keeping the same structure (especially the required `/23` for `aca-env-subnet`).
 
 ---
 
-## 3) Reuse shared VNet + LAW/Insights + ACR (and reuse PDNS)
+## 3. Platform Landing Zone — PDNS/PE managed by the platform
 
-Point the pattern at **existing platform assets** and **existing Private DNS zones**.
+Choose this scenario when your **platform landing zone already manages Private DNS Zones and Private Endpoints**.
+The AI/ML Landing Zone will consume the existing DNS zones you provide and will not create new ones.
 
-```json
-{
-  "parameters": {
-    "resourceIds": {
-      "value": {
-        "virtualNetworkResourceId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/virtualNetworks/<vnet>",
-        "logAnalyticsWorkspaceResourceId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<law>",
-        "appInsightsResourceId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Insights/components/<appi>",
-        "containerRegistryResourceId": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ContainerRegistry/registries/<acr>"
-      }
-    },
+```
+using './main.bicep'
 
-    "privateDnsZoneIds": {
-      "value": {
-        "cognitiveservices": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com",
-        "openai": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com",
-        "aiServices": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com",
-        "search": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.search.windows.net",
-        "cosmosSql": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com",
-        "blob": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.blob.<region>.core.windows.net",
-        "keyVault": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net",
-        "appConfig": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azconfig.io",
-        "containerApps": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.<location>.azurecontainerapps.io",
-        "acr": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io",
-        "appInsights": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.applicationinsights.azure.com"
-      }
-    }
-  }
+@description('Deploy core network while reusing platform-managed PDNS/PE.')
+param deployToggles = {
+  logAnalytics: false
+  appInsights: false
+  containerEnv: false
+  containerRegistry: false
+  cosmosDb: false
+  keyVault: false
+  storageAccount: false
+  groundingWithBingSearch: false
+  appConfig: false
+  apiManagement: false
+  applicationGateway: false
+  applicationGatewayPublicIp: false
+  firewall: false
+  wafPolicy: false
+  buildVm: false
+  bastionHost: false
+  jumpVm: false
+
+  agentNsg: true
+  peNsg: true
+  applicationGatewayNsg: true
+  apiManagementNsg: true
+  acaEnvironmentNsg: true
+  jumpboxNsg: true
+  devopsBuildAgentsNsg: true
+
+  virtualNetwork: true
 }
+
+@description('Enable platform landing zone integration.')
+param flagPlatformLandingZone = true
+
+@description('Provide IDs of existing Private DNS Zones managed by the platform.')
+param privateDnsZonesDefinition = {
+  allowInternetResolutionFallback: false
+  createNetworkLinks: false
+  cognitiveservicesZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com'
+  openaiZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com'
+  aiServicesZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com'
+  searchZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.search.windows.net'
+  cosmosSqlZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com'
+  blobZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net'
+  keyVaultZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net'
+  appConfigZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azconfig.io'
+  containerAppsZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.eastus2.azurecontainerapps.io'
+  acrZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io'
+  appInsightsZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.applicationinsights.azure.com'
+  tags: { ManagedBy: 'PlatformLZ' }
+}
+
+@description('Deployment location.')
+param location = 'eastus2'
 ```
 
-> Optional: If you also want Foundry to **reuse** your own Search/Cosmos/KV/Storage, set `existingResourceId` inside `aiFoundryDefinition.aiSearchConfiguration`, `cosmosDbConfiguration`, `keyVaultConfiguration`, and `storageAccountConfiguration`.
-
----
-
-## 4) AI Foundry scenarios
-
-### 4.1) Full Foundry — Agent Service **on**, auto‑deps **on**, with model deployments
-
-```json
-{
-  "parameters": {
-    "aiFoundryDefinition": {
-      "value": {
-        "includeAssociatedResources": true,
-        "aiFoundryConfiguration": {
-          "accountName": "af-${baseName}",
-          "createCapabilityHosts": true,
-          "project": { "name": "proj-${baseName}", "displayName": "AI Project" }
-        },
-        "aiModelDeployments": [
-          {
-            "name": "chat",
-            "model": { "format": "OpenAI", "name": "gpt-4o", "version": "2024-11-20" },
-            "scale": { "type": "Standard", "capacity": 1 }
-          }
-        ]
-      }
-    }
-  }
-}
-```
-
-### 4.2) Project only — **no Agent Service**, no auto‑deps (BYOR)
-
-```json
-{
-  "parameters": {
-    "aiFoundryDefinition": {
-      "value": {
-        "includeAssociatedResources": false,
-        "aiFoundryConfiguration": {
-          "createCapabilityHosts": false,
-          "project": { "name": "proj-${baseName}", "displayName": "Project Only" }
-        }
-      }
-    }
-  }
-}
-```
-
-> In BYOR mode, provision Search/Cosmos/Storage/KV separately and point your application to them.
-
----
-
-## 5) Platform Landing Zone integration (PDNS/PE managed by platform)
-
-Use when **platform** owns Private DNS and Private Endpoints. The pattern will **not** create PDNS/PE; it will bind to the zones you supply.
-
-```json
-{
-  "parameters": {
-    "flagPlatformLandingZone": { "value": true },
-
-    "privateDnsZoneIds": {
-      "value": {
-        "cognitiveservices": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.cognitiveservices.azure.com",
-        "openai": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.openai.azure.com",
-        "aiServices": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.services.ai.azure.com",
-        "search": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.search.windows.net",
-        "cosmosSql": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com",
-        "blob": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.blob.<region>.core.windows.net",
-        "keyVault": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.vaultcore.azure.net",
-        "appConfig": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azconfig.io",
-        "containerApps": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.<location>.azurecontainerapps.io",
-        "acr": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.azurecr.io",
-        "appInsights": "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.applicationinsights.azure.com"
-      }
-    }
-  }
-}
-```
-
----
-
-## 6) Use the pattern as an AVM module (in your repo)
-
-Reference the Azure Verified Pattern Module from your own Bicep file:
-
-**Registry‑based reference (example placeholder):**
-
-```bicep
-module landingZone 'br/public:avm/ptn/aiml-landing-zone:<version>' = {
-  name: 'landingZone'
-  params: {
-    location: resourceGroup().location
-    tags: { env: 'dev' }
-    aiFoundryDefinition: {
-      includeAssociatedResources: true
-      aiFoundryConfiguration: {
-        createCapabilityHosts: true
-        project: { name: 'proj-${uniqueString(resourceGroup().id)}' }
-      }
-    }
-  }
-}
-```
-
-> Pin a specific `<version>` and adjust parameters as in the examples above.
+This configuration **keeps all VNet subnets and address prefixes identical to the greenfield setup** (`192.168.0.0/22`) but delegates DNS and Private Endpoints to the existing platform landing zone.
