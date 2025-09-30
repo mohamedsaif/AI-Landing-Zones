@@ -123,9 +123,9 @@ The template supports flexible deployment patterns through parameter configurati
 
 For detailed configuration and examples, see:
 
-* **[parameters.md](./parameters.md)** — Complete parameter reference
-* **[defaults.md](./defaults.md)** — Default values for all input parameters
-* **[examples.md](./examples.md)** — Common deployment scenarios
+* **[Parameters](./parameters.md)** — Complete parameter reference
+* **[Defaults](./defaults.md)** — Default values for all input parameters
+* **[Examples](./examples.md)** — Common deployment scenarios
 
 ---
 
