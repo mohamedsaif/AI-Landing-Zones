@@ -27,7 +27,13 @@
    az login
    ```
 
-2. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
+2. **Create the resource group** where you're gonna deploy the AI Landing Zone Resources
+
+   ```bash
+   az group create --name "rg-aiml-dev" --location "eastus2"
+   ```
+
+3. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
 
    *PowerShell*:
 
@@ -45,29 +51,27 @@
    export AZURE_SUBSCRIPTION_ID="00000000-1111-2222-3333-444444444444"
    ```
 
-3. **Initialize the project**
+4. **Initialize the project**
 
    In an empty folder (e.g., `deploy`), run:
 
    ```bash
-   azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e dev
+   azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e aiml-dev
    ```
 
-4. **(Optional) Customize parameters**
+5. **(Optional) Customize parameters**
 
    Edit `infra/main.bicepparam` if you want to adjust deployment options.
 
-5. **Provision the infrastructure**
+6. **Provision the infrastructure**
 
    ```bash
    azd provision
    ```
 
-   > [!Note]
-   > Provisioning uses Template Specs to bypass the 4 MB ARM template size limit.
-   > Pre-provision scripts build and publish them, while post-provision scripts remove them after success.
-
----
+> [!NOTE]  
+> Provisioning uses Template Specs to bypass the 4 MB ARM template size limit.
+> Pre-provision scripts build and publish them, while post-provision scripts remove them after success.
 
 ## 3) Configuration options
 
