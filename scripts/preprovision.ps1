@@ -504,6 +504,36 @@ if ((Test-Path $mainBicepPath) -and ($templateSpecs.Count -gt 0)) {
 }
 
 #===============================================================================
+# STEP 5: APPLY TAGS
+#===============================================================================
+
+# Step 5: Apply tags to resource groups
+Write-Host ""
+Write-Host "[5] Step 5: Applying tags..." -ForegroundColor Cyan
+
+# Apply tag to main resource group
+try {
+  Write-Host "  Applying tags to resource group: $ResourceGroup" -ForegroundColor Gray
+  az group update --name $ResourceGroup --tags "SecurityControl=Ignore" --only-show-errors | Out-Null
+  Write-Host "  [+] Applied tags to: $ResourceGroup" -ForegroundColor Green
+} catch {
+  Write-Host "  [!] Warning: Failed to apply tags to resource group: $ResourceGroup" -ForegroundColor Yellow
+  Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
+# Apply tag to Template Spec resource group if different
+if ($TemplateSpecRG -ne $ResourceGroup) {
+  try {
+    Write-Host "  Applying tags to Template Spec resource group: $TemplateSpecRG" -ForegroundColor Gray
+    az group update --name $TemplateSpecRG --tags "SecurityControl=Ignore" --only-show-errors | Out-Null
+    Write-Host "  [+] Applied tags to: $TemplateSpecRG" -ForegroundColor Green
+  } catch {
+    Write-Host "  [!] Warning: Failed to apply tags to Template Spec resource group: $TemplateSpecRG" -ForegroundColor Yellow
+    Write-Host "      Error: $($_.Exception.Message)" -ForegroundColor Yellow
+  }
+}
+
+#===============================================================================
 # COMPLETION SUMMARY
 #===============================================================================
 

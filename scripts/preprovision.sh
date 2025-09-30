@@ -504,6 +504,32 @@ if [ -f "$main_bicep_path" ] && [ -s "$temp_mapping_file" ]; then
 fi
 
 #===============================================================================
+# STEP 5: APPLY TAGS
+#===============================================================================
+
+# Step 5: Apply tags to resource groups
+echo ""
+print_step "[5] Step 5: Applying tags..."
+
+# Apply tag to main resource group
+print_gray "  Applying tags to resource group: $RESOURCE_GROUP"
+if az group update --name "$RESOURCE_GROUP" --tags "SecurityControl=Ignore" --only-show-errors >/dev/null 2>&1; then
+    print_success "  [+] Applied tags to: $RESOURCE_GROUP"
+else
+    print_warning "  [!] Warning: Failed to apply tags to resource group: $RESOURCE_GROUP"
+fi
+
+# Apply tag to Template Spec resource group if different
+if [ "$TEMPLATE_SPEC_RG" != "$RESOURCE_GROUP" ]; then
+    print_gray "  Applying tags to Template Spec resource group: $TEMPLATE_SPEC_RG"
+    if az group update --name "$TEMPLATE_SPEC_RG" --tags "SecurityControl=Ignore" --only-show-errors >/dev/null 2>&1; then
+        print_success "  [+] Applied tags to: $TEMPLATE_SPEC_RG"
+    else
+        print_warning "  [!] Warning: Failed to apply tags to Template Spec resource group: $TEMPLATE_SPEC_RG"
+    fi
+fi
+
+#===============================================================================
 # COMPLETION SUMMARY
 #===============================================================================
 
