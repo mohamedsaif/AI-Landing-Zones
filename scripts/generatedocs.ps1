@@ -1,3 +1,7 @@
+# ====================================================================
+# SCRIPT PARAMETERS AND CONFIGURATION
+# ====================================================================
+
 param(
     [Parameter(Mandatory = $false)]
     [string]$TemplatePath = "infra/main.bicep",
@@ -5,6 +9,10 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$OutputPath = "docs/parameters.md"
 )
+
+# ====================================================================
+# HELPER FUNCTIONS - URL GENERATION AND PATH UTILITIES
+# ====================================================================
 
 # Helper function to generate safer documentation URLs
 function Generate-SafeLearnUrl {
@@ -39,6 +47,10 @@ function Get-RelativePath {
     $relativePath = [System.IO.Path]::GetRelativePath($currentDir.Path, $AbsolutePath)
     return $relativePath -replace '\\', '/'
 }
+
+# ====================================================================
+# USER DEFINED TYPES (UDT) PARSING FUNCTIONS
+# ====================================================================
 
 # Function to parse UDT definition from types.bicep file
 function Parse-UdtDefinition {
@@ -250,6 +262,10 @@ function Convert-BicepTypeToParameters {
     
     return $parameters
 }
+
+# ====================================================================
+# BICEP PARAMETER EXTRACTION AND PROCESSING FUNCTIONS
+# ====================================================================
 
 # Function to map UDT parameters from Bicep source
 function Get-UdtParameterMappings {
@@ -569,6 +585,10 @@ function Get-BicepParameters {
     return $parameters | Sort-Object Name
 }
 
+# ====================================================================
+# BICEP OUTPUTS EXTRACTION FUNCTIONS
+# ====================================================================
+
 # Function to extract outputs from compiled JSON
 function Get-BicepOutputs {
     param([string]$FilePath)
@@ -618,6 +638,10 @@ function Get-BicepOutputs {
     return $outputs | Sort-Object Name
 }
 
+# ====================================================================
+# SPECIAL HANDLING FOR PRIVATE DNS ZONE DEFINITIONS
+# ====================================================================
+
 # Function to fix privateDnsZoneDefinitionType by reading directly from types.bicep
 function Get-PrivateDnsZoneDefinitionFromSource {
     param([string]$TypesFilePath)
@@ -636,6 +660,10 @@ function Get-PrivateDnsZoneDefinitionFromSource {
     
     return @()
 }
+
+# ====================================================================
+# USER DEFINED TYPES EXTRACTION FROM JSON
+# ====================================================================
 
 # Function to extract User Defined Types (UDTs) from compiled JSON
 function Get-BicepUserDefinedTypes {
@@ -710,6 +738,10 @@ function Get-BicepUserDefinedTypes {
     
     return $types
 }
+
+# ====================================================================
+# RESOURCE TYPES EXTRACTION AND AVM MODULE PROCESSING
+# ====================================================================
 
 # Function to extract resource types recursively from main template and all wrapper modules
 function Get-BicepResourceTypes {
@@ -1011,6 +1043,10 @@ function Get-BicepResourceTypes {
     return $uniqueResourceTypes | Sort-Object ResourceType
 }
 
+# ====================================================================
+# PARAMETER CONDITIONALITY ANALYSIS
+# ====================================================================
+
 # Function to determine parameter conditionality
 function Get-ParameterConditionality {
     param(
@@ -1032,6 +1068,10 @@ function Get-ParameterConditionality {
     return "Required"
 }
 
+# ====================================================================
+# MARKDOWN DOCUMENTATION GENERATION
+# ====================================================================
+
 # Function to generate markdown documentation
 function Generate-MarkdownDocumentation {
     param(
@@ -1043,8 +1083,13 @@ function Generate-MarkdownDocumentation {
     )
     
     $markdown = "# $TemplateName" + "`n`n"
-    $markdown += "## Overview" + "`n`n"
-    $markdown += "This template deploys Azure resources for AI/ML workloads." + "`n`n"
+    $markdown += "### Parameters Documentation" + "`n`n"
+    $markdown += "This page provides detailed information about all the parameters available in the AI Landing Zone Bicep template. Parameters are configuration values that you can customize to adapt the deployment to your specific requirements and environment." + "`n`n"
+    $markdown += "The parameters are organized into three categories:" + "`n"
+    $markdown += "- **Required Parameters**: Must be provided for the template to deploy successfully" + "`n"
+    $markdown += "- **Conditional Parameters**: Required only when certain features or components are enabled" + "`n"
+    $markdown += "- **Optional Parameters**: Have default values but can be customized as needed" + "`n`n"
+    $markdown += "Each parameter includes information about its type, requirements, default values (where applicable), and detailed descriptions of its purpose and usage." + "`n`n"
     
     # Table of Contents with individual parameter links
     $markdown += "## Table of Contents" + "`n`n"
@@ -1301,6 +1346,10 @@ function Generate-MarkdownDocumentation {
     
     return $markdown
 }
+
+# ====================================================================
+# MAIN SCRIPT EXECUTION
+# ====================================================================
 
 # Main execution
 Write-Host "Parsing Bicep template: $TemplatePath" -ForegroundColor Cyan

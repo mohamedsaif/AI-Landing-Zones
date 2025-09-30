@@ -10,6 +10,9 @@
     4. Creates deploy/main.bicep ready for deployment
 
     Environment Variables:
+    - AZURE_SUBSCRIPTION_ID: Required. Azure subscription ID (GUID format)
+    - AZURE_LOCATION: Required. Azure region (e.g., eastus2, westus3)
+    - AZURE_RESOURCE_GROUP: Required. Resource group name
     - AZURE_TS_RG: If set, uses existing Template Specs from this resource group instead of creating new ones
 
 .EXAMPLE
@@ -57,6 +60,9 @@ if (-not $Location) {
 }
 if (-not $ResourceGroup) {
   $missingVars += "AZURE_RESOURCE_GROUP"
+}
+if (-not $SubscriptionId) {
+  $missingVars += "AZURE_SUBSCRIPTION_ID"
 }
 
 if ($missingVars.Count -gt 0) {
@@ -128,6 +134,39 @@ if ($missingVars.Count -gt 0) {
     }
   }
   
+  # Prompt for AZURE_SUBSCRIPTION_ID if missing
+  if (-not $SubscriptionId) {
+    $attempts = 0
+    $maxAttempts = 50
+    do {
+      $attempts++
+      if ($attempts -gt $maxAttempts) {
+        Write-Host "  [X] Too many attempts. Exiting..." -ForegroundColor Red
+        exit 1
+      }
+      Write-Host "Enter subscription ID (Azure subscription GUID): " -NoNewline -ForegroundColor White
+      $SubscriptionId = [Console]::ReadLine()
+      if ($SubscriptionId) { $SubscriptionId = $SubscriptionId.Trim() }
+      if ([string]::IsNullOrWhiteSpace($SubscriptionId)) {
+        Write-Host "  [!] Subscription ID cannot be empty. Please enter a valid Azure subscription GUID." -ForegroundColor Red
+      } elseif ($SubscriptionId -notmatch '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$') {
+        Write-Host "  [!] Invalid subscription ID format. Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789012)." -ForegroundColor Red
+        $SubscriptionId = $null
+      }
+    } while ([string]::IsNullOrWhiteSpace($SubscriptionId))
+    
+    Write-Host "  [+] Setting AZURE_SUBSCRIPTION_ID = '$SubscriptionId'" -ForegroundColor Green
+    try {
+      & azd env set AZURE_SUBSCRIPTION_ID $SubscriptionId
+      $env:AZURE_SUBSCRIPTION_ID = $SubscriptionId
+      Write-Host "  [+] Successfully set AZURE_SUBSCRIPTION_ID" -ForegroundColor Green
+    } catch {
+      Write-Host "  [X] Failed to set AZURE_SUBSCRIPTION_ID using azd: $($_.Exception.Message)" -ForegroundColor Red
+      Write-Host "  [i] Setting as environment variable for this session only" -ForegroundColor Yellow
+      $env:AZURE_SUBSCRIPTION_ID = $SubscriptionId
+    }
+  }
+  
   Write-Host ""
 }
 
@@ -139,6 +178,7 @@ if (-not $TemplateSpecRG) {
 }
 
 Write-Host "[i] Configuration:" -ForegroundColor Yellow
+Write-Host "  Subscription ID: $SubscriptionId" -ForegroundColor White
 Write-Host "  Location: $Location" -ForegroundColor White  
 Write-Host "  Resource Group: $ResourceGroup" -ForegroundColor White
 Write-Host "  Template Spec RG: $TemplateSpecRG" -ForegroundColor White

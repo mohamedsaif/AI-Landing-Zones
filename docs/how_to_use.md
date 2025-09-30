@@ -17,33 +17,55 @@
 * A **resource group** in your target subscription  
 * **Owner** or **Contributor + User Access Administrator** permissions on the subscription  
 
----
-
 ## 2) Quick start with azd
 
-### Steps to deploy
+### Deployment steps
 
-1) Sign in
+1. **Sign in to Azure**
 
-```bash
-azd auth login
-````
+   ```bash
+   az login
+   ```
 
-2. Initialize an environment (example: dev)
+2. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
 
-```bash
-azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e dev
-```
+   *PowerShell*:
 
-3. Configure parameters (optional)
+   ```powershell
+   $env:AZURE_LOCATION = "eastus2"
+   $env:AZURE_RESOURCE_GROUP = "rg-aiml-dev"
+   $env:AZURE_SUBSCRIPTION_ID = "00000000-1111-2222-3333-444444444444"
+   ```
 
-Optionally edit `infra/main.bicepparam` to customize your deployment as needed.
+   *bash*:
 
-4. Deploy infrastructure
+   ```bash
+   export AZURE_LOCATION="eastus2"
+   export AZURE_RESOURCE_GROUP="rg-aiml-dev"
+   export AZURE_SUBSCRIPTION_ID="00000000-1111-2222-3333-444444444444"
+   ```
 
-```bash
-azd provision
-```
+3. **Initialize the project**
+
+   In an empty folder (e.g., `deploy`), run:
+
+   ```bash
+   azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e dev
+   ```
+
+4. **(Optional) Customize parameters**
+
+   Edit `infra/main.bicepparam` if you want to adjust deployment options.
+
+5. **Provision the infrastructure**
+
+   ```bash
+   azd provision
+   ```
+
+   > [!Note]
+   > Provisioning uses Template Specs to bypass the 4 MB ARM template size limit.
+   > Pre-provision scripts build and publish them, while post-provision scripts remove them after success.
 
 ---
 

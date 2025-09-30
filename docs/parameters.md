@@ -1,8 +1,15 @@
 # AI Landing Zone
 
-## Overview
+### Parameters Documentation
 
-This template deploys Azure resources for AI/ML workloads.
+This page provides detailed information about all the parameters available in the AI Landing Zone Bicep template. Parameters are configuration values that you can customize to adapt the deployment to your specific requirements and environment.
+
+The parameters are organized into three categories:
+- **Required Parameters**: Must be provided for the template to deploy successfully
+- **Conditional Parameters**: Required only when certain features or components are enabled
+- **Optional Parameters**: Have default values but can be customized as needed
+
+Each parameter includes information about its type, requirements, default values (where applicable), and detailed descriptions of its purpose and usage.
 
 ## Table of Contents
 

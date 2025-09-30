@@ -1,22 +1,22 @@
-
-
 # AI/ML Landing Zone — Bicep parameter examples
 
 This page provides three complete examples of parameter files for deploying the AI/ML Landing Zone (Bicep AVM).
 
-- [1. Greenfield — full new and isolated deployment](#1-greenfield--full-new-and-isolated-deployment)
-- [2. Existing VNet — reuse an existing virtual network](#2-existing-vnet--reuse-an-existing-virtual-network)
-- [3. Platform Landing Zone — PDNS/PE managed by the platform](#3-platform-landing-zone--pdnspe-managed-by-the-platform)
+## Table of Contents
+
+1. [Greenfield — full new and isolated deployment](#1-greenfield--full-new-and-isolated-deployment)
+2. [Existing VNet — reuse an existing virtual network](#2-existing-vnet--reuse-an-existing-virtual-network)
+3. [Platform Landing Zone — PDNS/PE managed by the platform](#3-platform-landing-zone--pdnspe-managed-by-the-platform)
 
 ---
 
 ## 1. Greenfield — full new and isolated deployment
 
 Use this scenario for a **new environment from scratch**.
-It creates all required resources — Virtual Network with the standard subnets (address space `192.168.0.0/22`), Network Security Groups, Private Endpoints, Private DNS Zones, and the entire AI/ML stack (App Gateway, APIM, Firewall, AI services, etc.).
+It creates all required resources — Virtual Network, Network Security Groups, Private Endpoints, Private DNS Zones, and the entire AI/ML stack (App Gateway, APIM, Firewall, AI services, etc.).
 This is the default “everything on” template.
 
-```
+```bicep
 using './main.bicep'
 
 @description('Per-service deployment toggles.')
@@ -55,36 +55,33 @@ param resourceIds = {}
 
 @description('Enable platform landing zone integration. When true, private DNS zones and private endpoints are managed by the platform landing zone.')
 param flagPlatformLandingZone = false
-
-@description('Deployment location.')
-param location = 'eastus2'
 ```
-
-This configuration automatically provisions the **entire network topology** defined in `main.bicep`, including
-the delegated `/23` subnet for Azure Container Apps and all other subnets with the recommended prefix sizes.
 
 ---
 
 ## 2. Existing VNet — reuse an existing virtual network
 
 Use this when you already have a **pre-existing VNet** and only need to add the AI/ML Landing Zone subnets and resources.
-The deployment **does not create a new VNet**; instead, it creates all required subnets, with the same names and address prefixes as in the greenfield setup (`192.168.0.0/22`), inside the specified VNet.
-All NSGs are created and automatically associated.
+The deployment **does not create a new VNet**; instead, it creates required subnets and NSGs inside the specified VNet, while still deploying platform services like Cosmos DB, Storage, Key Vault, App Insights, Log Analytics, and Container Registry/Env.
+**Neste exemplo, assume-se que a VNet existente possua o espaço de endereçamento `192.168.0.0/22` (ou prefixos equivalentes ajustados de forma consistente), já que os subnets abaixo seguem essa estrutura.**
+Infra such as App Gateway, APIM, Firewall, Bastion, and Jumpbox is skipped.
 
-```
+```bicep
 using './main.bicep'
 
-@description('Deploy only subnets and NSGs inside an existing VNet.')
+@description('Deploy services while reusing an existing VNet; create only the needed subnets + NSGs.')
 param deployToggles = {
-  logAnalytics: false
-  appInsights: false
-  containerEnv: false
-  containerRegistry: false
-  cosmosDb: false
-  keyVault: false
-  storageAccount: false
-  groundingWithBingSearch: false
-  appConfig: false
+  // Application and data services
+  logAnalytics: true
+  appInsights: true
+  containerEnv: true
+  containerRegistry: true
+  cosmosDb: true
+  keyVault: true
+  storageAccount: true
+  appConfig: true
+
+  // Infra components not deployed in this scenario
   apiManagement: false
   applicationGateway: false
   applicationGatewayPublicIp: false
@@ -94,14 +91,16 @@ param deployToggles = {
   bastionHost: false
   jumpVm: false
 
+  // NSGs for subnets created
   agentNsg: true
   peNsg: true
-  applicationGatewayNsg: true
-  apiManagementNsg: true
+  applicationGatewayNsg: false
+  apiManagementNsg: false
   acaEnvironmentNsg: true
-  jumpboxNsg: true
+  jumpboxNsg: false
   devopsBuildAgentsNsg: true
 
+  // VNet already exists
   virtualNetwork: false
 }
 
@@ -123,26 +122,6 @@ param existingVNetSubnetsDefinition = {
       privateEndpointNetworkPolicies: 'Disabled'
     }
     {
-      name: 'AzureBastionSubnet'
-      addressPrefix: '192.168.0.64/26'
-    }
-    {
-      name: 'AzureFirewallSubnet'
-      addressPrefix: '192.168.0.128/26'
-    }
-    {
-      name: 'appgw-subnet'
-      addressPrefix: '192.168.0.192/27'
-    }
-    {
-      name: 'apim-subnet'
-      addressPrefix: '192.168.0.224/27'
-    }
-    {
-      name: 'jumpbox-subnet'
-      addressPrefix: '192.168.1.0/28'
-    }
-    {
       name: 'aca-env-subnet'
       addressPrefix: '192.168.2.0/23'
       delegation: 'Microsoft.App/environments'
@@ -152,36 +131,35 @@ param existingVNetSubnetsDefinition = {
       name: 'devops-agents-subnet'
       addressPrefix: '192.168.1.32/27'
     }
+    // Other infra subnets (AppGW, Bastion, Firewall, Jumpbox, APIM) omitted here
   ]
 }
-
-@description('Deployment location.')
-param location = 'eastus2'
 ```
-
-Make sure your existing VNet has the **`192.168.0.0/22` address space** available or adjust prefixes while keeping the same structure (especially the required `/23` for `aca-env-subnet`).
 
 ---
 
 ## 3. Platform Landing Zone — PDNS/PE managed by the platform
 
 Choose this scenario when your **platform landing zone already manages Private DNS Zones and Private Endpoints**.
-The AI/ML Landing Zone will consume the existing DNS zones you provide and will not create new ones.
+The AI/ML Landing Zone consumes the existing DNS zones you provide and does not create new ones.
+You still deploy platform services like Cosmos DB, Storage, Key Vault, App Insights, Log Analytics, and Container Registry/Env, but network infra such as App Gateway, APIM, Firewall, Bastion, and Jumpbox is skipped.
 
-```
+```bicep
 using './main.bicep'
 
-@description('Deploy core network while reusing platform-managed PDNS/PE.')
+@description('Deploy core services while reusing platform-managed PDNS/PE.')
 param deployToggles = {
-  logAnalytics: false
-  appInsights: false
-  containerEnv: false
-  containerRegistry: false
-  cosmosDb: false
-  keyVault: false
-  storageAccount: false
-  groundingWithBingSearch: false
-  appConfig: false
+  // Application and data services
+  logAnalytics: true
+  appInsights: true
+  containerEnv: true
+  containerRegistry: true
+  cosmosDb: true
+  keyVault: true
+  storageAccount: true
+  appConfig: true
+
+  // Infra components managed by platform or excluded
   apiManagement: false
   applicationGateway: false
   applicationGatewayPublicIp: false
@@ -191,14 +169,16 @@ param deployToggles = {
   bastionHost: false
   jumpVm: false
 
+  // NSGs still required for local subnets
   agentNsg: true
   peNsg: true
-  applicationGatewayNsg: true
-  apiManagementNsg: true
+  applicationGatewayNsg: false
+  apiManagementNsg: false
   acaEnvironmentNsg: true
-  jumpboxNsg: true
+  jumpboxNsg: false
   devopsBuildAgentsNsg: true
 
+  // Workload VNet created if pattern requires isolation
   virtualNetwork: true
 }
 
@@ -222,9 +202,4 @@ param privateDnsZonesDefinition = {
   appInsightsZoneId: '/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Network/privateDnsZones/privatelink.applicationinsights.azure.com'
   tags: { ManagedBy: 'PlatformLZ' }
 }
-
-@description('Deployment location.')
-param location = 'eastus2'
 ```
-
-This configuration **keeps all VNet subnets and address prefixes identical to the greenfield setup** (`192.168.0.0/22`) but delegates DNS and Private Endpoints to the existing platform landing zone.

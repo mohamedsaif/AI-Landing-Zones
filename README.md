@@ -18,5 +18,7 @@ Network isolation is enabled by default, routing all traffic through Private End
 * [**How to deploy the Landing Zone.**](./docs/how_to_use.md)
   Step-by-step instructions on creating or reusing resources, setting up isolation, and configuring parameters. Includes a minimal example and notes on running `azd provision`.
 
+  ![Demo](./docs/demo.gif)
+
 * [**Parameter reference.**](./docs/parameters.md)
   A complete list of parameters and outputs, along with the related resources and modules, aligned with the strongly typed contracts defined in [`types.bicep`](./infra/common/types.bicep).

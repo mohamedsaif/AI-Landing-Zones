@@ -9,6 +9,9 @@
 # 4. Creates deploy/main.bicep ready for deployment
 #
 # Environment Variables:
+# - AZURE_SUBSCRIPTION_ID: Required. Azure subscription ID (GUID format)
+# - AZURE_LOCATION: Required. Azure region (e.g., eastus2, westus3)
+# - AZURE_RESOURCE_GROUP: Required. Resource group name
 # - AZURE_TS_RG: If set, uses existing Template Specs from this resource group instead of creating new ones
 #
 # Usage: 
@@ -88,6 +91,9 @@ fi
 if [ -z "$RESOURCE_GROUP" ]; then
     missing_vars="${missing_vars}AZURE_RESOURCE_GROUP "
 fi
+if [ -z "$SUBSCRIPTION_ID" ]; then
+    missing_vars="${missing_vars}AZURE_SUBSCRIPTION_ID "
+fi
 
 if [ -n "$missing_vars" ]; then
     print_warning "Some required environment variables are missing:"
@@ -156,6 +162,39 @@ if [ -n "$missing_vars" ]; then
         fi
     fi
     
+    # Prompt for AZURE_SUBSCRIPTION_ID if missing
+    if [ -z "$SUBSCRIPTION_ID" ]; then
+        attempts=0
+        max_attempts=50
+        while [ -z "$SUBSCRIPTION_ID" ]; do
+            attempts=$((attempts + 1))
+            if [ $attempts -gt $max_attempts ]; then
+                printf "${RED}  [X] Too many attempts. Exiting...${NC}\n"
+                exit 1
+            fi
+            printf "${WHITE}Enter subscription ID (Azure subscription GUID): ${NC}"
+            read -r SUBSCRIPTION_ID
+            SUBSCRIPTION_ID=$(echo "$SUBSCRIPTION_ID" | xargs)  # Trim whitespace
+            if [ -z "$SUBSCRIPTION_ID" ]; then
+                printf "${RED}  [!] Subscription ID cannot be empty. Please enter a valid Azure subscription GUID.${NC}\n"
+            # Validate GUID format
+            elif ! echo "$SUBSCRIPTION_ID" | grep -qE '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'; then
+                printf "${RED}  [!] Invalid subscription ID format. Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789012).${NC}\n"
+                SUBSCRIPTION_ID=""
+            fi
+        done
+        
+        printf "${GREEN}  [+] Setting AZURE_SUBSCRIPTION_ID = '%s'${NC}\n" "$SUBSCRIPTION_ID"
+        if azd env set AZURE_SUBSCRIPTION_ID "$SUBSCRIPTION_ID" >/dev/null 2>&1; then
+            export AZURE_SUBSCRIPTION_ID="$SUBSCRIPTION_ID"
+            printf "${GREEN}  [+] Successfully set AZURE_SUBSCRIPTION_ID${NC}\n"
+        else
+            printf "${RED}  [X] Failed to set AZURE_SUBSCRIPTION_ID using azd${NC}\n"
+            printf "${YELLOW}  [i] Setting as environment variable for this session only${NC}\n"
+            export AZURE_SUBSCRIPTION_ID="$SUBSCRIPTION_ID"
+        fi
+    fi
+    
     echo ""
 fi
 
@@ -168,6 +207,7 @@ else
 fi
 
 print_info "Configuration:"
+print_white "Subscription ID: $SUBSCRIPTION_ID"
 print_white "Location: $LOCATION"  
 print_white "Resource Group: $RESOURCE_GROUP"
 print_white "Template Spec RG: $TEMPLATE_SPEC_RG"
