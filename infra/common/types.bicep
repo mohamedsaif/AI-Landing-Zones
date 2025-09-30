@@ -3728,14 +3728,9 @@ type keyVaultDefinitionType = {
   tags: object?
 }
 
-<<<<<<< HEAD
 // ---------------------------------------------
 // Log Analytics Workspace
 // ---------------------------------------------
-=======
-import { lockType } from 'br/public:avm/utl/types/avm-common-types:0.6.1'
-
->>>>>>> main
 @export()
 @description('Configuration object for the Log Analytics Workspace to be deployed.')
 type logAnalyticsDefinitionType = {
