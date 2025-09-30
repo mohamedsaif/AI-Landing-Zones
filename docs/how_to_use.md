@@ -2,23 +2,16 @@
 
 ## Table of Contents
 
-1. [What gets deployed](#1-what-gets-deployed)  
-2. [Prerequisites](#2-prerequisites)  
-3. [Quick start with azd](#3-quick-start-with-azd)  
-4. [Configuration options](#4-configuration-options)  
-5. [Reference docs](#5-reference-docs)  
-6. [Important notes](#6-important-notes)  
-7. [CI/CD pipelines (overview)](#7-cicd-pipelines-overview)  
+1. [Prerequisites](#2-prerequisites)  
+2. [Quick start with azd](#3-quick-start-with-azd)  
+3. [Configuration options](#4-configuration-options)  
+4. [Reference docs](#5-reference-docs)  
+5. [Important notes](#6-important-notes)  
+6. [CI/CD pipelines (overview)](#7-cicd-pipelines-overview)  
 
 ---
 
-## 1) What gets deployed
-
-This template deploys a complete AI Landing Zone with networking, AI services, data storage, container platform, and operational components.
-
----
-
-## 2) Prerequisites
+## 1) Prerequisites
 
 * **Azure CLI** and **Azure Developer CLI** installed and signed in  
 * A **resource group** in your target subscription  
@@ -26,7 +19,7 @@ This template deploys a complete AI Landing Zone with networking, AI services, d
 
 ---
 
-## 3) Quick start with azd
+## 2) Quick start with azd
 
 ### Steps to deploy
 
@@ -54,7 +47,7 @@ azd provision
 
 ---
 
-## 4) Configuration options
+## 3) Configuration options
 
 Update parameters in the `infra/main.bicepparam` file:
 
@@ -97,7 +90,7 @@ The template supports flexible deployment patterns through parameter configurati
 
 ---
 
-## 5) Reference docs
+## 4) Reference docs
 
 For detailed configuration and examples, see:
 
@@ -107,7 +100,7 @@ For detailed configuration and examples, see:
 
 ---
 
-## 6) Important notes
+## 5) Important notes
 
 * **Naming**: If you leave names blank, the template generates valid names from the `baseName` parameter
 * **Global resources**: Storage accounts and Container Registry require globally unique names
@@ -116,7 +109,7 @@ For detailed configuration and examples, see:
 
 ---
 
-## 7) CI/CD pipelines (overview)
+## 6) CI/CD pipelines (overview)
 
 Basic automation can be added later via `azd pipeline config`, which scaffolds either a GitHub Actions workflow or an Azure DevOps pipeline and sets up identity (OIDC) plus required variables. For deeper guidance, refer to the official docs: [https://learn.microsoft.com/azure/developer/azure-developer-cli/configure-devops-pipeline](https://learn.microsoft.com/azure/developer/azure-developer-cli/configure-devops-pipeline)
 

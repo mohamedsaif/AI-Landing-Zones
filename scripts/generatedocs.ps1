@@ -96,24 +96,80 @@ function Convert-BicepTypeToParameters {
         IsSubProperty = $false
     }
     
-    # Parse properties from the type definition using a more precise pattern
+    # Initialize stacks for tracking nested context
+    $propertyStack = @()
+    $braceStack = @()
+    
+    # Parse properties with context awareness for nested objects and arrays
     $lines = $TypeDefinition -split "`n"
     $currentDescription = ""
-    $insideProperty = $false
     
-    foreach ($line in $lines) {
-        $line = $line.Trim()
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        $trimmed = $line.Trim()
+        
+        # Skip empty lines
+        if ([string]::IsNullOrWhiteSpace($trimmed)) { continue }
+        
+        # Count braces on this line
+        $openBraces = ($trimmed.ToCharArray() | Where-Object { $_ -eq '{' }).Count
+        $closeBraces = ($trimmed.ToCharArray() | Where-Object { $_ -eq '}' }).Count
         
         # Match @description lines
-        if ($line -match '@description\([''"]([^''"]*)[''"]') {
+        if ($trimmed -match '@description\([''"]([^''"]*)[''"]') {
             $currentDescription = $matches[1]
             continue
         }
         
+        # Handle closing braces - pop from stack
+        if ($trimmed -eq '}' -or $trimmed -eq '}?' -or $trimmed -match '^\}(\[\])?(\?)?$') {
+            for ($j = 0; $j -lt $closeBraces; $j++) {
+                if ($braceStack.Count -gt 0) {
+                    $braceStack = $braceStack[0..($braceStack.Count - 2)]
+                    if ($propertyStack.Count -gt 0) {
+                        $propertyStack = $propertyStack[0..($propertyStack.Count - 2)]
+                    }
+                }
+            }
+            continue
+        }
+        
         # Match property definitions: propertyName: type
-        if ($line -match '^(\w+):\s*(.+)$') {
+        if ($trimmed -match '^(\w+):\s*(.+)$') {
             $propName = $matches[1]
             $propTypeRaw = $matches[2].Trim()
+            
+            # Detect if this property starts a nested object
+            $startsNestedObject = $propTypeRaw.StartsWith('{') -and -not ($propTypeRaw.EndsWith('}') -or $propTypeRaw.EndsWith('}?') -or $propTypeRaw.EndsWith('}[]?'))
+            
+            # Detect if it's an array type by looking ahead for }[] pattern
+            $isArrayType = $false
+            if ($startsNestedObject) {
+                # Scan forward to find the closing brace for this object
+                $nestedBraceCount = 1
+                for ($j = $i + 1; $j -lt $lines.Count; $j++) {
+                    $nextLine = $lines[$j].Trim()
+                    $nestedBraceCount += ($nextLine.ToCharArray() | Where-Object { $_ -eq '{' }).Count
+                    $nestedBraceCount -= ($nextLine.ToCharArray() | Where-Object { $_ -eq '}' }).Count
+                    
+                    # When we find the matching closing brace, check if followed by []
+                    if ($nestedBraceCount -eq 0) {
+                        if ($nextLine -match '^\}(\[\])?(\?)?$') {
+                            if ($matches[1] -eq '[]') {
+                                $isArrayType = $true
+                            }
+                        }
+                        break
+                    }
+                }
+            }
+            
+            # Build the full property path using the stack
+            $fullPath = if ($propertyStack.Count -gt 0) {
+                "$ParentName.$($propertyStack -join '.').$propName"
+            } else {
+                "$ParentName.$propName"
+            }
             
             # Clean up the type
             $propType = $propTypeRaw
@@ -152,7 +208,7 @@ function Convert-BicepTypeToParameters {
             }
             
             $parameters += [PSCustomObject]@{
-                Name = "$ParentName.$propName"
+                Name = $fullPath
                 Type = $propType
                 Description = $currentDescription
                 Conditionality = $conditionality
@@ -160,10 +216,35 @@ function Convert-BicepTypeToParameters {
                 HasDefault = $isOptional
                 IsStructured = $false
                 IsSubProperty = $true
+                IndentLevel = $propertyStack.Count
+                IsArray = $isArrayType
+            }
+            
+            # Push property onto stack if it starts a nested object
+            if ($startsNestedObject) {
+                if ($isArrayType) {
+                    # For arrays, add [*] notation to indicate array elements
+                    $propertyStack += "$propName[*]"
+                } else {
+                    $propertyStack += $propName
+                }
+                $braceStack += 1
             }
             
             # Reset description for next property
             $currentDescription = ""
+        }
+        
+        # Handle standalone closing braces in property definitions
+        for ($j = 0; $j -lt $closeBraces; $j++) {
+            if ($braceStack.Count -gt 0 -and $trimmed -notmatch '^(\w+):') {
+                if ($braceStack.Count -gt 0) {
+                    $braceStack = $braceStack[0..($braceStack.Count - 2)]
+                }
+                if ($propertyStack.Count -gt 0) {
+                    $propertyStack = $propertyStack[0..($propertyStack.Count - 2)]
+                }
+            }
         }
     }
     
@@ -241,35 +322,13 @@ function Get-BicepParameters {
     }
     
     # Helper function to expand structured parameters recursively
-    # Helper function to extract parameter types from Bicep source
-    function Get-BicepParameterType {
-        param(
-            [string]$BicepFilePath,
-            [string]$ParameterName
-        )
-        
-        if (-not (Test-Path $BicepFilePath)) {
-            return $null
-        }
-        
-        $bicepContent = Get-Content -Path $BicepFilePath -Raw
-        $pattern = "param\s+$ParameterName\s+(\w+)\??"
-        
-        if ($bicepContent -match $pattern) {
-            return $Matches[1]
-        }
-        
-        return $null
-    }
-
     function Expand-StructuredParameter {
         param(
             [string]$ParamName,
             [object]$ParamDef,
             [object]$JsonContent,
             [string]$ParentPath = "",
-            [int]$Depth = 0,
-            [string]$BicepFilePath = ""
+            [int]$Depth = 0
         )
         
         $expandedParams = @()
@@ -283,17 +342,6 @@ function Get-BicepParameters {
         
         $fullParamName = if ($ParentPath) { "$ParentPath.$ParamName" } else { $ParamName }
         
-        # DEBUG: Check if we should trigger nullable UDT detection
-        if ($ParamName -eq "acrPrivateDnsZoneDefinition" -and $Depth -eq 0) {
-            Write-Host "DEBUG acrPrivateDnsZoneDefinition:" -ForegroundColor Cyan
-            Write-Host "  Type: $($ParamDef.type)" -ForegroundColor Cyan
-            Write-Host "  Nullable: $($ParamDef.nullable)" -ForegroundColor Cyan
-            Write-Host "  Has properties: $([bool]$ParamDef.properties)" -ForegroundColor Cyan
-            Write-Host "  BicepFilePath: $BicepFilePath" -ForegroundColor Cyan
-            Write-Host "  Depth: $Depth" -ForegroundColor Cyan
-            Write-Host "  Condition result: $(($ParamDef.type -eq 'object') -and $ParamDef.nullable -and !$ParamDef.properties -and $BicepFilePath -and ($Depth -eq 0))" -ForegroundColor Cyan
-        }
-        
         # Debug: Log parameter being processed
         if ($fullParamName -like "*lock*") {
             Write-Verbose "DEBUG: Processing $fullParamName - Type: $($ParamDef.type), Has `$ref: $([bool]$ParamDef.'$ref'), Has properties: $([bool]$ParamDef.properties)"
@@ -302,21 +350,7 @@ function Get-BicepParameters {
         # Check if this parameter references a user-defined type
         if ($ParamDef.'$ref' -and $JsonContent.definitions) {
             $refName = $ParamDef.'$ref' -replace '^#/definitions/', ''
-            
-            Write-Host "[$fullParamName] PROCESSING $ref BRANCH" -ForegroundColor Cyan
-            Write-Host "  Ref: $($ParamDef.'$ref')" -ForegroundColor Yellow
-            Write-Host "  RefName: $refName" -ForegroundColor Yellow
-            
             $typeDef = $JsonContent.definitions.$refName
-            
-            Write-Host "  TypeDef found: $($null -ne $typeDef)" -ForegroundColor $(if ($typeDef) { 'Green' } else { 'Red' })
-            if ($typeDef) {
-                Write-Host "  TypeDef.type: $($typeDef.type)" -ForegroundColor Yellow
-                Write-Host "  Has properties: $($null -ne $typeDef.properties)" -ForegroundColor Yellow
-                if ($typeDef.properties) {
-                    Write-Host "  Property count: $($typeDef.properties.PSObject.Properties.Count)" -ForegroundColor Yellow
-                }
-            }
             
             if ($typeDef -and $typeDef.type -eq "object" -and $typeDef.properties) {
                 # Add the main parameter
@@ -331,16 +365,12 @@ function Get-BicepParameters {
                     IsSubProperty = $Depth -gt 0
                 }
                 
-                Write-Host "  Recursively expanding $($typeDef.properties.PSObject.Properties.Count) properties..." -ForegroundColor Green
-                
                 # Recursively expand sub-properties
                 foreach ($propName in $typeDef.properties.PSObject.Properties.Name) {
                     $prop = $typeDef.properties.$propName
-                    $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1) -BicepFilePath $BicepFilePath
+                    $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1)
                     $expandedParams += $nestedParams
                 }
-                
-                Write-Host "  Finished expanding. Total params: $($expandedParams.Count)" -ForegroundColor Green
             } else {
                 # Non-object structured type
                 $expandedParams += [PSCustomObject]@{
@@ -372,68 +402,8 @@ function Get-BicepParameters {
             foreach ($propName in $ParamDef.properties.PSObject.Properties.Name) {
                 $prop = $ParamDef.properties.$propName
                 Write-Verbose "  Expanding property: $propName under $fullParamName"
-                $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1) -BicepFilePath $BicepFilePath
+                $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1)
                 $expandedParams += $nestedParams
-            }
-        } elseif ($ParamDef.type -eq "object" -and $ParamDef.nullable -and !$ParamDef.properties -and $BicepFilePath -and $Depth -eq 0) {
-            # Handle nullable UDT parameters that lost their $ref during Bicep compilation
-            # This is a known Bicep limitation - nullable UDTs compile to plain "type: object" without $ref
-            Write-Host "DETECTED NULLABLE UDT WITHOUT PROPERTIES: $fullParamName" -ForegroundColor Magenta
-            Write-Verbose "Detected nullable object without properties at top level: $fullParamName - attempting Bicep lookup"
-            
-            $udtType = Get-BicepParameterType -BicepFilePath $BicepFilePath -ParameterName $ParamName
-            Write-Host "  Found UDT Type: $udtType" -ForegroundColor Yellow
-            
-            if ($udtType -and $JsonContent.definitions.$udtType) {
-                Write-Host "  Type definition exists in JSON - expanding!" -ForegroundColor Green
-                Write-Verbose "Found UDT type '$udtType' in Bicep source for parameter '$ParamName'"
-                $typeDef = $JsonContent.definitions.$udtType
-                
-                if ($typeDef.type -eq "object" -and $typeDef.properties) {
-                    # Add the main parameter
-                    $expandedParams += [PSCustomObject]@{
-                        Name = $fullParamName
-                        Type = "object"
-                        Description = $description
-                        Conditionality = $conditionality
-                        DefaultValue = if ($hasDefault) { $ParamDef.defaultValue } else { $null }
-                        HasDefault = $hasDefault
-                        IsStructured = $true
-                        IsSubProperty = $false
-                    }
-                    
-                    # Recursively expand sub-properties from the UDT definition
-                    foreach ($propName in $typeDef.properties.PSObject.Properties.Name) {
-                        $prop = $typeDef.properties.$propName
-                        $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath $fullParamName -Depth ($Depth + 1) -BicepFilePath $BicepFilePath
-                        $expandedParams += $nestedParams
-                    }
-                } else {
-                    # Type found but not an expandable object
-                    $expandedParams += [PSCustomObject]@{
-                        Name = $fullParamName
-                        Type = "object"
-                        Description = $description
-                        Conditionality = $conditionality
-                        DefaultValue = if ($hasDefault) { $ParamDef.defaultValue } else { $null }
-                        HasDefault = $hasDefault
-                        IsStructured = $false
-                        IsSubProperty = $false
-                    }
-                }
-            } else {
-                # No UDT found in Bicep - treat as plain object
-                Write-Verbose "No UDT type found for parameter '$ParamName' - treating as plain object"
-                $expandedParams += [PSCustomObject]@{
-                    Name = $fullParamName
-                    Type = "object"
-                    Description = $description
-                    Conditionality = $conditionality
-                    DefaultValue = if ($hasDefault) { $ParamDef.defaultValue } else { $null }
-                    HasDefault = $hasDefault
-                    IsStructured = $false
-                    IsSubProperty = $false
-                }
             }
         } elseif ($ParamDef.type -eq "array" -and $ParamDef.items) {
             # Array type - add the array parameter and try to expand items if they are objects
@@ -464,7 +434,7 @@ function Get-BicepParameters {
 
                 foreach ($propName in $ParamDef.items.properties.PSObject.Properties.Name) {
                     $prop = $ParamDef.items.properties.$propName
-                    $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath "$fullParamName[*]" -Depth ($Depth + 2) -BicepFilePath $BicepFilePath
+                    $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath "$fullParamName[*]" -Depth ($Depth + 2)
                     $expandedParams += $nestedParams
                 }
             } elseif ($ParamDef.items.'$ref' -and $JsonContent.definitions) {
@@ -485,7 +455,7 @@ function Get-BicepParameters {
                     }
                     foreach ($propName in $typeDef.properties.PSObject.Properties.Name) {
                         $prop = $typeDef.properties.$propName
-                        $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath "$fullParamName[*]" -Depth ($Depth + 2) -BicepFilePath $BicepFilePath
+                        $nestedParams = Expand-StructuredParameter -ParamName $propName -ParamDef $prop -JsonContent $JsonContent -ParentPath "$fullParamName[*]" -Depth ($Depth + 2)
                         $expandedParams += $nestedParams
                     }
                 }
@@ -521,42 +491,20 @@ function Get-BicepParameters {
             [string]$TypeName
         )
 
-        Write-Host "    [Resolve-UdtDefinitionName] TypeName: $TypeName" -ForegroundColor DarkCyan
-        
         if (-not $Definitions) {
-            Write-Host "      Definitions is NULL!" -ForegroundColor Red
             return $null
         }
 
-        $defNames = $Definitions.PSObject.Properties.Name
-        Write-Host "      Total definitions: $($defNames.Count)" -ForegroundColor DarkCyan
-        
-        # Try direct match first
         $directMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -eq $TypeName } | Select-Object -First 1
         if ($directMatch) {
-            Write-Host "      DIRECT MATCH: $($directMatch.Name)" -ForegroundColor Green
             return $directMatch.Name
         }
 
-        # Try plural variant (e.g., privateDnsZoneDefinitionType -> privateDnsZonesDefinitionType)
-        if ($TypeName -notmatch 's+DefinitionType$') {
-            $pluralVariant = $TypeName -replace 'DefinitionType$', 'sDefinitionType'
-            $pluralMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -eq $pluralVariant } | Select-Object -First 1
-            if ($pluralMatch) {
-                Write-Host "      PLURAL MATCH: $($pluralMatch.Name)" -ForegroundColor Green
-                return $pluralMatch.Name
-            }
-        }
-
-        # Try suffix match
-        Write-Host "      No direct/plural match, trying suffix match..." -ForegroundColor DarkYellow
         $suffixMatch = $Definitions.PSObject.Properties | Where-Object { $_.Name -like "*.$TypeName" } | Select-Object -First 1
         if ($suffixMatch) {
-            Write-Host "      SUFFIX MATCH: $($suffixMatch.Name)" -ForegroundColor Green
             return $suffixMatch.Name
         }
 
-        Write-Host "      NO MATCH FOUND!" -ForegroundColor Red
         return $null
     }
     
@@ -576,24 +524,7 @@ function Get-BicepParameters {
             if ($udtMappings.ContainsKey($paramName)) {
                 $udtTypeName = $udtMappings[$paramName]
                 
-                Write-Host "[$paramName] Checking UDT mapping" -ForegroundColor Cyan
-                Write-Host "  UDT Type Name: $udtTypeName" -ForegroundColor Yellow
-                
                 $definitionName = Resolve-UdtDefinitionName -Definitions $jsonContent.definitions -TypeName $udtTypeName
-
-                Write-Host "  Resolved Definition: $definitionName" -ForegroundColor $(if ($definitionName) { 'Green' } else { 'Red' })
-
-                if ($definitionName) {
-                    # Only use the resolved definition if it matches semantically
-                    # Don't use plural variant for singular type names (e.g., privateDnsZoneDefinitionType should NOT use privateDnsZonesDefinitionType)
-                    $isPluralMismatch = ($udtTypeName -notmatch 's+DefinitionType$' -and $definitionName -match 's+DefinitionType$')
-                    
-                    if ($isPluralMismatch) {
-                        Write-Host "  PLURAL MISMATCH DETECTED - Skipping resolved definition" -ForegroundColor Red
-                        Write-Host "  Will use fallback logic to parse from Bicep source" -ForegroundColor Yellow
-                        $definitionName = $null
-                    }
-                }
 
                 if ($definitionName) {
                     $syntheticParam = [pscustomobject]@{
@@ -612,11 +543,7 @@ function Get-BicepParameters {
                         $syntheticParam | Add-Member -NotePropertyName 'nullable' -NotePropertyValue $param.nullable
                     }
 
-                    Write-Host "  Synthetic Ref: $($syntheticParam.'$ref')" -ForegroundColor Magenta
-                    Write-Host "  Nullable: $($syntheticParam.nullable)" -ForegroundColor Magenta
-                    Write-Host "  Calling Expand-StructuredParameter..." -ForegroundColor White
-
-                    $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $syntheticParam -JsonContent $jsonContent -BicepFilePath $FilePath
+                    $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $syntheticParam -JsonContent $jsonContent
                 } else {
                     # Try to parse the UDT definition directly from the types file as a fallback
                     $typeDefinition = Parse-UdtDefinition -TypesFilePath $typesFilePath -TypeName $udtTypeName
@@ -627,12 +554,12 @@ function Get-BicepParameters {
                         $expandedParams = Convert-BicepTypeToParameters -TypeDefinition $typeDefinition -ParentName $paramName -Description $description -Conditionality $conditionality
                     } else {
                         # Fallback to normal processing if UDT definition not found
-                        $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $param -JsonContent $jsonContent -BicepFilePath $FilePath
+                        $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $param -JsonContent $jsonContent
                     }
                 }
             } else {
                 # Normal parameter processing
-                $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $param -JsonContent $jsonContent -BicepFilePath $FilePath
+                $expandedParams = Expand-StructuredParameter -ParamName $paramName -ParamDef $param -JsonContent $jsonContent
             }
             
             $parameters += $expandedParams
@@ -689,6 +616,25 @@ function Get-BicepOutputs {
     }
     
     return $outputs | Sort-Object Name
+}
+
+# Function to fix privateDnsZoneDefinitionType by reading directly from types.bicep
+function Get-PrivateDnsZoneDefinitionFromSource {
+    param([string]$TypesFilePath)
+    
+    $typesContent = Get-Content $TypesFilePath -Raw
+    
+    # Extract privateDnsZoneDefinitionType definition
+    if ($typesContent -match 'type privateDnsZoneDefinitionType = \{([^}]*(?:\{[^}]*\}[^}]*)*)\}') {
+        $typeDefinition = $matches[1]
+        
+        # Create a complete parameter array for this type
+        $parameters = Convert-BicepTypeToParameters -TypeDefinition "{ $typeDefinition }" -ParentName "privateDnsZoneDefinitionType" -Description "Configuration object for a single Private DNS Zone to be deployed." -Conditionality "Optional"
+        
+        return $parameters
+    }
+    
+    return @()
 }
 
 # Function to extract User Defined Types (UDTs) from compiled JSON
@@ -1274,7 +1220,12 @@ function Generate-MarkdownDocumentation {
             
             foreach ($child in $directChildren) {
                 $propName = $child.Name.Split('.')[-1]  # Get just the property name, not the full path
-                $propName = $propName -replace '\[\*\]','[]'
+                
+                # Determine display type based on IsArray flag
+                $displayType = $child.Type
+                if ($child.IsArray) {
+                    $displayType = 'array'
+                }
                 
                 # Clean description
                 $cleanDescription = $child.Description
@@ -1285,7 +1236,7 @@ function Generate-MarkdownDocumentation {
                 }
                 
                 # Format as list item with indentation
-                $hierarchyMarkdown += "$indentString- **``$propName``** (``$($child.Type)``) - $($child.Conditionality)" + "`n"
+                $hierarchyMarkdown += "$indentString- **``$propName``** (``$displayType``) - $($child.Conditionality)" + "`n"
                 $hierarchyMarkdown += "$indentString  - **Description:** $cleanDescription" + "`n"
                 
                 # Check if this property has sub-properties (recursive)
@@ -1364,6 +1315,25 @@ $parameters = Get-BicepParameters -FilePath $TemplatePath
 $resourceTypes = Get-BicepResourceTypes -FilePath $TemplatePath
 $userDefinedTypes = Get-BicepUserDefinedTypes -FilePath $TemplatePath
 $outputs = Get-BicepOutputs -FilePath $TemplatePath
+
+# Fix privateDnsZoneDefinitionType by reading directly from types.bicep
+$typesPath = Join-Path (Split-Path $TemplatePath) "common\types.bicep"
+if (Test-Path $typesPath) {
+    $fixedPrivateDnsParams = Get-PrivateDnsZoneDefinitionFromSource -TypesFilePath $typesPath
+    if ($fixedPrivateDnsParams.Count -gt 0) {
+        # Remove existing privateDnsZoneDefinitionType from userDefinedTypes
+        if ($userDefinedTypes.ContainsKey("privateDnsZoneDefinitionType")) {
+            $userDefinedTypes.Remove("privateDnsZoneDefinitionType")
+        }
+        # Add the fixed version
+        $userDefinedTypes["privateDnsZoneDefinitionType"] = [PSCustomObject]@{
+            Name = "privateDnsZoneDefinitionType"
+            Description = "Configuration object for a single Private DNS Zone to be deployed."
+            Properties = $fixedPrivateDnsParams | Where-Object { $_.IsSubProperty -eq $true }
+        }
+        Write-Host "Fixed privateDnsZoneDefinitionType with $($fixedPrivateDnsParams.Count) total parameters" -ForegroundColor Yellow
+    }
+}
 
 Write-Host "Found $($parameters.Count) parameters" -ForegroundColor Green
 Write-Host "Found $($resourceTypes.Count) resource types" -ForegroundColor Green

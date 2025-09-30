@@ -298,7 +298,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the category. Default true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for appConfigurationDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -313,7 +313,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the metric category. Default true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for appConfigurationDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -326,7 +326,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Log Analytics workspace resource ID for diagnostic logs.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for appConfigurationDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Name of a diagnostic log category.
@@ -397,7 +397,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Private IP addresses for the endpoint.
 
 
-  - **`customDnsConfigs[]`** (`object`) - Optional
+  - **`customDnsConfigs[*]`** (`object`) - Optional
     - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].customDnsConfigs
 
   - **`customNetworkInterfaceName`** (`string`) - Optional
@@ -424,7 +424,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`ipConfigurations[]`** (`object`) - Optional
+  - **`ipConfigurations[*]`** (`object`) - Optional
     - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].ipConfigurations
     - **`groupId`** (`string`) - Required
       - **Description:** Group ID from the remote resource.
@@ -474,7 +474,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Private DNS Zone resource ID.
 
 
-    - **`privateDnsZoneGroupConfigs[]`** (`object`) - Optional
+    - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
       - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
 
@@ -497,7 +497,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Tags to apply to the Private Endpoint.
 
 
-- **`privateEndpoints[]`** (`object`) - Optional
+- **`privateEndpoints[*]`** (`object`) - Optional
   - **Description:** Array item for appConfigurationDefinition.privateEndpoints
   - **`fqdn`** (`string`) - Optional
     - **Description:** FQDN that maps to the private IPs.
@@ -559,7 +559,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Private DNS Zone resource ID.
 
 
-  - **`privateDnsZoneGroupConfigs[]`** (`object`) - Optional
+  - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
     - **Description:** Array item for appConfigurationDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
   - **`name`** (`string`) - Optional
@@ -581,7 +581,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Azure region name for the replica.
 
 
-- **`replicaLocations[]`** (`object`) - Optional
+- **`replicaLocations[*]`** (`object`) - Optional
   - **Description:** Array item for appConfigurationDefinition.replicaLocations
 
 - **`roleAssignments`** (`array`) - Optional
@@ -794,7 +794,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the log category. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for appGatewayPublicIp.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -809,7 +809,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the metric category. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for appGatewayPublicIp.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -822,7 +822,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for appGatewayPublicIp.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Name of a diagnostic log category.
@@ -870,7 +870,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** IP tag value.
 
 
-- **`ipTags[]`** (`object`) - Optional
+- **`ipTags[*]`** (`object`) - Optional
   - **Description:** Array item for appGatewayPublicIp.ipTags
 
 - **`location`** (`string`) - Optional
@@ -927,7 +927,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role to assign (display name, GUID, or full resource ID).
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for appGatewayPublicIp.roleAssignments
 
 - **`skuName`** (`string`) - Optional
@@ -1216,7 +1216,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Storage account name.
 
 
-- **`storages[]`** (`object`) - Optional
+- **`storages[*]`** (`object`) - Optional
   - **Description:** Array item for containerAppEnvDefinition.storages
 
 - **`tags`** (`object`) - Optional
@@ -1263,7 +1263,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Target repository specified in docker pull command.
 
 
-- **`cacheRules[]`** (`object`) - Optional
+- **`cacheRules[*]`** (`object`) - Optional
   - **Description:** Array item for containerRegistryDefinition.cacheRules
 
 - **`credentialSets`** (`array`) - Optional
@@ -1280,7 +1280,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** KeyVault Secret URI for the username.
 
 
-  - **`authCredentials[]`** (`object`) - Optional
+  - **`authCredentials[*]`** (`object`) - Optional
     - **Description:** Array item for containerRegistryDefinition.credentialSets[*].authCredentials
 
   - **`loginServer`** (`string`) - Required
@@ -1296,7 +1296,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Name of the credential set.
 
 
-- **`credentialSets[]`** (`object`) - Optional
+- **`credentialSets[*]`** (`object`) - Optional
   - **Description:** Array item for containerRegistryDefinition.credentialSets
   - **`name`** (`string`) - Required
     - **Description:** Name of the credential.
@@ -1355,7 +1355,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable this category. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for containerRegistryDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -1370,7 +1370,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable this metric. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for containerRegistryDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -1383,7 +1383,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Log Analytics workspace resource ID.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for containerRegistryDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Diagnostic log category.
@@ -1532,7 +1532,7 @@ This template deploys Azure resources for AI/ML workloads.
           - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
 
-      - **`protocols[]`** (`object`) - Optional
+      - **`protocols[*]`** (`object`) - Optional
         - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
       - **`sourceAddresses`** (`array`) - Optional
@@ -1545,7 +1545,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** List of target FQDNs for this rule.
 
 
-    - **`rules[]`** (`object`) - Optional
+    - **`rules[*]`** (`object`) - Optional
       - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules
       - **`port`** (`int`) - Optional
         - **Description:** Port number for the protocol (≤64000).
@@ -1556,7 +1556,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-- **`applicationRuleCollections[]`** (`object`) - Optional
+- **`applicationRuleCollections[*]`** (`object`) - Optional
   - **Description:** Array item for firewallDefinition.applicationRuleCollections
   - **`action`** (`object`) - Required
     - **Description:** Action of the rule collection.
@@ -1587,7 +1587,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
 
-    - **`protocols[]`** (`object`) - Optional
+    - **`protocols[*]`** (`object`) - Optional
       - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
     - **`sourceAddresses`** (`array`) - Optional
@@ -1600,7 +1600,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** List of target FQDNs for this rule.
 
 
-  - **`rules[]`** (`object`) - Optional
+  - **`rules[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules
     - **`port`** (`int`) - Optional
       - **Description:** Port number for the protocol (≤64000).
@@ -1630,7 +1630,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Protocol type. Allowed values: Http, Https, Mssql.
 
 
-  - **`protocols[]`** (`object`) - Optional
+  - **`protocols[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.applicationRuleCollections[*].properties.rules[*].protocols
 
   - **`sourceAddresses`** (`array`) - Optional
@@ -1690,7 +1690,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable/disable category. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -1705,7 +1705,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable/disable metric category. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -1718,7 +1718,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Log Analytics workspace resource ID.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for firewallDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Name of a diagnostic log category.
@@ -1833,12 +1833,12 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Translated port for the NAT rule.
 
 
-    - **`rules[]`** (`object`) - Optional
+    - **`rules[*]`** (`object`) - Optional
       - **Description:** Array item for firewallDefinition.natRuleCollections[*].properties.rules
 
 
 
-- **`natRuleCollections[]`** (`object`) - Optional
+- **`natRuleCollections[*]`** (`object`) - Optional
   - **Description:** Array item for firewallDefinition.natRuleCollections
   - **`action`** (`object`) - Required
     - **Description:** Action of the NAT rule collection.
@@ -1882,7 +1882,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Translated port for the NAT rule.
 
 
-  - **`rules[]`** (`object`) - Optional
+  - **`rules[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.natRuleCollections[*].properties.rules
 
   - **`type`** (`string`) - Required
@@ -1965,12 +1965,12 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Source IP groups.
 
 
-    - **`rules[]`** (`object`) - Optional
+    - **`rules[*]`** (`object`) - Optional
       - **Description:** Array item for firewallDefinition.networkRuleCollections[*].properties.rules
 
 
 
-- **`networkRuleCollections[]`** (`object`) - Optional
+- **`networkRuleCollections[*]`** (`object`) - Optional
   - **Description:** Array item for firewallDefinition.networkRuleCollections
   - **`action`** (`object`) - Required
     - **Description:** Action of the network rule collection.
@@ -2011,7 +2011,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Source IP groups.
 
 
-  - **`rules[]`** (`object`) - Optional
+  - **`rules[*]`** (`object`) - Optional
     - **Description:** Array item for firewallDefinition.networkRuleCollections[*].properties.rules
 
   - **`type`** (`string`) - Required
@@ -2129,7 +2129,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Source IP groups.
 
 
-    - **`bypassTrafficSettings[]`** (`object`) - Optional
+    - **`bypassTrafficSettings[*]`** (`object`) - Optional
       - **Description:** Array item for firewallPolicyDefinition.intrusionDetection.configuration.bypassTrafficSettings
 
     - **`privateRanges`** (`array`) - Optional
@@ -2144,7 +2144,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Signature state. Allowed values: Alert, Deny, Off.
 
 
-    - **`signatureOverrides[]`** (`object`) - Optional
+    - **`signatureOverrides[*]`** (`object`) - Optional
       - **Description:** Array item for firewallPolicyDefinition.intrusionDetection.configuration.signatureOverrides
 
 
@@ -2261,7 +2261,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the log category. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for firewallPublicIp.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -2276,7 +2276,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the metric category. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for firewallPublicIp.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -2289,7 +2289,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for firewallPublicIp.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Name of a diagnostic log category.
@@ -2337,7 +2337,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** IP tag value.
 
 
-- **`ipTags[]`** (`object`) - Optional
+- **`ipTags[*]`** (`object`) - Optional
   - **Description:** Array item for firewallPublicIp.ipTags
 
 - **`location`** (`string`) - Optional
@@ -2394,7 +2394,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role to assign (display name, GUID, or full resource ID).
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for firewallPublicIp.roleAssignments
 
 - **`skuName`** (`string`) - Optional
@@ -2589,7 +2589,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Table names to export.
 
 
-- **`dataExports[]`** (`object`) - Optional
+- **`dataExports[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.dataExports
   - **`metaData`** (`object`) - Optional
     - **Description:** Destination metadata.
@@ -2652,7 +2652,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Tags for the data source.
 
 
-- **`dataSources[]`** (`object`) - Optional
+- **`dataSources[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.dataSources
 
 - **`diagnosticSettings`** (`array`) - Optional
@@ -2678,7 +2678,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the category. Default true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -2693,7 +2693,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the metric category. Default true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -2709,7 +2709,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Log Analytics workspace resource ID for diagnostics.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Log category name.
@@ -2766,7 +2766,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-- **`gallerySolutions[]`** (`object`) - Optional
+- **`gallerySolutions[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.gallerySolutions
   - **`name`** (`string`) - Optional
     - **Description:** Solution name (defaults to gallerySolutions.name).
@@ -2790,7 +2790,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Resource ID for write access.
 
 
-- **`linkedServices[]`** (`object`) - Optional
+- **`linkedServices[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.linkedServices
 
 - **`linkedStorageAccounts`** (`array`) - Conditional
@@ -2802,7 +2802,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Linked storage accounts resource IDs.
 
 
-- **`linkedStorageAccounts[]`** (`object`) - Optional
+- **`linkedStorageAccounts[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.linkedStorageAccounts
 
 - **`location`** (`string`) - Optional
@@ -2877,7 +2877,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role definition ID, name, or GUID.
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.roleAssignments
 
 - **`savedSearches`** (`array`) - Optional
@@ -2910,7 +2910,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Version of the query language. Default is 2.
 
 
-- **`savedSearches[]`** (`object`) - Optional
+- **`savedSearches[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.savedSearches
 
 - **`skuCapacityReservationLevel`** (`int`) - Optional
@@ -2931,7 +2931,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Tables to read.
 
 
-- **`storageInsightsConfigs[]`** (`object`) - Optional
+- **`storageInsightsConfigs[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.storageInsightsConfigs
 
 - **`tables`** (`array`) - Optional
@@ -2980,7 +2980,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Column type. Allowed: boolean, dateTime, dynamic, guid, int, long, real, string.
 
 
-    - **`columns[]`** (`object`) - Optional
+    - **`columns[*]`** (`object`) - Optional
       - **Description:** Array item for logAnalyticsDefinition.tables[*].schema.columns
 
     - **`description`** (`string`) - Optional
@@ -3015,7 +3015,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Total retention in days for the table.
 
 
-- **`tables[]`** (`object`) - Optional
+- **`tables[*]`** (`object`) - Optional
   - **Description:** Array item for logAnalyticsDefinition.tables
   - **`endRestoreTime`** (`string`) - Optional
     - **Description:** End restore time (UTC).
@@ -3044,7 +3044,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Column type. Allowed: boolean, dateTime, dynamic, guid, int, long, real, string.
 
 
-  - **`columns[]`** (`object`) - Optional
+  - **`columns[*]`** (`object`) - Optional
     - **Description:** Array item for logAnalyticsDefinition.tables[*].schema.columns
 
   - **`description`** (`string`) - Optional
@@ -3291,7 +3291,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the category explicitly. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for vNetDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -3306,7 +3306,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable the metric category explicitly. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for vNetDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -3319,7 +3319,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Resource ID of the diagnostic Log Analytics workspace.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for vNetDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Name of a diagnostic log category for the resource type.
@@ -3415,7 +3415,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Use remote gateways on this Virtual Network for transit. Default is false.
 
 
-- **`peerings[]`** (`object`) - Optional
+- **`peerings[*]`** (`object`) - Optional
   - **Description:** Array item for vNetDefinition.peerings
 
 - **`roleAssignments`** (`array`) - Optional
@@ -3445,7 +3445,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role to assign. Accepts role name, role GUID, or fully qualified role definition ID.
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for vNetDefinition.roleAssignments
 
 - **`subnets`** (`array`) - Optional
@@ -3510,7 +3510,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign. Accepts role name, role GUID, or fully qualified role definition ID.
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for vNetDefinition.subnets[*].roleAssignments
 
   - **`routeTableResourceId`** (`string`) - Optional
@@ -3526,7 +3526,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Sharing scope for the subnet. Allowed values: DelegatedServices, Tenant.
 
 
-- **`subnets[]`** (`object`) - Optional
+- **`subnets[*]`** (`object`) - Optional
   - **Description:** Array item for vNetDefinition.subnets
   - **`condition`** (`string`) - Optional
     - **Description:** Condition applied to the role assignment.
@@ -3608,7 +3608,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Selector match operator (e.g., Equals, Contains).
 
 
-  - **`exclusions[]`** (`object`) - Optional
+  - **`exclusions[*]`** (`object`) - Optional
     - **Description:** Array item for wafPolicyDefinition.managedRules.exclusions
     - **`ruleGroup`** (`array`) - Optional
       - **Description:** Rule groups to exclude.
@@ -3636,14 +3636,14 @@ This template deploys Azure resources for AI/ML workloads.
           - **Description:** Rule ID.
 
 
-      - **`rule[]`** (`object`) - Optional
+      - **`rule[*]`** (`object`) - Optional
         - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides[*].rule
 
       - **`ruleGroupName`** (`string`) - Required
         - **Description:** Name of the rule group.
 
 
-    - **`ruleGroupOverrides[]`** (`object`) - Optional
+    - **`ruleGroupOverrides[*]`** (`object`) - Optional
       - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides
       - **`action`** (`string`) - Required
         - **Description:** Action to take (e.g., Allow, Block, Log).
@@ -3662,7 +3662,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Rule set version.
 
 
-  - **`managedRuleSets[]`** (`object`) - Optional
+  - **`managedRuleSets[*]`** (`object`) - Optional
     - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets
     - **`rule`** (`array`) - Required
       - **Description:** Rule overrides within the group.
@@ -3676,7 +3676,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Rule ID.
 
 
-    - **`rule[]`** (`object`) - Optional
+    - **`rule[*]`** (`object`) - Optional
       - **Description:** Array item for wafPolicyDefinition.managedRules.managedRuleSets[*].ruleGroupOverrides[*].rule
 
     - **`ruleGroupName`** (`string`) - Required
@@ -3736,77 +3736,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `acrPrivateEndpointDefinition`
 
@@ -3816,77 +3825,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for acrPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `aiFoundryDefinition`
 
@@ -3989,7 +4007,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Version upgrade option.
 
 
-- **`aiModelDeployments[]`** (`object`) - Optional
+- **`aiModelDeployments[*]`** (`object`) - Optional
   - **Description:** Array item for aiFoundryDefinition.aiModelDeployments
   - **`format`** (`string`) - Required
     - **Description:** Format of the deployment model.
@@ -4155,7 +4173,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable this log category. Default is true.
 
 
-  - **`logCategoriesAndGroups[]`** (`object`) - Optional
+  - **`logCategoriesAndGroups[*]`** (`object`) - Optional
     - **Description:** Array item for aiSearchDefinition.diagnosticSettings[*].logCategoriesAndGroups
 
   - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -4170,7 +4188,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Enable or disable this metric category. Default is true.
 
 
-  - **`metricCategories[]`** (`object`) - Optional
+  - **`metricCategories[*]`** (`object`) - Optional
     - **Description:** Array item for aiSearchDefinition.diagnosticSettings[*].metricCategories
 
   - **`name`** (`string`) - Optional
@@ -4183,7 +4201,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Log Analytics workspace resource ID for diagnostic logs.
 
 
-- **`diagnosticSettings[]`** (`object`) - Optional
+- **`diagnosticSettings[*]`** (`object`) - Optional
   - **Description:** Array item for aiSearchDefinition.diagnosticSettings
   - **`category`** (`string`) - Optional
     - **Description:** Diagnostic log category.
@@ -4248,7 +4266,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** IPv4 address (e.g., 123.1.2.3) or range in CIDR format (e.g., 123.1.2.3/24) to allow.
 
 
-  - **`ipRules[]`** (`object`) - Optional
+  - **`ipRules[*]`** (`object`) - Optional
     - **Description:** Array item for aiSearchDefinition.networkRuleSet.ipRules
 
 
@@ -4299,77 +4317,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for aiServicesPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `apimDefinition`
 
@@ -4522,77 +4549,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `apimPrivateEndpointDefinition`
 
@@ -4602,77 +4638,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for apimPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `appConfigPrivateDnsZoneDefinition`
 
@@ -4682,77 +4727,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `appConfigPrivateEndpointDefinition`
 
@@ -4762,77 +4816,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appConfigPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `appInsightsPrivateDnsZoneDefinition`
 
@@ -4842,77 +4905,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for appInsightsPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `baseName`
 
@@ -4928,77 +5000,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for blobPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `buildVmMaintenanceDefinition`
 
@@ -5071,7 +5152,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role to assign (display name, GUID, or full resource ID).
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for buildVmMaintenanceDefinition.roleAssignments
 
 - **`tags`** (`object`) - Optional
@@ -5088,77 +5169,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cognitiveServicesPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `containerAppEnvPrivateEndpointDefinition`
 
@@ -5168,77 +5258,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppEnvPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `containerAppsList`
 
@@ -5254,77 +5353,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for containerAppsPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `cosmosDbDefinition`
 
@@ -5370,7 +5478,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** The unique identifier of the NoSQL native role definition.
 
 
-- **`dataPlaneRoleAssignments[]`** (`object`) - Optional
+- **`dataPlaneRoleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleAssignments
 
 - **`dataPlaneRoleDefinitions`** (`array`) - Optional
@@ -5387,7 +5495,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** The Microsoft Entra principal ID granted access by this role assignment.
 
 
-  - **`assignments[]`** (`object`) - Optional
+  - **`assignments[*]`** (`object`) - Optional
     - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleDefinitions[*].assignments
 
   - **`dataActions`** (`array`) - Optional
@@ -5400,7 +5508,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** A user-friendly unique name for the role definition.
 
 
-- **`dataPlaneRoleDefinitions[]`** (`object`) - Optional
+- **`dataPlaneRoleDefinitions[*]`** (`object`) - Optional
   - **Description:** Array item for cosmosDbDefinition.dataPlaneRoleDefinitions
   - **`name`** (`string`) - Optional
     - **Description:** Unique identifier name for the role assignment.
@@ -5445,7 +5553,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Region name.
 
 
-- **`failoverLocations[]`** (`object`) - Optional
+- **`failoverLocations[*]`** (`object`) - Optional
   - **Description:** Array item for cosmosDbDefinition.failoverLocations
 
 - **`gremlinDatabases`** (`array`) - Optional
@@ -5525,77 +5633,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `cosmosPrivateEndpointDefinition`
 
@@ -5605,77 +5722,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for cosmosPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `enableTelemetry`
 
@@ -5739,7 +5865,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Sharing scope for the subnet.
 
 
-- **`subnets[]`** (`object`) - Optional
+- **`subnets[*]`** (`object`) - Optional
   - **Description:** Array item for existingVNetSubnetsDefinition.subnets
 
 - **`useDefaultSubnets`** (`bool`) - Optional
@@ -5828,7 +5954,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Role to assign (display name, GUID, or full resource ID).
 
 
-- **`roleAssignments[]`** (`object`) - Optional
+- **`roleAssignments[*]`** (`object`) - Optional
   - **Description:** Array item for jumpVmMaintenanceDefinition.roleAssignments
 
 - **`tags`** (`object`) - Optional
@@ -5872,7 +5998,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** The tenant ID that is used for authenticating requests to the key vault.
 
 
-- **`accessPolicies[]`** (`object`) - Optional
+- **`accessPolicies[*]`** (`object`) - Optional
   - **Description:** Array item for keyVaultDefinition.accessPolicies
   - **`certificates`** (`array`) - Optional
     - **Description:** Permissions to certificates.
@@ -5952,7 +6078,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** A list of private IP addresses of the private endpoint.
 
 
-  - **`customDnsConfigs[]`** (`object`) - Optional
+  - **`customDnsConfigs[*]`** (`object`) - Optional
     - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].customDnsConfigs
 
   - **`customNetworkInterfaceName`** (`string`) - Optional
@@ -5979,7 +6105,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`ipConfigurations[]`** (`object`) - Optional
+  - **`ipConfigurations[*]`** (`object`) - Optional
     - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].ipConfigurations
     - **`groupId`** (`string`) - Required
       - **Description:** The ID of a group obtained from the remote resource to connect to.
@@ -6029,7 +6155,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** The resource ID of the private DNS zone.
 
 
-    - **`privateDnsZoneGroupConfigs[]`** (`object`) - Optional
+    - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
       - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
 
@@ -6052,7 +6178,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** Tags for the Private Endpoint.
 
 
-- **`privateEndpoints[]`** (`object`) - Optional
+- **`privateEndpoints[*]`** (`object`) - Optional
   - **Description:** Array item for keyVaultDefinition.privateEndpoints
   - **`fqdn`** (`string`) - Optional
     - **Description:** FQDN that resolves to private endpoint IP address.
@@ -6114,7 +6240,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** The resource ID of the private DNS zone.
 
 
-  - **`privateDnsZoneGroupConfigs[]`** (`object`) - Optional
+  - **`privateDnsZoneGroupConfigs[*]`** (`object`) - Optional
     - **Description:** Array item for keyVaultDefinition.privateEndpoints[*].privateDnsZoneGroup.privateDnsZoneGroupConfigs
 
   - **`name`** (`string`) - Optional
@@ -6160,7 +6286,7 @@ This template deploys Azure resources for AI/ML workloads.
     - **Description:** The value of the secret.
 
 
-- **`secrets[]`** (`object`) - Optional
+- **`secrets[*]`** (`object`) - Optional
   - **Description:** Array item for keyVaultDefinition.secrets
   - **`enabled`** (`bool`) - Optional
     - **Description:** Defines whether the secret is enabled or disabled.
@@ -6189,77 +6315,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `keyVaultPrivateEndpointDefinition`
 
@@ -6269,77 +6404,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for keyVaultPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `location`
 
@@ -6380,7 +6524,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.acaEnvironment.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -6396,7 +6540,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.acaEnvironment.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -6459,7 +6603,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.acaEnvironment.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -6516,7 +6660,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.acaEnvironment.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -6593,7 +6737,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.agent.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -6609,7 +6753,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.agent.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -6672,7 +6816,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.agent.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -6729,7 +6873,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.agent.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -6806,7 +6950,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.apiManagement.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -6822,7 +6966,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.apiManagement.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -6885,7 +7029,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.apiManagement.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -6942,7 +7086,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.apiManagement.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -7019,7 +7163,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.applicationGateway.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -7035,7 +7179,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.applicationGateway.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -7098,7 +7242,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.applicationGateway.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -7155,7 +7299,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.applicationGateway.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -7232,7 +7376,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.devopsBuildAgents.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -7248,7 +7392,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.devopsBuildAgents.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -7311,7 +7455,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.devopsBuildAgents.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -7368,7 +7512,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.devopsBuildAgents.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -7445,7 +7589,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.jumpbox.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -7461,7 +7605,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.jumpbox.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -7524,7 +7668,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.jumpbox.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -7581,7 +7725,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.jumpbox.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -7658,7 +7802,7 @@ This template deploys Azure resources for AI/ML workloads.
         - **Description:** Whether this category/category group is enabled.
 
 
-    - **`logCategoriesAndGroups[]`** (`object`) - Optional
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
       - **Description:** Array item for nsgDefinitions.pe.diagnosticSettings[*].logCategoriesAndGroups
 
     - **`marketplacePartnerResourceId`** (`string`) - Optional
@@ -7674,7 +7818,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Destination Log Analytics workspace resource ID.
 
 
-  - **`diagnosticSettings[]`** (`object`) - Optional
+  - **`diagnosticSettings[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.pe.diagnosticSettings
     - **`category`** (`string`) - Optional
       - **Description:** Single diagnostic log category to enable.
@@ -7737,7 +7881,7 @@ This template deploys Azure resources for AI/ML workloads.
       - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
 
 
-  - **`roleAssignments[]`** (`object`) - Optional
+  - **`roleAssignments[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.pe.roleAssignments
 
   - **`securityRules`** (`array`) - Optional
@@ -7794,7 +7938,7 @@ This template deploys Azure resources for AI/ML workloads.
 
 
 
-  - **`securityRules[]`** (`object`) - Optional
+  - **`securityRules[*]`** (`object`) - Optional
     - **Description:** Array item for nsgDefinitions.pe.securityRules
     - **`access`** (`string`) - Required
       - **Description:** Whether matching traffic is allowed or denied.
@@ -7854,77 +7998,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for openAiPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `privateDnsZonesDefinition`
 
@@ -8076,77 +8229,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateDnsZoneDefinition.virtualNetworkLinks
 
 ### `searchPrivateEndpointDefinition`
 
@@ -8156,77 +8318,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
+
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
+
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
-
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
-
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
+
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
+
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
-
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
-
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for searchPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `storageBlobPrivateEndpointDefinition`
 
@@ -8236,77 +8407,86 @@ This template deploys Azure resources for AI/ML workloads.
 
 **Properties:**
 
-- **`a`** (`object`) - Optional
+- **`a`** (`array`) - Optional
   - **Description:** A list of DNS zone records to create.
+  - **`ipv4Addresses`** (`array`) - Required
+    - **Description:** List of IPv4 addresses.
 
-- **`description`** (`string`) - Optional
-  - **Description:** Description of the role assignment.
+  - **`name`** (`string`) - Required
+    - **Description:** Name of the A record.
 
-- **`enableTelemetry`** (`string`) - Optional
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the A record.
+
+  - **`ttl`** (`int`) - Optional
+    - **Description:** Time-to-live for the record.
+
+
+- **`a[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.a
+
+- **`enableTelemetry`** (`bool`) - Optional
   - **Description:** Enable/Disable usage telemetry for the module.
 
-- **`ipv4Addresses`** (`array`) - Required
-  - **Description:** List of IPv4 addresses.
-
-- **`kind`** (`string`) - Optional
-  - **Description:** Lock type.
-
 - **`location`** (`string`) - Optional
-  - **Description:** Location for the resource. Defaults to 
+  - **Description:** Location for the resource. Defaults to "global".
 
 - **`lock`** (`object`) - Optional
   - **Description:** Lock configuration for the Private DNS Zone.
+  - **`kind`** (`string`) - Optional
+    - **Description:** Lock type.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Lock name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Lock name.
 
-- **`name`** (`string`) - Optional
-  - **Description:** Name for the role assignment.
+  - **`notes`** (`string`) - Optional
+    - **Description:** Lock notes.
 
-- **`name`** (`string`) - Required
-  - **Description:** The name of the virtual network link.
 
 - **`name`** (`string`) - Required
   - **Description:** The name of the Private DNS Zone.
 
-- **`name`** (`string`) - Required
-  - **Description:** Name of the A record.
-
-- **`notes`** (`string`) - Optional
-  - **Description:** Lock notes.
-
-- **`principalId`** (`string`) - Required
-  - **Description:** Principal ID to assign the role to.
-
-- **`principalType`** (`string`) - Optional
-  - **Description:** Principal type.
-
-- **`registrationEnabled`** (`string`) - Optional
-  - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
-
-- **`roleAssignments`** (`object`) - Optional
+- **`roleAssignments`** (`array`) - Optional
   - **Description:** Role assignments for the Private DNS Zone.
+  - **`description`** (`string`) - Optional
+    - **Description:** Description of the role assignment.
 
-- **`roleDefinitionIdOrName`** (`string`) - Required
-  - **Description:** Role definition ID or name.
+  - **`name`** (`string`) - Optional
+    - **Description:** Name for the role assignment.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the virtual network link.
+  - **`principalId`** (`string`) - Required
+    - **Description:** Principal ID to assign the role to.
 
-- **`tags`** (`string`) - Optional
-  - **Description:** Tags for the A record.
+  - **`principalType`** (`string`) - Optional
+    - **Description:** Principal type.
 
-- **`tags`** (`string`) - Optional
+  - **`roleDefinitionIdOrName`** (`string`) - Required
+    - **Description:** Role definition ID or name.
+
+
+- **`roleAssignments[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.roleAssignments
+
+- **`tags`** (`object`) - Optional
   - **Description:** Tags for the Private DNS Zone.
 
-- **`ttl`** (`string`) - Optional
-  - **Description:** Time-to-live for the record.
-
-- **`virtualNetworkLinks`** (`object`) - Optional
+- **`virtualNetworkLinks`** (`array`) - Optional
   - **Description:** Virtual network links to create for the Private DNS Zone.
+  - **`name`** (`string`) - Required
+    - **Description:** The name of the virtual network link.
 
-- **`virtualNetworkResourceId`** (`string`) - Required
-  - **Description:** Resource ID of the virtual network to link.
+  - **`registrationEnabled`** (`bool`) - Optional
+    - **Description:** Whether to enable auto-registration of virtual machine records in the zone.
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags for the virtual network link.
+
+  - **`virtualNetworkResourceId`** (`string`) - Required
+    - **Description:** Resource ID of the virtual network to link.
+
+
+- **`virtualNetworkLinks[*]`** (`object`) - Optional
+  - **Description:** Array item for storageBlobPrivateEndpointDefinition.virtualNetworkLinks
 
 ### `tags`
 
