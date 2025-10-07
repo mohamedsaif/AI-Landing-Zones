@@ -21,7 +21,7 @@
 set -e  # Exit on any error
 
 # Default values - can be overridden by environment variables
-REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+BICEP_ROOT="${BICEP_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 LOCATION="${AZURE_LOCATION:-}"
 SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-}"
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-}"
@@ -219,8 +219,8 @@ echo ""
 #===============================================================================
 
 # Define paths
-infra_dir="$REPO_ROOT/infra"
-deploy_dir="$REPO_ROOT/deploy"
+infra_dir="$BICEP_ROOT/infra"
+deploy_dir="$BICEP_ROOT/deploy"
 deploy_wrappers_dir="$deploy_dir/wrappers"
 
 # Step 1: Copy infra directory to deploy
@@ -544,5 +544,5 @@ else
     print_white "  Template Specs created: $template_spec_count"
 fi
 print_white "  Template Spec references updated in main.bicep"
-print_white "  Deploy directory ready: ./deploy/"
+print_white "  Deploy directory ready: ./bicep/deploy/"
 echo ""

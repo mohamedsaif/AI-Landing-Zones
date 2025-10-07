@@ -16,7 +16,7 @@
 
 # Bicep build outputs (don’t commit generated ARM templates)
 bicep/**/*.json
-deploy/
+bicep/deploy/
 !bicep/version.json
 !bicep/bicepconfig.json
 

@@ -29,7 +29,7 @@
 [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseDeclaredVarsMoreThanAssignments', '')]
 [CmdletBinding()]
 param(
-  [string]$RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path,
+  [string]$BicepRoot = (Resolve-Path "$PSScriptRoot/..").Path,
   [string]$Location = $env:AZURE_LOCATION,
   [string]$SubscriptionId = $env:AZURE_SUBSCRIPTION_ID,
   [string]$ResourceGroup = $env:AZURE_RESOURCE_GROUP,
@@ -190,8 +190,8 @@ Write-Host ""
 #===============================================================================
 
 # Define paths
-$infraDir = Join-Path $RepoRoot 'infra'
-$deployDir = Join-Path $RepoRoot 'deploy'
+$infraDir = Join-Path $BicepRoot 'infra'
+$deployDir = Join-Path $BicepRoot 'deploy'
 $deployWrappersDir = Join-Path $deployDir 'wrappers'
 
 # Step 1: Copy infra directory to deploy
@@ -546,5 +546,5 @@ if ($useExistingTemplateSpecs) {
   Write-Host "  Template Specs created: $($templateSpecs.Count)" -ForegroundColor White
   Write-Host "  Template Spec references updated in main.bicep" -ForegroundColor White
 }
-Write-Host "  Deploy directory ready: ./deploy/" -ForegroundColor White
+Write-Host "  Deploy directory ready: ./bicep/deploy/" -ForegroundColor White
 Write-Host ""
