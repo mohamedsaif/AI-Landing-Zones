@@ -25,6 +25,9 @@ param acaEnvironmentNsgResourceId string = ''
 @description('Optional. DevOps Build Agents NSG Resource ID.')
 param devopsBuildAgentsNsgResourceId string = ''
 
+@description('Optional. Bastion NSG Resource ID.')
+param bastionNsgResourceId string = ''
+
 // Enrich subnets with NSGs based on naming conventions
 var enrichedSubnets = [for subnet in userSubnets: union(subnet, {
   networkSecurityGroupResourceId: subnet.name == 'agent-subnet' && !empty(agentNsgResourceId) ? agentNsgResourceId
@@ -34,6 +37,7 @@ var enrichedSubnets = [for subnet in userSubnets: union(subnet, {
     : subnet.name == 'jumpbox-subnet' && !empty(jumpboxNsgResourceId) ? jumpboxNsgResourceId
     : subnet.name == 'aca-env-subnet' && !empty(acaEnvironmentNsgResourceId) ? acaEnvironmentNsgResourceId
     : subnet.name == 'devops-agents-subnet' && !empty(devopsBuildAgentsNsgResourceId) ? devopsBuildAgentsNsgResourceId
+    : subnet.name == 'AzureBastionSubnet' && !empty(bastionNsgResourceId) ? bastionNsgResourceId
     : subnet.?networkSecurityGroupResourceId
 })]
 

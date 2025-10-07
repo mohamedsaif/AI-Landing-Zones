@@ -191,6 +191,9 @@ Each parameter includes information about its type, requirements, default values
 - **`bastionHost`** (`bool`) - Required
   - **Description:** Toggle to deploy an Azure Bastion host (true) or not (false).
 
+- **`bastionNsg`** (`bool`) - Required
+  - **Description:** Toggle to deploy NSG for Bastion host subnet (true) or not (false).
+
 - **`buildVm`** (`bool`) - Required
   - **Description:** Toggle to deploy Build VM (true) or not (false).
 
@@ -7358,6 +7361,219 @@ Each parameter includes information about its type, requirements, default values
     - **Description:** Tags to apply to the NSG.
 
 
+- **`bastion`** (`object`) - Optional
+  - **Description:** NSG definition applied to the Bastion subnet.
+  - **`diagnosticSettings`** (`array`) - Optional
+    - **Description:** Diagnostic settings to send NSG logs/metrics to Log Analytics, Event Hub, or Storage.
+    - **`eventHubAuthorizationRuleResourceId`** (`string`) - Optional
+      - **Description:** Destination Event Hub authorization rule resource ID.
+
+    - **`eventHubName`** (`string`) - Optional
+      - **Description:** Destination Event Hub name when sending to Event Hub.
+
+    - **`logAnalyticsDestinationType`** (`string`) - Optional
+      - **Description:** Destination type for Log Analytics (AzureDiagnostics or Dedicated).
+
+    - **`logCategoriesAndGroups`** (`array`) - Optional
+      - **Description:** List of categories and/or category groups to enable.
+      - **`category`** (`string`) - Optional
+        - **Description:** Single diagnostic log category to enable.
+
+      - **`categoryGroup`** (`string`) - Optional
+        - **Description:** Category group (e.g., AllMetrics) to enable.
+
+      - **`enabled`** (`bool`) - Optional
+        - **Description:** Whether this category/category group is enabled.
+
+
+    - **`logCategoriesAndGroups[*]`** (`object`) - Optional
+      - **Description:** Array item for nsgDefinitions.bastion.diagnosticSettings[*].logCategoriesAndGroups
+
+    - **`marketplacePartnerResourceId`** (`string`) - Optional
+      - **Description:** Marketplace partner destination resource ID (if applicable).
+
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the diagnostic settings resource.
+
+    - **`storageAccountResourceId`** (`string`) - Optional
+      - **Description:** Destination Storage Account resource ID.
+
+    - **`workspaceResourceId`** (`string`) - Optional
+      - **Description:** Destination Log Analytics workspace resource ID.
+
+
+  - **`diagnosticSettings[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.bastion.diagnosticSettings
+    - **`category`** (`string`) - Optional
+      - **Description:** Single diagnostic log category to enable.
+
+    - **`categoryGroup`** (`string`) - Optional
+      - **Description:** Category group (e.g., AllMetrics) to enable.
+
+    - **`enabled`** (`bool`) - Optional
+      - **Description:** Whether this category/category group is enabled.
+
+
+  - **`enableTelemetry`** (`bool`) - Optional
+    - **Description:** Enable or disable usage telemetry for this module. Default: true.
+
+  - **`flushConnection`** (`bool`) - Optional
+    - **Description:** When true, flows created from NSG connections are re-evaluated when rules are updated. Default: false.
+
+  - **`location`** (`string`) - Optional
+    - **Description:** Azure region for the NSG. Defaults to the resource group location.
+
+  - **`lock`** (`object`) - Optional
+    - **Description:** Management lock configuration for the NSG.
+    - **`kind`** (`string`) - Optional
+      - **Description:** Lock type (None, CanNotDelete, or ReadOnly).
+
+    - **`name`** (`string`) - Optional
+      - **Description:** Name of the management lock.
+
+    - **`notes`** (`string`) - Optional
+      - **Description:** Notes describing the reason for the lock.
+
+
+  - **`name`** (`string`) - Optional
+    - **Description:** Name of the Network Security Group.
+
+  - **`roleAssignments`** (`array`) - Optional
+    - **Description:** Role assignments to apply on the NSG.
+    - **`condition`** (`string`) - Optional
+      - **Description:** Advanced condition expression for the assignment.
+
+    - **`conditionVersion`** (`string`) - Optional
+      - **Description:** Condition version. Use 2.0 when condition is provided.
+
+    - **`delegatedManagedIdentityResourceId`** (`string`) - Optional
+      - **Description:** Delegated managed identity resource ID (for cross-tenant scenarios).
+
+    - **`description`** (`string`) - Optional
+      - **Description:** Description for the role assignment.
+
+    - **`name`** (`string`) - Optional
+      - **Description:** Stable GUID name of the role assignment (omit to auto-generate).
+
+    - **`principalId`** (`string`) - Required
+      - **Description:** Principal (object) ID for the assignment.
+
+    - **`principalType`** (`string`) - Optional
+      - **Description:** Principal type for the assignment.
+
+    - **`roleDefinitionIdOrName`** (`string`) - Required
+      - **Description:** Role to assign (name, GUID, or fully qualified role definition ID).
+
+
+  - **`roleAssignments[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.bastion.roleAssignments
+
+  - **`securityRules`** (`array`) - Optional
+    - **Description:** Security rules to apply to the NSG. If omitted, only default rules are present.
+    - **`name`** (`string`) - Required
+      - **Description:** Name of the security rule.
+
+    - **`properties`** (`object`) - Required
+      - **Description:** Properties that define the behavior of the security rule.
+      - **`access`** (`string`) - Required
+        - **Description:** Whether matching traffic is allowed or denied.
+
+      - **`description`** (`string`) - Optional
+        - **Description:** Free-form description for the rule.
+
+      - **`destinationAddressPrefix`** (`string`) - Optional
+        - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
+
+      - **`destinationAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple destination address prefixes.
+
+      - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Destination Application Security Group (ASG) resource IDs.
+
+      - **`destinationPortRange`** (`string`) - Optional
+        - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
+
+      - **`destinationPortRanges`** (`array`) - Optional
+        - **Description:** Multiple destination ports or port ranges.
+
+      - **`direction`** (`string`) - Required
+        - **Description:** Direction of the rule (Inbound or Outbound).
+
+      - **`priority`** (`int`) - Required
+        - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
+
+      - **`protocol`** (`string`) - Required
+        - **Description:** Network protocol to match.
+
+      - **`sourceAddressPrefix`** (`string`) - Optional
+        - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
+
+      - **`sourceAddressPrefixes`** (`array`) - Optional
+        - **Description:** Multiple source address prefixes.
+
+      - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+        - **Description:** Source Application Security Group (ASG) resource IDs.
+
+      - **`sourcePortRange`** (`string`) - Optional
+        - **Description:** Single source port or port range.
+
+      - **`sourcePortRanges`** (`array`) - Optional
+        - **Description:** Multiple source ports or port ranges.
+
+
+
+  - **`securityRules[*]`** (`object`) - Optional
+    - **Description:** Array item for nsgDefinitions.bastion.securityRules
+    - **`access`** (`string`) - Required
+      - **Description:** Whether matching traffic is allowed or denied.
+
+    - **`description`** (`string`) - Optional
+      - **Description:** Free-form description for the rule.
+
+    - **`destinationAddressPrefix`** (`string`) - Optional
+      - **Description:** Single destination address prefix (e.g., 10.0.0.0/24, VirtualNetwork).
+
+    - **`destinationAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple destination address prefixes.
+
+    - **`destinationApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Destination Application Security Group (ASG) resource IDs.
+
+    - **`destinationPortRange`** (`string`) - Optional
+      - **Description:** Single destination port or port range (e.g., 443, 1000-2000).
+
+    - **`destinationPortRanges`** (`array`) - Optional
+      - **Description:** Multiple destination ports or port ranges.
+
+    - **`direction`** (`string`) - Required
+      - **Description:** Direction of the rule (Inbound or Outbound).
+
+    - **`priority`** (`int`) - Required
+      - **Description:** Priority of the rule (100–4096). Must be unique per rule in the NSG.
+
+    - **`protocol`** (`string`) - Required
+      - **Description:** Network protocol to match.
+
+    - **`sourceAddressPrefix`** (`string`) - Optional
+      - **Description:** Single source address prefix (e.g., Internet, 10.0.0.0/24).
+
+    - **`sourceAddressPrefixes`** (`array`) - Optional
+      - **Description:** Multiple source address prefixes.
+
+    - **`sourceApplicationSecurityGroupResourceIds`** (`array`) - Optional
+      - **Description:** Source Application Security Group (ASG) resource IDs.
+
+    - **`sourcePortRange`** (`string`) - Optional
+      - **Description:** Single source port or port range.
+
+    - **`sourcePortRanges`** (`array`) - Optional
+      - **Description:** Multiple source ports or port ranges.
+
+
+  - **`tags`** (`object`) - Optional
+    - **Description:** Tags to apply to the NSG.
+
+
 - **`devopsBuildAgents`** (`object`) - Optional
   - **Description:** NSG definition applied to the DevOps build agents subnet.
   - **`diagnosticSettings`** (`array`) - Optional
@@ -8176,6 +8392,9 @@ Each parameter includes information about its type, requirements, default values
 
 - **`bastionHostResourceId`** (`string`) - Optional
   - **Description:** Existing Azure Bastion resource ID to reuse; leave empty to skip.
+
+- **`bastionNsgResourceId`** (`string`) - Optional
+  - **Description:** Existing NSG resource ID to reuse for the Bastion host subnet.
 
 - **`containerEnvResourceId`** (`string`) - Optional
   - **Description:** Existing Container Apps Environment resource ID to reuse.
