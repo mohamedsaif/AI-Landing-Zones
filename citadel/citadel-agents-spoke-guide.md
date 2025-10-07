@@ -194,7 +194,20 @@ Evaluate each optional component based on your use case requirements:
 **Skip when**:
 - No file storage or data persistence requirements exist
 
-**Cost impact**: ~$20-$50/month (standard tier)
+**Cost impact**: starting at ~$20-$50/month (standard tier)
+
+---
+
+#### Grounding with Bing
+
+**Include when**:
+- You have requirements for real-time web search capabilities
+- Agents need to access up-to-date information from the web
+
+**Skip when**:
+- No web search or real-time information access is required
+
+**Cost impact**: starting at ~$X/month (standard tier)
 
 ---
 
