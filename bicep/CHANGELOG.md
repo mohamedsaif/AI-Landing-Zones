@@ -6,7 +6,7 @@ The latest version of the changelog can be found [here](https://github.com/Azure
 
 ### Changes
 
-- Updated password parameter configuration and validation.
+- Updated password parameter configuration.
 
 ## 0.1.2
 
