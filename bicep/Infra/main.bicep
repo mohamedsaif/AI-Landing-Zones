@@ -53,6 +53,7 @@ metadata description = 'Deploys a secure AI/ML landing zone (resource groups, ne
 //       2.5 Azure Container Apps Environment Subnet NSG
 //       2.6 Jumpbox Subnet NSG
 //       2.7 DevOps Build Agents Subnet NSG
+//       2.8 Azure Bastion Subnet NSG
 //   3  NETWORKING - VIRTUAL NETWORK
 //       3.1 Virtual Network and Subnets
 //       3.2 Existing VNet Subnet Configuration (if applicable)
@@ -435,6 +436,143 @@ var devopsBuildAgentsNsgResourceId = resourceIds.?devopsBuildAgentsNsgResourceId
   ? devopsBuildAgentsNsgWrapper!.outputs.resourceId
   : '')
 
+// 2.8 Azure Bastion Subnet NSG
+
+var varDeployBastionNsg = deployToggles.bastionNsg && empty(resourceIds.?bastionNsgResourceId)
+
+module bastionNsgWrapper 'wrappers/avm.res.network.network-security-group.bicep' = if (varDeployBastionNsg) {
+  name: 'm-nsg-bastion'
+  params: {
+    nsg: union(
+      {
+        name: 'nsg-bastion-${baseName}'
+        location: location
+        enableTelemetry: enableTelemetry
+        // Required security rules for Azure Bastion
+        securityRules: [
+          {
+            name: 'Allow-GatewayManager-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 100
+              protocol: 'Tcp'
+              description: 'Allow Azure Bastion control plane traffic'
+              sourceAddressPrefix: 'GatewayManager'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-Internet-HTTPS-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 110
+              protocol: 'Tcp'
+              description: 'Allow HTTPS traffic from Internet for user sessions'
+              sourceAddressPrefix: 'Internet'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-Internet-HTTPS-Alt-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 120
+              protocol: 'Tcp'
+              description: 'Allow alternate HTTPS traffic from Internet'
+              sourceAddressPrefix: 'Internet'
+              sourcePortRange: '*'
+              destinationAddressPrefix: '*'
+              destinationPortRange: '4443'
+            }
+          }
+          {
+            name: 'Allow-BastionHost-Communication-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 130
+              protocol: 'Tcp'
+              description: 'Allow Bastion host-to-host communication'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRanges: ['8080', '5701']
+            }
+          }
+          {
+            name: 'Allow-SSH-RDP-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 100
+              protocol: '*'
+              description: 'Allow SSH and RDP to target VMs'
+              sourceAddressPrefix: '*'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRanges: ['22', '3389']
+            }
+          }
+          {
+            name: 'Allow-AzureCloud-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 110
+              protocol: 'Tcp'
+              description: 'Allow Azure Cloud communication'
+              sourceAddressPrefix: '*'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'AzureCloud'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-BastionHost-Communication-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 120
+              protocol: 'Tcp'
+              description: 'Allow Bastion host-to-host communication'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRanges: ['8080', '5701']
+            }
+          }
+          {
+            name: 'Allow-GetSessionInformation-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 130
+              protocol: '*'
+              description: 'Allow session and certificate validation'
+              sourceAddressPrefix: '*'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'Internet'
+              destinationPortRange: '80'
+            }
+          }
+        ]
+      },
+      nsgDefinitions!.?bastion ?? {}
+    )
+  }
+}
+
+var bastionNsgResourceId = resourceIds.?bastionNsgResourceId ?? (varDeployBastionNsg
+  ? bastionNsgWrapper!.outputs.resourceId
+  : '')
+
 // -----------------------
 // 3 NETWORKING - VIRTUAL NETWORK
 // -----------------------
@@ -496,6 +634,7 @@ module vNetworkWrapper 'wrappers/avm.res.network.virtual-network.bicep' = if (va
             enabled: true
             name: 'AzureBastionSubnet'
             addressPrefix: '192.168.0.64/26'
+            networkSecurityGroupResourceId: bastionNsgResourceId
             // Min (required by Azure): /26 (64 IPs)
             // Recommended: /26 (mandatory, cannot be smaller)
           }
@@ -560,7 +699,7 @@ module vNetworkWrapper 'wrappers/avm.res.network.virtual-network.bicep' = if (va
 // with different scopes but the same template to handle both same-scope and cross-scope scenarios.
 
 // 3.2 Existing VNet Subnet Configuration (if applicable)
-module existingVNetSubnets './components/existing-vnet-subnets-wrapper/main.bicep' = if (varDeploySubnetsToExistingVnet && !varIsCrossScope) {
+module existingVNetSubnets './helpers/setup-subnets-for-vnet/main.bicep' = if (varDeploySubnetsToExistingVnet && !varIsCrossScope) {
   name: 'm-existing-vnet-subnets'
   params: {
     existingVNetSubnetsDefinition: existingVNetSubnetsDefinition!
@@ -572,12 +711,13 @@ module existingVNetSubnets './components/existing-vnet-subnets-wrapper/main.bice
       jumpboxNsgResourceId: jumpboxNsgResourceId!
       acaEnvironmentNsgResourceId: acaEnvironmentNsgResourceId!
       devopsBuildAgentsNsgResourceId: devopsBuildAgentsNsgResourceId!
+      bastionNsgResourceId: bastionNsgResourceId!
     }
   }
 }
 
 // Deploy subnets to existing VNet (cross-scope)
-module existingVNetSubnetsCrossScope './components/existing-vnet-subnets-wrapper/main.bicep' = if (varDeploySubnetsToExistingVnet && varIsCrossScope) {
+module existingVNetSubnetsCrossScope './helpers/setup-subnets-for-vnet/main.bicep' = if (varDeploySubnetsToExistingVnet && varIsCrossScope) {
   name: 'm-existing-vnet-subnets-cross-scope'
   scope: resourceGroup(varExistingVNetSubscriptionId, varExistingVNetResourceGroupName)
   params: {
@@ -1304,6 +1444,11 @@ module privateEndpointContainerAppsEnv 'wrappers/avm.res.network.private-endpoin
       containerAppEnvPrivateEndpointDefinition ?? {}
     )
   }
+  dependsOn: [
+    #disable-next-line BCP321
+    varDeployContainerAppEnv ? containerEnv : null
+  ]
+
 }
 
 // 7.4. Azure Container Registry Private Endpoint
@@ -2724,6 +2869,9 @@ output jumpboxNsgResourceId string = jumpboxNsgResourceId
 
 @description('DevOps Build Agents subnet Network Security Group resource ID (newly created or existing).')
 output devopsBuildAgentsNsgResourceId string = devopsBuildAgentsNsgResourceId
+
+@description('Bastion subnet Network Security Group resource ID (newly created or existing).')
+output bastionNsgResourceId string = bastionNsgResourceId
 
 // Virtual Network Outputs
 @description('Virtual Network resource ID (newly created or existing).')

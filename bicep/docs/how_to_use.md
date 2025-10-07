@@ -56,12 +56,12 @@
    In an empty folder (e.g., `deploy`), run:
 
    ```bash
-   azd init -t Azure/bicep-avm-ptn-aiml-landing-zone -e aiml-dev
+   azd init -t Azure/AI-Landing-Zones -e aiml-dev
    ```
 
 5. **(Optional) Customize parameters**
 
-   Edit `infra/main.bicepparam` if you want to adjust deployment options.
+   Edit `bicep/infra/main.bicepparam` if you want to adjust deployment options.
 
 6. **Provision the infrastructure**
 
@@ -78,7 +78,7 @@
 
 ## 3) Configuration options
 
-Update parameters in the `infra/main.bicepparam` file:
+Update parameters in the `bicep/infra/main.bicepparam` file:
 
 ```bicep
 using 'main.bicep'

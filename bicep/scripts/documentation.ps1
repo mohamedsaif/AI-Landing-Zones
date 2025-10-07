@@ -4,6 +4,9 @@
 
 param(
     [Parameter(Mandatory = $false)]
+    [string]$BicepRoot = (Resolve-Path "$PSScriptRoot/..").Path,
+    
+    [Parameter(Mandatory = $false)]
     [string]$TemplatePath = "infra/main.bicep",
     
     [Parameter(Mandatory = $false)]
@@ -1350,6 +1353,10 @@ function Generate-MarkdownDocumentation {
 # ====================================================================
 # MAIN SCRIPT EXECUTION
 # ====================================================================
+
+# Resolve paths relative to BicepRoot
+$TemplatePath = Join-Path $BicepRoot $TemplatePath
+$OutputPath = Join-Path $BicepRoot $OutputPath
 
 # Main execution
 Write-Host "Parsing Bicep template: $TemplatePath" -ForegroundColor Cyan

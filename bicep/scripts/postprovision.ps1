@@ -11,7 +11,7 @@
 
 [CmdletBinding()]
 param(
-  [string]$RepoRoot = (Resolve-Path "$PSScriptRoot/..").Path,
+  [string]$BicepRoot = (Resolve-Path "$PSScriptRoot/..").Path,
   [string]$ResourceGroup = $env:AZURE_RESOURCE_GROUP,
   [string]$TemplateSpecRG = $env:AZURE_TS_RG,
   [string]$SubscriptionId = $env:AZURE_SUBSCRIPTION_ID
@@ -76,7 +76,7 @@ if ($SubscriptionId -and ($SubscriptionId.Trim() -ne '')) {
 }
 
 # Define paths
-$deployDir = Join-Path $RepoRoot 'deploy'
+$deployDir = Join-Path $BicepRoot 'deploy'
 
 #===============================================================================
 # STEP 1: TEMPLATE SPEC CLEANUP

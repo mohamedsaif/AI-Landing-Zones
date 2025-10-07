@@ -74,6 +74,7 @@ module enrichSubnetsWithNsgs '../enrich-subnets-with-nsgs/main.bicep' = if (exis
     jumpboxNsgResourceId: nsgResourceIds.jumpboxNsgResourceId
     acaEnvironmentNsgResourceId: nsgResourceIds.acaEnvironmentNsgResourceId
     devopsBuildAgentsNsgResourceId: nsgResourceIds.devopsBuildAgentsNsgResourceId
+    bastionNsgResourceId: nsgResourceIds.bastionNsgResourceId
   }
 }
 
@@ -85,7 +86,7 @@ var subnetsForExistingVnet = existingVNetSubnetsDefinition.?useDefaultSubnets !=
     : existingVNetSubnetsDefinition.subnets!
 
 // Deploy subnets to existing VNet
-module existingVNetSubnetsDeployment '../existing-vnet-subnets/main.bicep' = {
+module existingVNetSubnetsDeployment '../deploy-subnets-to-vnet/main.bicep' = {
   name: 'm-deploy-subnets'
   params: {
     existingVNetName: existingVNetSubnetsDefinition.existingVNetName

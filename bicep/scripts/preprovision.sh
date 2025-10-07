@@ -21,7 +21,7 @@
 set -e  # Exit on any error
 
 # Default values - can be overridden by environment variables
-REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+BICEP_ROOT="${BICEP_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 LOCATION="${AZURE_LOCATION:-}"
 SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-}"
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-}"
@@ -219,8 +219,8 @@ echo ""
 #===============================================================================
 
 # Define paths
-infra_dir="$REPO_ROOT/infra"
-deploy_dir="$REPO_ROOT/deploy"
+infra_dir="$BICEP_ROOT/infra"
+deploy_dir="$BICEP_ROOT/deploy"
 deploy_wrappers_dir="$deploy_dir/wrappers"
 
 # Step 1: Copy infra directory to deploy
@@ -386,33 +386,15 @@ for wrapper_file in "$deploy_wrappers_dir"/*.bicep; do
         existing_ts=$(az ts list -g "$TEMPLATE_SPEC_RG" --query "[?name=='$ts_name'].name" -o tsv 2>/dev/null || echo "")
         
         if [ -n "$existing_ts" ]; then
-            print_warning "    [~] Template Spec already exists..."
+            print_info "    [i] Template Spec already exists, skipping..."
 
-            existing_version_id=$(az ts show -g "$TEMPLATE_SPEC_RG" -n "$ts_name" -v "$version" --query id -o tsv 2>/dev/null || echo "")
-
-            if [ -n "$existing_version_id" ]; then
-                print_warning "    [~] Updating Template Spec version with latest wrapper..."
-                if az ts update -g "$TEMPLATE_SPEC_RG" -n "$ts_name" -v "$version" --template-file "$json_path" --only-show-errors > /dev/null 2>&1; then
-                    print_success "    [+] Updated Template Spec version: $ts_name/$version"
-                else
-                    print_error "    [X] Failed to update Template Spec version: $ts_name/$version"
-                fi
-            else
-                print_gray "    [+] Creating missing Template Spec version: $version"
-                if ! az ts create -g "$TEMPLATE_SPEC_RG" -n "$ts_name" -v "$version" -l "$LOCATION" \
-                        --template-file "$json_path" --display-name "Wrapper: $wrapper_name" \
-                        --description "Auto-generated Template Spec for $wrapper_name wrapper" \
-                        --only-show-errors > /dev/null 2>&1; then
-                    print_error "    [X] Failed to create Template Spec version: $ts_name/$version"
-                fi
-            fi
-
+            # Get existing Template Spec ID (specific version when available)
             ts_id=$(az ts show -g "$TEMPLATE_SPEC_RG" -n "$ts_name" -v "$version" --query id -o tsv 2>/dev/null || \
                     az ts show -g "$TEMPLATE_SPEC_RG" -n "$ts_name" --query id -o tsv 2>/dev/null || echo "")
 
             if [ -n "$ts_id" ]; then
                 echo "$(basename "$wrapper_file")|$ts_id" >> "$temp_mapping_file"
-                print_success "    [+] Using Template Spec: $ts_name"
+                print_success "    [+] Using existing Template Spec: $ts_name"
             fi
         else
             printf "${GRAY}    [+] Creating new Template Spec...${NC}"
@@ -544,5 +526,5 @@ else
     print_white "  Template Specs created: $template_spec_count"
 fi
 print_white "  Template Spec references updated in main.bicep"
-print_white "  Deploy directory ready: ./deploy/"
+print_white "  Deploy directory ready: ./bicep/deploy/"
 echo ""

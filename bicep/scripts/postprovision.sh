@@ -9,7 +9,7 @@
 set -e  # Exit on any error
 
 # Default values - can be overridden by environment variables
-REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
+BICEP_ROOT="${BICEP_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
 RESOURCE_GROUP="${AZURE_RESOURCE_GROUP:-}"
 TEMPLATE_SPEC_RG="${AZURE_TS_RG:-}"
 SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID:-}"
@@ -118,7 +118,7 @@ if [ -n "$SUBSCRIPTION_ID" ] && [ "$SUBSCRIPTION_ID" != "" ]; then
 fi
 
 # Define paths
-deploy_dir="$REPO_ROOT/deploy"
+deploy_dir="$BICEP_ROOT/deploy"
 
 #===============================================================================
 # STEP 1: TEMPLATE SPEC CLEANUP
