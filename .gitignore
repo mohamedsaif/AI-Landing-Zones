@@ -12,11 +12,13 @@
 *.env
 .local/
 .azure
-main.bicepparam
-main_ts.bicep
 .bld/
-main.json
+
+# Bicep build outputs (don’t commit generated ARM templates)
+bicep/**/*.json
 deploy/
+!bicep/version.json
+!bicep/bicepconfig.json
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
