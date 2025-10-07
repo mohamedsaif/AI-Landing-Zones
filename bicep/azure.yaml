@@ -1,0 +1,24 @@
+name: aiml-landing-zone
+metadata:
+  template: aiml-landing-zone
+
+infra:
+  path: deploy
+  module: ./main
+hooks:
+  preprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/preprovision.ps1
+      interactive: true
+    posix:
+      shell: sh 
+      run: ./scripts/preprovision.sh
+      interactive: true           
+  postprovision:
+    windows:
+      shell: pwsh
+      run: ./scripts/postprovision.ps1
+    posix:
+      shell: sh
+      run: ./scripts/postprovision.sh
