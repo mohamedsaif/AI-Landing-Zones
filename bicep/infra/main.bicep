@@ -116,23 +116,26 @@ metadata description = 'Deploys a secure AI/ML landing zone (resource groups, ne
 //       18.2 Application Gateway
 //       18.3 Azure Firewall Policy
 //       18.4 Azure Firewall
-//   19 OUTPUTS
-//       19.1 Network Security Group Outputs
-//       19.2 Virtual Network Outputs
-//       19.3 Private DNS Zone Outputs
-//       19.4 Public IP Outputs
-//       19.5 VNet Peering Outputs
-//       19.6 Observability Outputs
-//       19.7 Container Platform Outputs
-//       19.8 Storage Outputs
-//       19.9 Application Configuration Outputs
-//       19.10 Cosmos DB Outputs
-//       19.11 Key Vault Outputs
-//       19.12 AI Search Outputs
-//       19.13 API Management Outputs
-//       19.14 AI Foundry Outputs
-//       19.15 Bing Grounding Outputs
-//       19.16 Gateways and Firewall Outputs
+//   19 VIRTUAL MACHINES
+//       19.1 Build VM (Linux)
+//       19.2 Jump VM (Windows)
+//   20 OUTPUTS
+//       20.1 Network Security Group Outputs
+//       20.2 Virtual Network Outputs
+//       20.3 Private DNS Zone Outputs
+//       20.4 Public IP Outputs
+//       20.5 VNet Peering Outputs
+//       20.6 Observability Outputs
+//       20.7 Container Platform Outputs
+//       20.8 Storage Outputs
+//       20.9 Application Configuration Outputs
+//       20.10 Cosmos DB Outputs
+//       20.11 Key Vault Outputs
+//       20.12 AI Search Outputs
+//       20.13 API Management Outputs
+//       20.14 AI Foundry Outputs
+//       20.15 Bing Grounding Outputs
+//       20.16 Gateways and Firewall Outputs
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 targetScope = 'resourceGroup'
@@ -2683,6 +2686,11 @@ param buildVmDefinition vmDefinitionType?
 @description('Optional. Build VM Maintenance Definition. Used when deploy.buildVm is true.')
 param buildVmMaintenanceDefinition vmMaintenanceDefinitionType?
 
+// Generates a 23-character password: [8 UPPERCASE hex][8 lowercase hex]@[4 mixed hex]! using newGuid()
+@description('Optional. Auto-generated random password for Build VM. Do not override unless necessary.')
+@secure()
+param buildVmAdminPassword string = '${toUpper(substring(replace(newGuid(), '-', ''), 0, 8))}${toLower(substring(replace(newGuid(), '-', ''), 8, 8))}@${substring(replace(newGuid(), '-', ''), 16, 4)}!'
+
 var varDeployBuildVm = deployToggles.?buildVm ?? false
 var varBuildSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
   ? '${virtualNetworkResourceId}/subnets/agent-subnet'
@@ -2744,7 +2752,7 @@ module buildVm 'wrappers/avm.res.compute.build-vm.bicep' = if (varDeployBuildVm)
         }
         // Linux-specific configuration - using password authentication like Jump VM
         disablePasswordAuthentication: false
-        adminPassword: 'P@ssw0rd123!' // Temporary password for testing - expires on first login
+        adminPassword: buildVmAdminPassword
         // Infrastructure parameters
         availabilityZone: 1 // Set availability zone directly in VM configuration
         location: location
@@ -2766,6 +2774,11 @@ param jumpVmDefinition vmDefinitionType?
 
 @description('Optional. Jump VM Maintenance Definition. Used when deploy.jumpVm is true.')
 param jumpVmMaintenanceDefinition vmMaintenanceDefinitionType?
+
+// Generates a 23-character password: [8 UPPERCASE hex][8 lowercase hex]@[4 mixed hex]! using newGuid()
+@description('Optional. Auto-generated random password for Jump VM. Do not override unless necessary.')
+@secure()
+param jumpVmAdminPassword string = '${toUpper(substring(replace(newGuid(), '-', ''), 0, 8))}${toLower(substring(replace(newGuid(), '-', ''), 8, 8))}@${substring(replace(newGuid(), '-', ''), 16, 4)}!'
 
 var varDeployJumpVm = deployToggles.?jumpVm ?? false
 var varJumpVmMaintenanceConfigured = varDeployJumpVm && (jumpVmMaintenanceDefinition != null)
@@ -2803,8 +2816,8 @@ module jumpVm 'wrappers/avm.res.compute.jump-vm.bicep' = if (varDeployJumpVm) {
           sku: '2022-datacenter-azure-edition'
           version: 'latest'
         }
-        // Temporary password - will be expired on first login
-        adminPassword: 'P@ssw0rd123!' // Temporary password for testing - expires on first login
+        // Auto-generated random password
+        adminPassword: jumpVmAdminPassword
         nicConfigurations: [
           {
             nicSuffix: '-nic'
