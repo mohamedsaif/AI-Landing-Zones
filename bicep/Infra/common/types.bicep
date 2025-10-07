@@ -1376,6 +1376,9 @@ type deployTogglesType = {
 
   @description('Required. Toggle to deploy NSG for DevOps build agents subnet (true) or not (false).')
   devopsBuildAgentsNsg: bool
+
+  @description('Required. Toggle to deploy NSG for Bastion host subnet (true) or not (false).')
+  bastionNsg: bool
 }
 
 @export()
@@ -1455,6 +1458,9 @@ type resourceIdsType = {
 
   @description('Optional. Existing NSG resource ID to reuse for the DevOps build agents subnet.')
   devopsBuildAgentsNsgResourceId: string?
+
+  @description('Optional. Existing NSG resource ID to reuse for the Bastion host subnet.')
+  bastionNsgResourceId: string?
 }
 
 @export()
@@ -1810,6 +1816,9 @@ type nsgPerSubnetDefinitionsType = {
 
   @description('Optional. NSG definition applied to the DevOps build agents subnet.')
   devopsBuildAgents: nsgDefinitionType?
+
+  @description('Optional. NSG definition applied to the Bastion subnet.')
+  bastion: nsgDefinitionType?  
 }
 
 @export()
@@ -4129,6 +4138,7 @@ type logAnalyticsDefinitionType = {
     *: string
   }?
 }
+
 
 
 

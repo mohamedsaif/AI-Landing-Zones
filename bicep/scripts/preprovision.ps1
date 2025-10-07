@@ -359,28 +359,16 @@ foreach ($wrapperFile in $wrapperFiles) {
       $templateSpecExists = $existingTemplateSpecs -and $existingTemplateSpecs.Trim() -ne ''
 
       if ($templateSpecExists) {
-        Write-Host "    [~] Template Spec already exists..." -ForegroundColor Yellow
+        Write-Host "    [i] Template Spec already exists, skipping..." -ForegroundColor Cyan
 
-        # Ensure the targeted version reflects the latest wrapper template
-        $existingVersionId = az ts show -g $TemplateSpecRG -n $tsName -v $version --query id -o tsv 2>$null
-
-        if ($existingVersionId) {
-          Write-Host "    [~] Updating Template Spec version with latest wrapper..." -ForegroundColor Yellow
-          az ts update -g $TemplateSpecRG -n $tsName -v $version --template-file $jsonPath --only-show-errors | Out-Null
-          Write-Host "    [+] Updated Template Spec version: $tsName/$version" -ForegroundColor Green
-        } else {
-          Write-Host "    [+] Creating missing Template Spec version: $version" -ForegroundColor Gray
-          az ts create -g $TemplateSpecRG -n $tsName -v $version -l $Location --template-file $jsonPath --display-name "Wrapper: $wrapperName" --description "Auto-generated Template Spec for $wrapperName wrapper" --only-show-errors | Out-Null
-        }
-
-        # Get latest Template Spec ID (specific version when available)
+        # Get existing Template Spec ID (specific version when available)
         $tsId = az ts show -g $TemplateSpecRG -n $tsName -v $version --query id -o tsv 2>$null
         if (-not $tsId) {
           $tsId = az ts show -g $TemplateSpecRG -n $tsName --query id -o tsv 2>$null
         }
 
         $templateSpecs[$wrapperFile.Name] = $tsId
-        Write-Host "    [+] Using Template Spec: $tsName" -ForegroundColor Green
+        Write-Host "    [+] Using existing Template Spec: $tsName" -ForegroundColor Green
       } else {
         Write-Host "    [+] Creating new Template Spec..." -ForegroundColor Gray -NoNewline
         # Create new template spec with version
