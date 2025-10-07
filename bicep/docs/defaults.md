@@ -49,6 +49,7 @@ Network Security Groups (NSGs) provide network-level security by controlling tra
 | acaEnvNsg.name | nsg-aca-env-${baseName} | NSG for Container Apps environment subnet |
 | jumpboxNsg.name | nsg-jumpbox-${baseName} | NSG for jumpbox/bastion host subnet |
 | devopsAgentsNsg.name | nsg-devops-agents-${baseName} | NSG for DevOps build agents subnet |
+| bastionNsg.name | nsg-bastion-${baseName} | NSG for Azure Bastion subnet |
 
 ### App Gateway NSG Default Rules
 
@@ -451,7 +452,6 @@ Pre-configured AI model deployments for immediate use in AI applications.
 | buildVmDefinition.osDisk.deleteOption | Delete |
 | buildVmDefinition.osDisk.managedDisk.storageAccountType | Standard_LRS |
 | buildVmDefinition.disablePasswordAuthentication | false |
-| buildVmDefinition.adminPassword | P@ssw0rd123! |
 | buildVmDefinition.availabilityZone | 1 |
 | buildVmMaintenanceDefinition.name | mc-${baseName}-build |
 
@@ -467,7 +467,6 @@ Pre-configured AI model deployments for immediate use in AI applications.
 | jumpVmDefinition.imageReference.offer | WindowsServer |
 | jumpVmDefinition.imageReference.sku | 2022-datacenter-azure-edition |
 | jumpVmDefinition.imageReference.version | latest |
-| jumpVmDefinition.adminPassword | P@ssw0rd123! |
 | jumpVmDefinition.nicConfigurations[0].nicSuffix | -nic |
 | jumpVmDefinition.nicConfigurations[0].ipConfigurations[0].name | ipconfig01 |
 | jumpVmDefinition.osDisk.caching | ReadWrite |

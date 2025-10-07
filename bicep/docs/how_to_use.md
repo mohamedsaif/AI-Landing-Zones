@@ -2,14 +2,13 @@
 
 ## Table of Contents
 
-1. [Prerequisites](#2-prerequisites)  
-2. [Quick start with azd](#3-quick-start-with-azd)  
-3. [Configuration options](#4-configuration-options)  
-4. [Reference docs](#5-reference-docs)  
-5. [Important notes](#6-important-notes)  
-6. [CI/CD pipelines (overview)](#7-cicd-pipelines-overview)  
-
----
+1. [Prerequisites](#1-prerequisites)  
+2. [Quick start with azd](#2-quick-start-with-azd)  
+3. [Accessing VMs](#3-accessing-vms)  
+4. [Configuration options](#4-configuration-options)  
+5. [Reference docs](#5-reference-docs)  
+6. [Important notes](#6-important-notes)  
+7. [CI/CD pipelines (overview)](#7-cicd-pipelines-overview)  
 
 ## 1) Prerequisites
 
@@ -33,25 +32,7 @@
    az group create --name "rg-aiml-dev" --location "eastus2"
    ```
 
-3. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
-
-   *PowerShell*:
-
-   ```powershell
-   $env:AZURE_LOCATION = "eastus2"
-   $env:AZURE_RESOURCE_GROUP = "rg-aiml-dev"
-   $env:AZURE_SUBSCRIPTION_ID = "00000000-1111-2222-3333-444444444444"
-   ```
-
-   *bash*:
-
-   ```bash
-   export AZURE_LOCATION="eastus2"
-   export AZURE_RESOURCE_GROUP="rg-aiml-dev"
-   export AZURE_SUBSCRIPTION_ID="00000000-1111-2222-3333-444444444444"
-   ```
-
-4. **Initialize the project**
+3. **Initialize the project**
 
    In an empty folder (e.g., `deploy`), run:
 
@@ -59,9 +40,17 @@
    azd init -t Azure/AI-Landing-Zones -e aiml-dev
    ```
 
+4. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
+
+   ```bash
+   azd env set AZURE_LOCATION "eastus2"
+   azd env set AZURE_RESOURCE_GROUP "rg-aiml-dev"
+   azd env set AZURE_SUBSCRIPTION_ID "00000000-1111-2222-3333-444444444444"
+   ```
+
 5. **(Optional) Customize parameters**
 
-   Edit `bicep/infra/main.bicepparam` if you want to adjust deployment options.
+   Edit `bicep/infra/main.bicepparam` if you want to adjust deployment options. (See [Configuration options](#4-configuration-options) and [Reference docs](#5-reference-docs))
 
 6. **Provision the infrastructure**
 
@@ -74,9 +63,40 @@
 > Pre-provision scripts build and publish them, while post-provision scripts remove them after success.
 
 > [!TIP]  
-> **Alternative deployment with Azure CLI**: If you prefer using Azure CLI instead of `azd`, skip step 4 (initialize) and replace step 6 with `az deployment group create`. Ensure you run the pre-provision script before deployment and the post-provision script after deployment.
+> **Alternative deployment with Azure CLI**: Clone the repo, set environment variables manually (e.g., `$env:VAR="value"`), run the pre-provision script, then use `az deployment group create` instead of `azd provision`. Remember to run the post-provision script after deployment.
 
-## 3) Configuration options
+## 3) Accessing VMs
+
+> [!NOTE]  
+> VM deployment is optional. This section applies only if you chose to deploy the Jump VM or Build VM during provisioning.
+
+### VM Credentials
+
+The template uses auto-generated random passwords by default for security. You can optionally provide custom passwords (or SSH keys for the Linux Build VM) as parameters during deployment.
+
+**Default usernames:**
+- Jump VM (Windows): `azureuser`
+- Build VM (Linux): `builduser`
+
+### Resetting Passwords
+
+If you used auto-generated passwords (default), reset them through the Azure Portal before connecting:
+
+1. Navigate to the VM resource
+2. Go to **Help** → **Reset password**
+3. Enter the username and your new password
+4. Click **Update**
+
+![Reset Password in Azure Portal](reset_password.png)
+
+### Connecting to VMs
+
+- **Jump VM (Windows)**: Azure Bastion or RDP
+- **Build VM (Linux)**: SSH
+
+Both VMs provide access to resources within the virtual network.
+
+## 4) Configuration options
 
 Update parameters in the `bicep/infra/main.bicepparam` file:
 
@@ -117,9 +137,8 @@ The template supports flexible deployment patterns through parameter configurati
 * **Project only**: AI Foundry project only (no Agent Service or dependencies)
 * **Custom models**: Configure specific AI model deployments
 
----
 
-## 4) Reference docs
+## 5) Reference docs
 
 For detailed configuration and examples, see:
 
@@ -127,18 +146,15 @@ For detailed configuration and examples, see:
 * **[Defaults](./defaults.md)** — Default values for all input parameters
 * **[Examples](./examples.md)** — Common deployment scenarios
 
----
 
-## 5) Important notes
+## 6) Important notes
 
 * **Naming**: If you leave names blank, the template generates valid names from the `baseName` parameter
 * **Global resources**: Storage accounts and Container Registry require globally unique names
 * **Platform integration**: Set `flagPlatformLandingZone = true` to integrate with existing platform DNS zones
 * **VM deployment**: Build/Jump VMs only deploy when required parameters are provided (SSH keys, passwords)
 
----
-
-## 6) CI/CD pipelines (overview)
+## 7) CI/CD pipelines (overview)
 
 Basic automation can be added later via `azd pipeline config`, which scaffolds either a GitHub Actions workflow or an Azure DevOps pipeline and sets up identity (OIDC) plus required variables. For deeper guidance, refer to the official docs: [https://learn.microsoft.com/azure/developer/azure-developer-cli/configure-devops-pipeline](https://learn.microsoft.com/azure/developer/azure-developer-cli/configure-devops-pipeline)
 
