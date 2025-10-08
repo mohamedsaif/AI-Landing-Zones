@@ -254,6 +254,7 @@ Select one or both based on your agent architecture:
 - Building single-agent or multi-agent systems with Foundry tools
 - Publishing agents to Microsoft 365 Copilot (Teams, Copilot Marketplace,...)
 - Need rapid AI development velocity with minimal infrastructure management
+- Create one or more AI Foundry projects, each project can host multiple agents and can be configured with the deployment scripts.
 
 **Benefits**:
 - Fully managed runtime (no infrastructure management)
@@ -274,6 +275,7 @@ Select one or both based on your agent architecture:
 - Need full control over agent runtime and dependencies (in-house developed or partner solutions)
 - Deploying containerized agent workloads without Kubernetes complexity
 - Your organization does not have direct control over the agent development technology stack
+- Deploy the additional supporting services with Azure Container Apps (like Container Registry, App Configurations,...) which is part of the deployment scripts.
 
 **Benefits**:
 - Serverless container hosting
