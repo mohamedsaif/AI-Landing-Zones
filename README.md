@@ -35,9 +35,9 @@ The table represents the various reference implementations of the AI Landing Zon
 
 | Type | Description |
 | ----------- | ----------- |
-| Terraform | [AVM Repo](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) |
-| Bicep | [AVM Repo](./bicep/README.md) |
-| Portal | Coming Soon in September 2025 |
+| Terraform | [Repo](https://aka.ms/ailz/terraform) |
+| Bicep | [Repo](https://aka.ms/ailz/bicep) |
+| Portal | Coming Soon |
 
 ## Design Framework
 The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
