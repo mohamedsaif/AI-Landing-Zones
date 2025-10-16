@@ -259,7 +259,7 @@ module defenderModule './components/defender/main.bicep' = if (enableDefenderFor
     enableDefenderForKeyVault: deployKeyVault
   }
 }
-
+ 
 // -----------------------
 // 2 SECURITY - NETWORK SECURITY GROUPS
 // -----------------------
