@@ -366,6 +366,137 @@ module apiManagementNsgWrapper 'wrappers/avm.res.network.network-security-group.
         name: 'nsg-apim-${baseName}'
         location: location
         enableTelemetry: enableTelemetry
+        // Required security rules for API Management Internal VNet mode
+        securityRules: [
+          // ========== INBOUND RULES ==========
+          {
+            name: 'Allow-APIM-Management-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 100
+              protocol: 'Tcp'
+              description: 'Azure API Management control plane traffic'
+              sourceAddressPrefix: 'ApiManagement'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRange: '3443'
+            }
+          }
+          {
+            name: 'Allow-AzureLoadBalancer-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 110
+              protocol: 'Tcp'
+              description: 'Azure Infrastructure Load Balancer health probes'
+              sourceAddressPrefix: 'AzureLoadBalancer'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRange: '6390'
+            }
+          }
+          {
+            name: 'Allow-VNet-to-APIM-Inbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Inbound'
+              priority: 120
+              protocol: 'Tcp'
+              description: 'Internal VNet clients to APIM gateway'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRange: '443'
+            }
+          }
+          // ========== OUTBOUND RULES ==========
+          {
+            name: 'Allow-APIM-to-Storage-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 100
+              protocol: 'Tcp'
+              description: 'APIM to Azure Storage for dependencies'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'Storage'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-APIM-to-SQL-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 110
+              protocol: 'Tcp'
+              description: 'APIM to Azure SQL for dependencies'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'Sql'
+              destinationPortRange: '1443'
+            }
+          }
+          {
+            name: 'Allow-APIM-to-KeyVault-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 120
+              protocol: 'Tcp'
+              description: 'APIM to Key Vault for certificates and secrets'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'AzureKeyVault'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-APIM-to-EventHub-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 130
+              protocol: 'Tcp'
+              description: 'APIM to Event Hub for logging'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'EventHub'
+              destinationPortRanges: ['5671', '5672', '443']
+            }
+          }
+          {
+            name: 'Allow-APIM-to-InternalBackends-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 140
+              protocol: 'Tcp'
+              description: 'APIM to internal backends (OpenAI, AI Services, etc)'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'VirtualNetwork'
+              destinationPortRange: '443'
+            }
+          }
+          {
+            name: 'Allow-APIM-to-AzureMonitor-Outbound'
+            properties: {
+              access: 'Allow'
+              direction: 'Outbound'
+              priority: 150
+              protocol: 'Tcp'
+              description: 'APIM to Azure Monitor for telemetry'
+              sourceAddressPrefix: 'VirtualNetwork'
+              sourcePortRange: '*'
+              destinationAddressPrefix: 'AzureMonitor'
+              destinationPortRanges: ['1886', '443']
+            }
+          }
+        ]
       },
       nsgDefinitions!.?apiManagement ?? {}
     )
@@ -696,6 +827,10 @@ module vNetworkWrapper 'wrappers/avm.res.network.virtual-network.bicep' = if (va
     )
   }
 }
+
+var varApimSubnetId = empty(resourceIds.?virtualNetworkResourceId!)
+  ? '${virtualNetworkResourceId}/subnets/apim-subnet'
+  : '${resourceIds.virtualNetworkResourceId!}/subnets/apim-subnet'
 
 // Note: We need two module declarations because Bicep requires compile-time scope resolution.
 // The scope parameter cannot be conditionally determined at runtime, so we use two modules
@@ -2106,7 +2241,8 @@ module apiManagement 'wrappers/avm.res.api-management.service.bicep' = if (varDe
 
         // Network Configuration - Use 'None' for Private Endpoint access
         // StandardV2 supports Private Endpoints for internal access within VNet
-        virtualNetworkType: 'None'
+        virtualNetworkType: 'Internal'
+        subnetResourceId: varApimSubnetId 
 
         // Basic Configuration
         location: location
