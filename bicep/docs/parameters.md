@@ -146,6 +146,7 @@ Each parameter includes information about its type, requirements, default values
 | `Microsoft.OperationalInsights/workspaces` | 2025-02-01 |
 | `Microsoft.Resources/deployments` | 2022-09-01 |
 | `Microsoft.Search/searchServices` | 2025-02-01-preview |
+| `Microsoft.Security/pricings` | 2024-01-01 |
 | `Microsoft.SecurityInsights/onboardingStates` | 2024-03-01 |
 | `Microsoft.Storage/storageAccounts` | 2024-01-01 |
 
