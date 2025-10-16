@@ -242,6 +242,24 @@ resource avmTelemetry 'Microsoft.Resources/deployments@2024-03-01' = if (enableT
 // Generate unique suffixes to prevent deployment name conflicts
 var varUniqueSuffix = substring(uniqueString(deployment().name, location, resourceGroup().id), 0, 8)
 
+
+// -----------------------
+// 1.8 SECURITY - MICROSOFT DEFENDER FOR AI
+// -----------------------
+
+@description('Optional. Enable Microsoft Defender for AI (part of Defender for Cloud).')
+param enableDefenderForAI bool = true
+
+// Deploy Microsoft Defender for AI at subscription level via module
+module defenderModule './components/defender/main.bicep' = if (enableDefenderForAI) {
+  name: 'defender-${varUniqueSuffix}'
+  scope: subscription()
+  params: {
+    enableDefenderForAI: enableDefenderForAI
+    enableDefenderForKeyVault: deployKeyVault
+  }
+}
+
 // -----------------------
 // 2 SECURITY - NETWORK SECURITY GROUPS
 // -----------------------
