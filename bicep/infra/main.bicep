@@ -1803,6 +1803,60 @@ module privateEndpointKeyVault 'wrappers/avm.res.network.private-endpoint.bicep'
   }
 }
 
+
+
+// 7.9 AI Services (OpenAI) Private Endpoint for Evaluation
+@description('Optional. AI Services (OpenAI) Private Endpoint configuration for Evaluation feature.')
+param aiServicesPrivateEndpointDefinition privateDnsZoneDefinitionType?
+
+// Reference the AI Services account created by AI Foundry
+resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
+  name: aiFoundry.outputs.aiServicesName
+  scope: resourceGroup()
+}
+
+module privateEndpointAiServices 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe) {
+  name: 'aiservices-private-endpoint-${varUniqueSuffix}'
+  params: {
+    privateEndpoint: union(
+      {
+        name: 'pe-aiservices-${baseName}'
+        location: location
+        tags: tags
+        subnetResourceId: varPeSubnetId
+        enableTelemetry: enableTelemetry
+        privateLinkServiceConnections: [
+          {
+            name: 'aiServicesConnection'
+            properties: {
+              privateLinkServiceId: aiServicesAccount.id
+              groupIds: ['account']
+            }
+          }
+        ]
+        privateDnsZoneGroup: {
+          name: 'aiServicesDnsZoneGroup'
+          privateDnsZoneGroupConfigs: [
+            {
+              name: 'aiServicesARecord'
+              privateDnsZoneResourceId: !varUseExistingPdz.openai
+                ? privateDnsZoneOpenAi!.outputs.resourceId
+                : privateDnsZonesDefinition.openaiZoneId!
+            }
+          ]
+        }
+      },
+      aiServicesPrivateEndpointDefinition ?? {}
+    )
+  }
+  dependsOn: [
+    aiFoundry!
+    #disable-next-line BCP321
+    (varDeployPdnsAndPe && !varUseExistingPdz.openai) ? privateDnsZoneOpenAi : null
+  ]
+}
+
+
 // -----------------------
 // 8 OBSERVABILITY
 // -----------------------
