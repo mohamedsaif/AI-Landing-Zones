@@ -2394,7 +2394,7 @@ var varAfNetworkingOverride = union(
   { cognitiveServicesPrivateDnsZoneResourceId: varAfCognitiveServicesPdzId }
 )
 
-// Module
+// 16.1 AI Foundry Configuration
 module aiFoundry 'wrappers/avm.ptn.ai-ml.ai-foundry.bicep' = {
   name: 'aiFoundryDeployment-${varUniqueSuffix}'
   params: {
@@ -2479,6 +2479,38 @@ module aiFoundry 'wrappers/avm.ptn.ai-ml.ai-foundry.bicep' = {
     (varDeployPdnsAndPe && !varUseExistingPdz.openai) ? privateDnsZoneOpenAi : null
     #disable-next-line BCP321
     (varDeployPdnsAndPe && !varUseExistingPdz.aiServices) ? privateDnsZoneAiService : null
+  ]
+}
+
+// 16.2 AI Foundry Application Insights Connection
+var varDeployAfAppInsightsConnection = varDeployAppInsights || !empty(resourceIds.?appInsightsResourceId!)
+
+// Compute the AI Hub account name (Cognitive Services Account)
+var varAiHubAccountName = aiFoundryDefinition.?aiFoundryConfiguration.?accountName ?? 'ai${baseName}'
+
+// Reference to the AI Hub (Cognitive Services Account) - created by aiFoundry module
+resource aiHubAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = if (varDeployAfAppInsightsConnection) {
+  name: varAiHubAccountName
+  scope: resourceGroup()
+}
+
+// Create the Application Insights connection under the Cognitive Services Account
+resource aiFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-06-01' = if (varDeployAfAppInsightsConnection) {
+  name: 'ApplicationInsights'
+  parent: aiHubAccount
+  properties: {
+    category: 'ApplicationInsights'
+    authType: 'AAD'
+    isSharedToAll: true
+    target: varAppiResourceId
+    metadata: {
+      ResourceId: varAppiResourceId
+    }
+  }
+  dependsOn: [
+    aiFoundry
+    #disable-next-line BCP321
+    varDeployAppInsights ? appInsights : null
   ]
 }
 
