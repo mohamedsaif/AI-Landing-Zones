@@ -8,7 +8,7 @@ param enableDefenderForKeyVault bool = true
 
 // Deploy Microsoft Defender for AI at subscription level
 resource defenderForAI 'Microsoft.Security/pricings@2024-01-01' = if (enableDefenderForAI) {
-  name: 'CognitiveServices'
+  name: 'AI'
   properties: {
     pricingTier: 'Standard'
   }

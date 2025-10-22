@@ -1821,60 +1821,6 @@ module privateEndpointKeyVault 'wrappers/avm.res.network.private-endpoint.bicep'
   }
 }
 
-
-
-// 7.9 AI Services (OpenAI) Private Endpoint for Evaluation
-@description('Optional. AI Services (OpenAI) Private Endpoint configuration for Evaluation feature.')
-param aiServicesPrivateEndpointDefinition privateDnsZoneDefinitionType?
-
-// Reference the AI Services account created by AI Foundry
-resource aiServicesAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = {
-  name: aiFoundry.outputs.aiServicesName
-  scope: resourceGroup()
-}
-
-module privateEndpointAiServices 'wrappers/avm.res.network.private-endpoint.bicep' = if (varDeployPdnsAndPe) {
-  name: 'aiservices-private-endpoint-${varUniqueSuffix}'
-  params: {
-    privateEndpoint: union(
-      {
-        name: 'pe-aiservices-${baseName}'
-        location: location
-        tags: tags
-        subnetResourceId: varPeSubnetId
-        enableTelemetry: enableTelemetry
-        privateLinkServiceConnections: [
-          {
-            name: 'aiServicesConnection'
-            properties: {
-              privateLinkServiceId: aiServicesAccount.id
-              groupIds: ['account']
-            }
-          }
-        ]
-        privateDnsZoneGroup: {
-          name: 'aiServicesDnsZoneGroup'
-          privateDnsZoneGroupConfigs: [
-            {
-              name: 'aiServicesARecord'
-              privateDnsZoneResourceId: !varUseExistingPdz.openai
-                ? privateDnsZoneOpenAi!.outputs.resourceId
-                : privateDnsZonesDefinition.openaiZoneId!
-            }
-          ]
-        }
-      },
-      aiServicesPrivateEndpointDefinition ?? {}
-    )
-  }
-  dependsOn: [
-    aiFoundry!
-    #disable-next-line BCP321
-    (varDeployPdnsAndPe && !varUseExistingPdz.openai) ? privateDnsZoneOpenAi : null
-  ]
-}
-
-
 // -----------------------
 // 8 OBSERVABILITY
 // -----------------------
@@ -2307,12 +2253,15 @@ module apiManagement 'wrappers/avm.res.api-management.service.bicep' = if (varDe
         publisherEmail: 'admin@contoso.com'
         publisherName: 'Contoso'
 
-        // Default values for StandardV2 deployment with Private Endpoint support
-        sku: 'StandardV2'
-        skuCapacity: 1
+        // Premium SKU configuration for Internal VNet mode
+        // Premium supports full VNet integration with Internal mode
+        // Allows complete network isolation without exposing public endpoints
+        sku: 'Premium'
+        skuCapacity: 3
 
-        // Network Configuration - Use 'None' for Private Endpoint access
-        // StandardV2 supports Private Endpoints for internal access within VNet
+        // Network Configuration - Internal VNet mode
+        // Internal mode: APIM accessible only from within VNet via private IP
+        // Requires Premium SKU (StandardV2 does NOT support Internal mode)
         virtualNetworkType: 'Internal'
         subnetResourceId: varApimSubnetId 
 
@@ -2551,38 +2500,6 @@ module aiFoundry 'wrappers/avm.ptn.ai-ml.ai-foundry.bicep' = {
     (varDeployPdnsAndPe && !varUseExistingPdz.openai) ? privateDnsZoneOpenAi : null
     #disable-next-line BCP321
     (varDeployPdnsAndPe && !varUseExistingPdz.aiServices) ? privateDnsZoneAiService : null
-  ]
-}
-
-// 16.2 AI Foundry Application Insights Connection
-var varDeployAfAppInsightsConnection = varDeployAppInsights || !empty(resourceIds.?appInsightsResourceId!)
-
-// Compute the AI Hub account name (Cognitive Services Account)
-var varAiHubAccountName = aiFoundryDefinition.?aiFoundryConfiguration.?accountName ?? 'ai${baseName}'
-
-// Reference to the AI Hub (Cognitive Services Account) - created by aiFoundry module
-resource aiHubAccount 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = if (varDeployAfAppInsightsConnection) {
-  name: varAiHubAccountName
-  scope: resourceGroup()
-}
-
-// Create the Application Insights connection under the Cognitive Services Account
-resource aiFoundryAppInsightsConnection 'Microsoft.CognitiveServices/accounts/connections@2025-06-01' = if (varDeployAfAppInsightsConnection) {
-  name: 'ApplicationInsights'
-  parent: aiHubAccount
-  properties: {
-    category: 'ApplicationInsights'
-    authType: 'AAD'
-    isSharedToAll: true
-    target: varAppiResourceId
-    metadata: {
-      ResourceId: varAppiResourceId
-    }
-  }
-  dependsOn: [
-    aiFoundry
-    #disable-next-line BCP321
-    varDeployAppInsights ? appInsights : null
   ]
 }
 
