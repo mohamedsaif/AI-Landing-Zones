@@ -42,11 +42,21 @@
 
 4. **Set environment variables** `AZURE_LOCATION`, `AZURE_RESOURCE_GROUP`, `AZURE_SUBSCRIPTION_ID`.
 
-   ```bash
-   azd env set AZURE_LOCATION "eastus2"
-   azd env set AZURE_RESOURCE_GROUP "rg-aiml-dev"
-   azd env set AZURE_SUBSCRIPTION_ID "00000000-1111-2222-3333-444444444444"
-   ```
+**Bash (Linux/macOS, WSL, Cloud Shell)**
+
+```bash
+export AZURE_LOCATION="eastus2"
+export AZURE_RESOURCE_GROUP="rg-aiml-dev"
+export AZURE_SUBSCRIPTION_ID="00000000-1111-2222-3333-444444444444"
+```
+
+**PowerShell (Windows/PowerShell Core)**
+
+```powershell
+$env:AZURE_LOCATION = "eastus2"
+$env:AZURE_RESOURCE_GROUP = "rg-aiml-dev"
+$env:AZURE_SUBSCRIPTION_ID = "00000000-1111-2222-3333-444444444444"
+```
 
 5. **(Optional) Customize parameters**
 
