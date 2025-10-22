@@ -2,6 +2,13 @@
 
 The latest version of the changelog can be found [here](https://github.com/Azure/bicep-registry-modules/blob/main/avm/ptn/ai-ml/landing-zone/CHANGELOG.md).
 
+## 0.1.4
+
+### Changed
+
+- [APIM connectivity should be intenal Vnet instead of using private endpoint](https://github.com/Azure/AI-Landing-Zones/issues/21)
+- [Azure Defender for AI needs to be enabled during the deployment and configuration - Bicep](https://github.com/Azure/AI-Landing-Zones/issues/27)
+
 ## 0.1.3
 
 ### Changes
