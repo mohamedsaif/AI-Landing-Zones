@@ -4,8 +4,8 @@ using './main.bicep'
 param deployToggles = {
   acaEnvironmentNsg: true
   agentNsg: true
-  apiManagement: true
-  apiManagementNsg: true
+  apiManagement: false
+  apiManagementNsg: false
   appConfig: true
   appInsights: true
   applicationGateway: true
