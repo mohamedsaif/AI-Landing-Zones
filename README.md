@@ -41,9 +41,7 @@ The table represents the various reference implementations of the AI Landing Zon
 
 ## Design Checklist
 The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design considertion and recommendations to help you design a greenfield AI Landing Zone and assess a brown field AI Landing Zone.
-<p style="text-align:center;">
 ![image](/media/AI-Landing-Zone-design-area-checklist.png)
-</p>
 
 
 ## Use cases & Scenarios
