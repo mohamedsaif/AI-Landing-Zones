@@ -39,22 +39,12 @@ The table represents the various reference implementations of the AI Landing Zon
 | Bicep | [Repo](https://aka.ms/ailz/bicep) |
 | Portal | Coming Soon |
 
-## Design Framework
-The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design recommendations & best practices which the AI Landing Zone aligns to.
+## Design Checklist
+The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design considertion and recommendations to help you design a greenfield AI Landing Zone and assess a brown field AI Landing Zone.
+<p style="text-align:center;">
+![image](/media/AI-Landing-Zone-design-area-checklist.png)
+</p>
 
-- [Security](/docs/Security.md)
-- [Identity](/docs/Identity.md)
-- [Compute](/docs/Compute.md)
-- [Data](/docs/Data.md)
-- [Reliability](/docs/Reliability.md)
-- [Networking](/docs/Networking.md)
-- [Governance](/docs/Governance.md)
-- [Monitoring](/docs/Monitoring.md)
-- [Cost Optimization](/docs/Cost-Optimization.md)
-- [Platform Automation](/docs/Platform-Automation.md)
-- [Resource Organization](/docs/Resource-Organization.md)
-- [Operational Excellence](/docs/Operational-Excellence.md)
-- [Performance Efficiency](/docs/Performance-Efficiency.md)
 
 ## Use cases & Scenarios
 The AI Landing Zone act as a foundation architecture which can be leveraged to deploy a particular AI usecase & scenario on Azure, such as the below, either with its default architecture or by extending it with additional Azure services as needed.
