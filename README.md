@@ -13,21 +13,14 @@ The AI Landing Zone provides an enterprise-scale production ready reference arch
 ## Reference Architectures
 
 ### AI Landing Zone with Platform Landing Zone
+
 The below diagram represents the reference architecture of the AI Landing Zone with Platform Landing Zone which is our recommended configuration.
 ![image](/media/AI-Landing-Zone-with-platform.png)
 
 ### AI Landing Zone without Platform Landing Zone
+
 The below diagram represents the reference architecture of the AI Landing Zone without Platform Landing Zone as a standalone application landing zone.
 ![image](/media/AI-Landing-Zone-without-platform.png)
-
-### Upcoming AI Landing Zone Architectures
-- AI Landing Zone in Azure Government Cloud
-- AI Landing Zone in Azure Sovereign Cloud
-- AI Landing Zone in Multi-Region for BCDR
-- AI Landing Zone in Multi-Environment (Dev, Test, Prod)
-- AI Landing Zone in Multi-App workloads
-- AI Landing Zone in Multi-cloud & Hybrid environments
-- AI Landing Zone with Data Landing Zone
 
 ## Extensible Implementations
 
@@ -40,10 +33,10 @@ The table represents the various reference implementations of the AI Landing Zon
 | Portal | Coming Soon |
 
 ## Design Checklist
-The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design considertion and design recommendations to help you design a greenfield environment and assess a brown field environment using the [AI Landing Zone Checklist](/docs/Design-Checklist.md).
+
+The AI Landing Zone cover the following design areas which are across the Cloud Adoption Framework and the Well-Architected Framework. In each design area there are design considertion and design recommendations to help you design a greenfield environment and assess a brown field environment using the [AI Landing Zone Checklist](/docs/AI-Landing-Zones-Design-Checklist.md).
 
 ![image](/media/AI-Landing-Zone-design-area-checklist.png)
-
 
 ## Use cases & Scenarios
 The AI Landing Zone act as a foundation architecture which can be leveraged to deploy a particular AI usecase & scenario on Azure, such as the below, either with its default architecture or by extending it with additional Azure services as needed.
@@ -57,12 +50,23 @@ The AI Landing Zone act as a foundation architecture which can be leveraged to d
 - Conversation knowledge mining
 - Modernize your code
 
+## Roadmap
+The AI Landing Zone is currently in preview. The roadmap for the project is available [here](https://aka.ms/ailz/roadmap).
+
+## What's New
+The latest updates to the AI Landing Zone are documented [here](./docs/AI-Landing-Zones-Whats-New.md).
+
+## Frequently Asked Questions
+The frequently asked questions about the AI Landing Zone are documented [here](./docs/AI-Landing-Zones-FAQ.md).
+
 ## Cloud Adoption Framework
+
 The AI landing Zone aligns with the guidance in the [CAF AI Scenario](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/). For a holistic implementation of the AI Landing Zone, we recommend to review the [AI Checklist](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/#ai-checklists). To understand how to leverage the AI Landing Zone as part of a wider strategy, review the guidance on [AI Strategy](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/strategy). AI Landing Zone is part of the AI Ready stage in particular the [AI on Azure platforms (PaaS)](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/platform/architectures).
 
 ![image](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/scenarios/ai/images/ai-ready.svg)
 
 ## Well-Architected Framework
+
 The AI landing Zone aligns with the guidance in the WAF AI workload. For a holistic implementation of the AI Landing Zone, we recommend to review the design methodology, principles and areas of [AI workloads on Azure](https://learn.microsoft.com/en-us/azure/well-architected/ai/).
 ![image](https://learn.microsoft.com/en-us/azure/well-architected/ai/images/ai-architecture-pattern.png)
 
