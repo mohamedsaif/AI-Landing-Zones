@@ -1,8 +1,8 @@
 # Azure AI Landing Zone - Pricing Calculator Configuration Guide
 
-**Date:** November 5, 2025  
-**Template:** Azure AI Landing Zones - Standard Deployment  
+**Template:** AI Landing Zones - Standard Deployment  
 **Region:** East US (adjust for your target region)
+** Azure Pricing Calculator Link:** [Azure Pricing Calculator](https://azure.com/e/e92e102172054654a13cdc1cada6cecc)
 
 ---
 
