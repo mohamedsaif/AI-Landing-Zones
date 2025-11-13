@@ -40,7 +40,7 @@ This is a complete AI/ML platform environment ready for development and deployme
 
 ### 3. Register Required Resource Providers
 
-Before deploying, ensure these Azure resource providers are registered:
+Before deploying, ensure these Azure resource providers are registered.  If not, terraform will register the providers during deployment, which may cause delays:
 
 ```powershell
 az provider register --namespace Microsoft.CognitiveServices
