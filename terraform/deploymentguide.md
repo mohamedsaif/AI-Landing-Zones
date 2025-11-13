@@ -135,12 +135,14 @@ $env:ARM_CLIENT_ID="<appId from output>"
 $env:ARM_CLIENT_SECRET="<password from output>"
 $env:ARM_TENANT_ID="<tenant from output>"
 $env:ARM_SUBSCRIPTION_ID="<your subscription ID>"
+$env:ARM_USE_AZUREAD=true
 
 # Verify they're set
 echo "Client ID: $env:ARM_CLIENT_ID"
 echo "Tenant ID: $env:ARM_TENANT_ID"
 echo "Subscription ID: $env:ARM_SUBSCRIPTION_ID"
 echo "Client Secret is set: $($env:ARM_CLIENT_SECRET -ne $null)"
+echo "Use Azure AD: $env:ARM_USE_AZUREAD"
 ```
 
 **To make these permanent (persist across PowerShell sessions):**
@@ -150,12 +152,14 @@ echo "Client Secret is set: $($env:ARM_CLIENT_SECRET -ne $null)"
 [System.Environment]::SetEnvironmentVariable('ARM_CLIENT_SECRET', '<password>', 'User')
 [System.Environment]::SetEnvironmentVariable('ARM_TENANT_ID', '<tenant>', 'User')
 [System.Environment]::SetEnvironmentVariable('ARM_SUBSCRIPTION_ID', '<subscription_id>', 'User')
+[System.Environment]::SetEnvironmentVariable('ARM_USE_AZUREAD', 'true', 'User')
 
 # Refresh your current session to load the variables
 $env:ARM_CLIENT_ID = [System.Environment]::GetEnvironmentVariable('ARM_CLIENT_ID', 'User')
 $env:ARM_CLIENT_SECRET = [System.Environment]::GetEnvironmentVariable('ARM_CLIENT_SECRET', 'User')
 $env:ARM_TENANT_ID = [System.Environment]::GetEnvironmentVariable('ARM_TENANT_ID', 'User')
 $env:ARM_SUBSCRIPTION_ID = [System.Environment]::GetEnvironmentVariable('ARM_SUBSCRIPTION_ID', 'User')
+$env:ARM_USE_AZUREAD = [System.Environment]::GetEnvironmentVariable('ARM_USE_AZUREAD', 'User')
 ```
 
 **Step 4: Test the Service Principal**
