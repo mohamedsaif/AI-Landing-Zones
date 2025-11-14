@@ -1,20 +1,8 @@
-# Terraform Deployment Guide for AI Landing Zone on Azure
+# Terraform Deployment Guide for AI Landing Zones
 
 ## What This Deployment Does
 
-This Terraform configuration deploys an **AI Landing Zone** on Azure, which includes:
-- Azure AI Foundry (AI Hub and Project)
-- Virtual Network (VNet) with appropriate subnets
-- Azure Container Registry
-- Azure Key Vault
-- Azure Storage Account
-- Azure Cosmos DB
-- Azure AI Search
-- Azure Bastion (for secure VM access)
-- Container App Environment
-- Optional Application Gateway
-
-This is a complete AI/ML platform environment ready for development and deployment of AI applications.
+This Terraform configuration deploys an **AI Landing Zone** which is a complete AI/ML platform environment ready for development and deployment of AI applications.
 
 ---
 
