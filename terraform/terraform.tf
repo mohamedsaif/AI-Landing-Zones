@@ -2,25 +2,33 @@ terraform {
   required_version = ">= 1.9, < 2.0"
 
   required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 2.4"
-    }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 4.21"
     }
-    modtm = {
-      source  = "azure/modtm"
-      version = "~> 0.3"
+    http = {
+      source  = "hashicorp/http"
+      version = "~> 3.4"
     }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
-    time = {
-      source  = "hashicorp/time"
-      version = "~> 0.12"
+  }
+}
+
+provider "azurerm" {
+  features {
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+    virtual_machine {
+      delete_os_disk_on_deletion = true
+    }
+    cognitive_account {
+      purge_soft_delete_on_destroy = true
     }
   }
+  storage_use_azuread = true
+  #subscription_id = ""
 }

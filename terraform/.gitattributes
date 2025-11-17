@@ -1,4 +1,0 @@
-*.tfvars text eol=lf
-*.hcl text eol=lf
-*.go text eol=lf
-*.tf text eol=lf

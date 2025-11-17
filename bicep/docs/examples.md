@@ -63,7 +63,7 @@ param flagPlatformLandingZone = false
 
 Use this when you already have a **pre-existing VNet** and only need to add the AI/ML Landing Zone subnets and resources.
 The deployment **does not create a new VNet**; instead, it creates required subnets and NSGs inside the specified VNet, while still deploying platform services like Cosmos DB, Storage, Key Vault, App Insights, Log Analytics, and Container Registry/Env.
-**Neste exemplo, assume-se que a VNet existente possua o espaço de endereçamento `192.168.0.0/22` (ou prefixos equivalentes ajustados de forma consistente), já que os subnets abaixo seguem essa estrutura.**
+**In this example, it is assumed that the existing VNet has the address space `192.168.0.0/22` (or equivalent prefixes consistently adjusted), since the subnets below follow this structure.**
 Infra such as App Gateway, APIM, Firewall, Bastion, and Jumpbox is skipped.
 
 ```bicep
