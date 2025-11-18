@@ -1,4 +1,4 @@
-# AI Landing Zone - Preview
+# AI Landing Zones
 
 The AI Landing Zone provides an enterprise-scale production ready reference architecture with implementation (Portal, Bicep & Terraform) to deploy secure and resilient AI Apps & Agents solutions in Azure.
 
